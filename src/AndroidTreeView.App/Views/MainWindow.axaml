@@ -1,0 +1,134 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AndroidTreeView.App.ViewModels"
+        xmlns:loc="using:AndroidTreeView.App.Localization"
+        x:Class="AndroidTreeView.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{loc:Localize Key=app.title}"
+        Width="1280" Height="820"
+        MinWidth="360" MinHeight="480"
+        Icon="/Assets/atv-icon.ico"
+        Background="Transparent"
+        TransparencyLevelHint="AcrylicBlur, Mica, Blur">
+
+    <Panel>
+        <!-- Liquid-glass backdrop; degrades to a tinted panel where OS blur is unavailable. -->
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="Black"
+                                             TintOpacity="1"
+                                             MaterialOpacity="0.35" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <Grid ColumnDefinitions="Auto,*">
+
+            <!-- Navigation sidebar (collapsible; hidden entirely in narrow via the toggle). -->
+            <Border Grid.Column="0"
+                    Width="248"
+                    Padding="16"
+                    IsVisible="{Binding IsSidebarOpen}"
+                    Background="{DynamicResource Glass.Sidebar.Background}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="{loc:Localize Key=app.title}"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Margin="4,4,4,24" />
+
+                    <StackPanel DockPanel.Dock="Top" Spacing="6">
+                        <Button Classes="nav"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Command="{Binding NavigateDevicesCommand}"
+                                Classes.active="{Binding CurrentSection, Converter={StaticResource EnumEquals}, ConverterParameter=Devices}"
+                                Content="{loc:Localize Key=nav.devices}" />
+                        <Button Classes="nav"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Command="{Binding NavigateSettingsCommand}"
+                                Classes.active="{Binding CurrentSection, Converter={StaticResource EnumEquals}, ConverterParameter=Settings}"
+                                Content="{loc:Localize Key=nav.settings}" />
+                        <Button Classes="nav"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Command="{Binding NavigateAboutCommand}"
+                                Classes.active="{Binding CurrentSection, Converter={StaticResource EnumEquals}, ConverterParameter=About}"
+                                Content="{loc:Localize Key=nav.about}" />
+                    </StackPanel>
+
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="4">
+                        <TextBlock Text="{Binding AdbStatusText}"
+                                   FontSize="12"
+                                   Opacity="0.85"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding DeviceCount, StringFormat='#{0}'}"
+                                   FontSize="12"
+                                   Opacity="0.55"
+                                   IsVisible="{Binding IsAdbAvailable}" />
+                    </StackPanel>
+
+                    <Panel />
+                </DockPanel>
+            </Border>
+
+            <!-- Main region: top bar, update banner, content. -->
+            <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*">
+
+                <Grid Grid.Row="0"
+                      Margin="12"
+                      ColumnDefinitions="Auto,Auto,*,Auto,Auto"
+                      ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Width="40"
+                            Command="{Binding ToggleSidebarCommand}"
+                            Content="&#9776;" />
+                    <Button Grid.Column="1"
+                            IsVisible="{Binding IsNarrow}"
+                            Command="{Binding BackCommand}"
+                            Content="{loc:Localize Key=common.back}" />
+                    <TextBlock Grid.Column="2"
+                               VerticalAlignment="Center"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Text="{loc:Localize Key=devices.title}" />
+                    <TextBlock Grid.Column="3"
+                               VerticalAlignment="Center"
+                               Opacity="0.85"
+                               Text="{Binding AdbStatusText}" />
+                    <Button Grid.Column="4"
+                            Command="{Binding RefreshCommand}"
+                            Content="{loc:Localize Key=common.refresh}" />
+                </Grid>
+
+                <Border Grid.Row="1"
+                        Margin="12,0,12,12"
+                        Padding="12,8"
+                        CornerRadius="8"
+                        IsVisible="{Binding ShowUpdateBanner}"
+                        Background="{DynamicResource Glass.Card.Background}"
+                        BorderBrush="{DynamicResource Glass.Card.Border}"
+                        BorderThickness="1">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                        <TextBlock Grid.Column="0"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding UpdateBannerText}" />
+                        <Button Grid.Column="1"
+                                Command="{Binding OpenReleaseCommand}"
+                                Content="{loc:Localize Key=update.openrelease}" />
+                        <Button Grid.Column="2"
+                                Width="36"
+                                Command="{Binding DismissUpdateCommand}"
+                                Content="&#10005;" />
+                    </Grid>
+                </Border>
+
+                <ContentControl Grid.Row="2"
+                                Margin="12,0,12,12"
+                                Content="{Binding CurrentContent}" />
+            </Grid>
+        </Grid>
+    </Panel>
+</Window>

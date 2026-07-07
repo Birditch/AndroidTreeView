@@ -1,0 +1,47 @@
+name: 使用问题 (Question)
+description: 提出聚焦的使用、设计或集成问题 (Ask a focused usage, design, or integration question).
+title: "[问题 Question]: "
+labels: ["问题 (question)", "状态：待分诊 (status: needs triage)"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请尽量让问题聚焦，并说明你已经尝试过什么。
+
+  - type: input
+    id: question
+    attributes:
+      label: 问题 (Question)
+      placeholder: 我应该如何理解连接设备的循环次数？
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 背景 (Context)
+      description: 你在做什么功能，有哪些约束 (What are you building, and what constraints matter)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: 已尝试方案 (What have you tried?)
+      description: 可补充文档链接、代码片段或实验结果 (Link docs, code snippets, or experiments if useful).
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: 相关代码 (Relevant code)
+      render: csharp
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 检查清单 (Checklist)
+      options:
+        - label: 我已搜索 README 和现有 Issue (I have searched the README and existing issues).
+          required: true
+        - label: 这是一个聚焦于 AndroidTreeView 连接设备体验的问题 (This is a focused AndroidTreeView connected-device question).
+          required: true

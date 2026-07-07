@@ -1,0 +1,91 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.DeviceDetailView"
+             x:DataType="vm:DeviceDetailViewModel"
+             x:CompileBindings="True">
+
+    <Grid RowDefinitions="Auto,Auto,*" Margin="16">
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                CornerRadius="14"
+                Padding="18"
+                Margin="0,0,0,12"
+                Background="{DynamicResource Glass.Card.Background}"
+                BorderBrush="{DynamicResource Glass.Card.Border}"
+                BorderThickness="1">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+
+                <!-- Back -->
+                <Button Grid.Column="0"
+                        Command="{Binding BackCommand}"
+                        Content="{loc:Localize Key=common.back}"
+                        VerticalAlignment="Top"
+                        Margin="0,0,16,0" />
+
+                <!-- Identity + status -->
+                <StackPanel Grid.Column="1" Spacing="6">
+                    <TextBlock Text="{Binding DisplayName}"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <WrapPanel Orientation="Horizontal">
+                        <controls:StatusBadge Text="{Binding StatusText}"
+                                              Kind="{Binding StatusKind}"
+                                              Margin="0,0,8,4" />
+                    </WrapPanel>
+
+                    <StackPanel Spacing="2">
+                        <controls:InfoRow Label="{loc:Localize Key=overview.model}" Value="{Binding Model}" />
+                        <controls:InfoRow Label="{loc:Localize Key=card.serial}" Value="{Binding Serial}" />
+                        <controls:InfoRow Label="{loc:Localize Key=card.battery}"
+                                          Value="{Binding BatteryPercent, StringFormat='{}{0}%'}" />
+                        <controls:InfoRow Label="{loc:Localize Key=card.root}" Value="{Binding RootText}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Refresh -->
+                <Button Grid.Column="2"
+                        Command="{Binding RefreshCommand}"
+                        Content="{loc:Localize Key=common.refresh}"
+                        VerticalAlignment="Top"
+                        Margin="16,0,0,0" />
+            </Grid>
+        </Border>
+
+        <!-- Tab strip -->
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled"
+                      Margin="0,0,0,12">
+            <ListBox ItemsSource="{Binding Tabs}"
+                     SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                     Background="Transparent"
+                     BorderThickness="0">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DetailTab">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding Glyph}" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
+
+        <!-- Selected category content (rendered by the ViewLocator) -->
+        <ContentControl Grid.Row="2" Content="{Binding CurrentCategory}" />
+    </Grid>
+</UserControl>

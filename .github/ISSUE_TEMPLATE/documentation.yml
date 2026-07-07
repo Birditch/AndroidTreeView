@@ -1,0 +1,63 @@
+name: 文档改进 (Documentation)
+description: 反馈缺失、不清晰或过期的文档 (Report missing, unclear, or outdated documentation).
+title: "[文档 Docs]: "
+labels: ["文档 (documentation)", "状态：待分诊 (status: needs triage)"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        清晰的文档也是产品体验的一部分，感谢你的改进建议。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 摘要 (Summary)
+      placeholder: 安装方式需要补充更清晰的接入说明。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: doc_type
+    attributes:
+      label: 文档类型 (Documentation type)
+      options:
+        - README
+        - API 参考 (API reference)
+        - 示例应用 (Sample app)
+        - 迁移指南 (Migration guide)
+        - 无障碍 (Accessibility)
+        - 其他 (Other)
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: 当前问题 (Current problem)
+      description: 哪些内容缺失、不清楚或已经过期 (What is missing, confusing, or outdated)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 改进建议 (Suggested improvement)
+      description: 你希望文档如何改进 (What should the documentation say instead)?
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: 相关页面或章节 (Related page or section)
+      placeholder: README.md#installation
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 检查清单 (Checklist)
+      options:
+        - label: 我已搜索过现有 Issue (I have searched existing issues).
+          required: true
+        - label: 我愿意为此文档改进提交 PR (I am willing to open a pull request for this documentation change).
+          required: false

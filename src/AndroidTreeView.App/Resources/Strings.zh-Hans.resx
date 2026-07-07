@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Simplified Chinese (zh-Hans) satellite resources for AndroidTreeView.App.
+    Base name: AndroidTreeView.App.Resources.Strings
+    Mirrors every key from the neutral Strings.resx (docs/app-contract.md master list).
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="app.title" xml:space="preserve">
+    <value>AndroidTreeView</value>
+  </data>
+  <data name="nav.devices" xml:space="preserve">
+    <value>设备</value>
+  </data>
+  <data name="nav.settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="nav.about" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="common.refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="common.back" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="common.retry" xml:space="preserve">
+    <value>重试</value>
+  </data>
+  <data name="common.browse" xml:space="preserve">
+    <value>浏览…</value>
+  </data>
+  <data name="common.save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="common.reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="common.loading" xml:space="preserve">
+    <value>加载中…</value>
+  </data>
+  <data name="common.unavailable" xml:space="preserve">
+    <value>不可用</value>
+  </data>
+  <data name="common.yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="common.no" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="common.none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="common.search" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="status.online" xml:space="preserve">
+    <value>在线</value>
+  </data>
+  <data name="status.offline" xml:space="preserve">
+    <value>离线</value>
+  </data>
+  <data name="status.unauthorized" xml:space="preserve">
+    <value>未授权</value>
+  </data>
+  <data name="status.rooted" xml:space="preserve">
+    <value>已 Root</value>
+  </data>
+  <data name="status.charging" xml:space="preserve">
+    <value>充电中</value>
+  </data>
+  <data name="status.lowbattery" xml:space="preserve">
+    <value>电量低</value>
+  </data>
+  <data name="adb.status.ready" xml:space="preserve">
+    <value>ADB 就绪</value>
+  </data>
+  <data name="adb.status.missing" xml:space="preserve">
+    <value>未找到 ADB</value>
+  </data>
+  <data name="adb.status.devices" xml:space="preserve">
+    <value>{0} 台设备</value>
+  </data>
+  <data name="devices.title" xml:space="preserve">
+    <value>安卓设备</value>
+  </data>
+  <data name="devices.empty.title" xml:space="preserve">
+    <value>未检测到设备</value>
+  </data>
+  <data name="devices.empty.body" xml:space="preserve">
+    <value>请开启开发者选项与 USB 调试，连接手机并允许调试授权。</value>
+  </data>
+  <data name="devices.count" xml:space="preserve">
+    <value>已连接 {0} 台</value>
+  </data>
+  <data name="card.serial" xml:space="preserve">
+    <value>序列号</value>
+  </data>
+  <data name="card.battery" xml:space="preserve">
+    <value>电量</value>
+  </data>
+  <data name="card.charging" xml:space="preserve">
+    <value>充电</value>
+  </data>
+  <data name="card.cycle" xml:space="preserve">
+    <value>循环次数</value>
+  </data>
+  <data name="card.cycle.unavailable" xml:space="preserve">
+    <value>循环次数：不可用</value>
+  </data>
+  <data name="card.temperature" xml:space="preserve">
+    <value>温度</value>
+  </data>
+  <data name="card.root" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="card.lastrefresh" xml:space="preserve">
+    <value>最后刷新</value>
+  </data>
+  <data name="detail.tab.overview" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="detail.tab.hardware" xml:space="preserve">
+    <value>硬件</value>
+  </data>
+  <data name="detail.tab.battery" xml:space="preserve">
+    <value>电池</value>
+  </data>
+  <data name="detail.tab.system" xml:space="preserve">
+    <value>系统</value>
+  </data>
+  <data name="detail.tab.storage" xml:space="preserve">
+    <value>存储</value>
+  </data>
+  <data name="detail.tab.network" xml:space="preserve">
+    <value>网络</value>
+  </data>
+  <data name="detail.tab.root" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="detail.tab.logcat" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="detail.tab.raw" xml:space="preserve">
+    <value>原始属性</value>
+  </data>
+  <data name="overview.manufacturer" xml:space="preserve">
+    <value>制造商</value>
+  </data>
+  <data name="overview.brand" xml:space="preserve">
+    <value>品牌</value>
+  </data>
+  <data name="overview.model" xml:space="preserve">
+    <value>型号</value>
+  </data>
+  <data name="overview.android" xml:space="preserve">
+    <value>安卓版本</value>
+  </data>
+  <data name="overview.api" xml:space="preserve">
+    <value>API 级别</value>
+  </data>
+  <data name="overview.build" xml:space="preserve">
+    <value>版本号</value>
+  </data>
+  <data name="overview.fingerprint" xml:space="preserve">
+    <value>指纹</value>
+  </data>
+  <data name="overview.patch" xml:space="preserve">
+    <value>安全补丁</value>
+  </data>
+  <data name="hardware.cpu" xml:space="preserve">
+    <value>处理器</value>
+  </data>
+  <data name="hardware.arch" xml:space="preserve">
+    <value>架构</value>
+  </data>
+  <data name="hardware.cores" xml:space="preserve">
+    <value>核心数</value>
+  </data>
+  <data name="hardware.abi" xml:space="preserve">
+    <value>ABI 列表</value>
+  </data>
+  <data name="hardware.ram" xml:space="preserve">
+    <value>内存</value>
+  </data>
+  <data name="hardware.screen" xml:space="preserve">
+    <value>屏幕</value>
+  </data>
+  <data name="hardware.density" xml:space="preserve">
+    <value>密度</value>
+  </data>
+  <data name="battery.level" xml:space="preserve">
+    <value>电量</value>
+  </data>
+  <data name="battery.status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="battery.health" xml:space="preserve">
+    <value>健康度</value>
+  </data>
+  <data name="battery.temp" xml:space="preserve">
+    <value>温度</value>
+  </data>
+  <data name="battery.voltage" xml:space="preserve">
+    <value>电压</value>
+  </data>
+  <data name="battery.tech" xml:space="preserve">
+    <value>技术</value>
+  </data>
+  <data name="battery.cycle" xml:space="preserve">
+    <value>循环次数</value>
+  </data>
+  <data name="system.kernel" xml:space="preserve">
+    <value>内核</value>
+  </data>
+  <data name="system.selinux" xml:space="preserve">
+    <value>SELinux</value>
+  </data>
+  <data name="system.uptime" xml:space="preserve">
+    <value>运行时间</value>
+  </data>
+  <data name="system.locale" xml:space="preserve">
+    <value>区域</value>
+  </data>
+  <data name="system.timezone" xml:space="preserve">
+    <value>时区</value>
+  </data>
+  <data name="storage.total" xml:space="preserve">
+    <value>总计</value>
+  </data>
+  <data name="storage.used" xml:space="preserve">
+    <value>已用</value>
+  </data>
+  <data name="storage.free" xml:space="preserve">
+    <value>可用</value>
+  </data>
+  <data name="network.wifiip" xml:space="preserve">
+    <value>Wi-Fi IP</value>
+  </data>
+  <data name="network.wifimac" xml:space="preserve">
+    <value>Wi-Fi MAC</value>
+  </data>
+  <data name="root.detected" xml:space="preserve">
+    <value>检测到 Root</value>
+  </data>
+  <data name="root.notdetected" xml:space="preserve">
+    <value>未 Root</value>
+  </data>
+  <data name="root.selinux" xml:space="preserve">
+    <value>SELinux 模式</value>
+  </data>
+  <data name="logcat.start" xml:space="preserve">
+    <value>开始</value>
+  </data>
+  <data name="logcat.stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="logcat.clear" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="logcat.filter" xml:space="preserve">
+    <value>过滤</value>
+  </data>
+  <data name="raw.filter" xml:space="preserve">
+    <value>过滤属性</value>
+  </data>
+  <data name="settings.title" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="settings.adbpath" xml:space="preserve">
+    <value>ADB 路径</value>
+  </data>
+  <data name="settings.theme" xml:space="preserve">
+    <value>主题</value>
+  </data>
+  <data name="settings.theme.system" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="settings.theme.light" xml:space="preserve">
+    <value>亮色</value>
+  </data>
+  <data name="settings.theme.dark" xml:space="preserve">
+    <value>暗色</value>
+  </data>
+  <data name="settings.language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="settings.language.system" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="settings.language.zh" xml:space="preserve">
+    <value>简体中文</value>
+  </data>
+  <data name="settings.language.en" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="settings.autorefresh" xml:space="preserve">
+    <value>自动刷新</value>
+  </data>
+  <data name="settings.refreshinterval" xml:space="preserve">
+    <value>设备刷新间隔（秒）</value>
+  </data>
+  <data name="settings.batteryinterval" xml:space="preserve">
+    <value>电池刷新间隔（秒）</value>
+  </data>
+  <data name="settings.logcatmax" xml:space="preserve">
+    <value>日志最大行数</value>
+  </data>
+  <data name="settings.autoupdate" xml:space="preserve">
+    <value>自动检查更新</value>
+  </data>
+  <data name="settings.accent" xml:space="preserve">
+    <value>强调色</value>
+  </data>
+  <data name="settings.remember" xml:space="preserve">
+    <value>记住上次设备</value>
+  </data>
+  <data name="settings.startup" xml:space="preserve">
+    <value>启动行为</value>
+  </data>
+  <data name="update.current" xml:space="preserve">
+    <value>当前版本</value>
+  </data>
+  <data name="update.latest" xml:space="preserve">
+    <value>最新版本</value>
+  </data>
+  <data name="update.check" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="update.available" xml:space="preserve">
+    <value>有可用更新：{0}</value>
+  </data>
+  <data name="update.uptodate" xml:space="preserve">
+    <value>已是最新版本</value>
+  </data>
+  <data name="update.checking" xml:space="preserve">
+    <value>检查中…</value>
+  </data>
+  <data name="update.failed" xml:space="preserve">
+    <value>检查更新失败</value>
+  </data>
+  <data name="update.openrelease" xml:space="preserve">
+    <value>查看发布</value>
+  </data>
+  <data name="about.title" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="about.project" xml:space="preserve">
+    <value>项目主页</value>
+  </data>
+  <data name="setup.title" xml:space="preserve">
+    <value>未找到 ADB</value>
+  </data>
+  <data name="setup.body" xml:space="preserve">
+    <value>AndroidTreeView 需要 Android platform-tools（adb）。请安装并加入 PATH，或手动选择 adb。</value>
+  </data>
+  <data name="setup.download" xml:space="preserve">
+    <value>下载 platform-tools</value>
+  </data>
+  <data name="setup.selectadb" xml:space="preserve">
+    <value>选择 adb 可执行文件</value>
+  </data>
+  <data name="error.generic" xml:space="preserve">
+    <value>出现错误</value>
+  </data>
+  <data name="error.unauthorized" xml:space="preserve">
+    <value>设备未授权 —— 请在设备上允许 USB 调试</value>
+  </data>
+  <data name="error.offline" xml:space="preserve">
+    <value>设备离线</value>
+  </data>
+  <data name="error.loadfailed" xml:space="preserve">
+    <value>加载 {0} 失败</value>
+  </data>
+</root>

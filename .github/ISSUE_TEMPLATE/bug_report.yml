@@ -1,0 +1,131 @@
+name: 缺陷反馈 (Bug report)
+description: 反馈可复现的异常行为 (Report reproducible behavior that is incorrect or broken).
+title: "[缺陷 Bug]: "
+labels: ["缺陷 (bug)", "状态：待分诊 (status: needs triage)"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你帮助改进 AndroidTreeView。
+
+        请尽量提供可复现信息，这会显著提高定位效率。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 摘要 (Summary)
+      description: 用一句话说明问题 (Describe the issue in one sentence).
+      placeholder: 设备卡片显示了错误的当前电量。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 影响范围 (Affected area)
+      options:
+        - ADB 检测 / 引导页 (ADB detection / setup)
+        - 设备发现 (Device discovery)
+        - 设备卡片 (Device card)
+        - 详情页 (Detail page)
+        - 当前电量 (Battery level)
+        - 循环次数 (Cycle count)
+        - 存储 (Storage)
+        - 网络 (Network)
+        - Root 状态 (Root status)
+        - 日志 (Logcat)
+        - 原始属性 (Raw properties)
+        - 连接状态 (Connection state)
+        - 刷新行为 (Refresh behavior)
+        - 设置 (Settings)
+        - 更新检查 (Update check)
+        - 界面 / 主题 (UI / theme)
+        - 本地化 / 语言 (Localization / language)
+        - 安装 / MSI (Install / MSI)
+        - 无障碍 (Accessibility)
+        - 文档 (Documentation)
+        - 不确定 (Unknown)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: 安装方式 (Install method)
+      options:
+        - MSI 安装包 (MSI installer)
+        - 源码自行编译 (Built from source)
+        - 其他 (Other)
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为 (Expected behavior)
+      description: 你期望发生什么 (What did you expect to happen)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为 (Actual behavior)
+      description: 实际发生了什么 (What happened instead)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤 (Reproduction steps)
+      description: 请提供尽可能小且稳定的复现步骤 (Provide the smallest reliable reproduction you can).
+      placeholder: |
+        1. 连接设备 ...
+        2. 打开设备卡片列表 ...
+        3. 点击设备卡片 ...
+        4. 观察结果 ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: 最小示例 (Minimal sample)
+      description: 如方便，请贴出相关 C# 或 XAML 片段 (Paste relevant C# or XAML snippets if available).
+      render: csharp
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境信息 (Environment)
+      description: 应用、运行系统、ADB 与被连接的 Android 设备信息 (App, host OS, ADB, and connected Android device information).
+      placeholder: |
+        AndroidTreeView 版本 / 提交 (version / commit):
+        运行系统 (host OS, e.g. Windows 11 24H2):
+        ADB 版本 (adb version 输出):
+        连接的 Android 设备型号 (connected device model):
+        被连接设备的 Android 版本 (connected device Android version):
+        连接设备地区 / 固件 (connected device region / firmware):
+        连接方式 (connection type: USB / Wi-Fi):
+        设备授权状态 (device authorization state):
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志或截图 (Logs or screenshots)
+      description: 如有帮助，请补充堆栈、截图、视频或布局检查信息 (Add stack traces, screenshots, videos, or layout inspector notes if useful).
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 检查清单 (Checklist)
+      options:
+        - label: 我已搜索过现有 Issue (I have searched existing issues).
+          required: true
+        - label: 我可以在最新代码或版本中复现 (I can reproduce this with the latest code or release).
+          required: true
+        - label: 我已提供足够的信息帮助维护者排查 (I have included enough information for maintainers to investigate).
+          required: true

@@ -1,0 +1,20 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="using:AndroidTreeView.App.Converters">
+    <!--
+        Converters.axaml — keyed converter instances shared across all views/controls.
+        Merged into App.axaml at avares://AndroidTreeView.App/Converters/Converters.axaml.
+        Keys match the app-contract exactly; views/controls reference them via {StaticResource Key}.
+    -->
+    <conv:NullToBoolConverter x:Key="NullToBool" />
+    <conv:NullOrEmptyToDashConverter x:Key="NullOrEmptyToDash" />
+    <conv:BoolToOpacityConverter x:Key="BoolToOpacity" />
+    <conv:BytesToHumanConverter x:Key="BytesToHuman" />
+    <conv:EnumEqualsConverter x:Key="EnumEquals" />
+    <conv:LayoutModeEqualsConverter x:Key="LayoutModeEquals" />
+    <conv:LogPriorityToBrushConverter x:Key="LogPriorityToBrush" />
+    <conv:BadgeKindToBrushConverter x:Key="BadgeKindToBrush" />
+    <conv:BatteryLevelToBrushConverter x:Key="BatteryLevelToBrush" />
+    <conv:InverseBoolConverter x:Key="InverseBool" />
+    <conv:CountToBoolConverter x:Key="CountToBool" />
+</ResourceDictionary>

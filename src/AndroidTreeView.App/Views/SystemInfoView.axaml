@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.SystemInfoView"
+             x:DataType="vm:SystemInfoViewModel"
+             x:CompileBindings="True">
+
+    <Grid>
+        <!-- Loaded content -->
+        <ScrollViewer IsVisible="{Binding !IsLoading}"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="4" Spacing="12">
+
+                <!-- Error banner -->
+                <Border IsVisible="{Binding HasError}"
+                        Background="#22D13438"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="&#x26A0;" FontSize="18" Foreground="{DynamicResource Badge.Unauthorized}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <controls:SectionCard Header="{loc:Localize Key=detail.tab.system}">
+                    <StackPanel Spacing="2">
+                        <controls:InfoRow Label="{loc:Localize Key=system.kernel}" Value="{Binding Info.KernelVersion}" />
+                        <controls:InfoRow Label="{loc:Localize Key=system.selinux}" Value="{Binding Info.SelinuxStatus}" />
+                        <controls:InfoRow Label="{loc:Localize Key=system.uptime}" Value="{Binding Info.Uptime}" />
+                        <controls:InfoRow Label="{loc:Localize Key=system.locale}" Value="{Binding Info.Locale}" />
+                        <controls:InfoRow Label="{loc:Localize Key=system.timezone}" Value="{Binding Info.Timezone}" />
+                    </StackPanel>
+                </controls:SectionCard>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading skeleton -->
+        <StackPanel IsVisible="{Binding IsLoading}" Margin="4" Spacing="12">
+            <controls:SkeletonBlock Height="180" />
+        </StackPanel>
+    </Grid>
+</UserControl>

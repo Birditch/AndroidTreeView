@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.BatteryView"
+             x:DataType="vm:BatteryViewModel"
+             x:CompileBindings="True">
+
+    <Grid>
+        <!-- Loaded content -->
+        <ScrollViewer IsVisible="{Binding !IsLoading}"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="4" Spacing="12">
+
+                <!-- Error banner -->
+                <Border IsVisible="{Binding HasError}"
+                        Background="#22D13438"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="&#x26A0;" FontSize="18" Foreground="{DynamicResource Badge.Unauthorized}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <controls:SectionCard Header="{loc:Localize Key=detail.tab.battery}">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <controls:BatteryIndicator Grid.Column="0"
+                                                   Level="{Binding LevelPercent}"
+                                                   IsCharging="{Binding Battery.IsCharging}"
+                                                   Width="120"
+                                                   Height="52"
+                                                   VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="{Binding LevelPercent, StringFormat='{}{0}%'}" FontSize="30" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ChargingText}" Opacity="0.75" />
+                        </StackPanel>
+                    </Grid>
+                </controls:SectionCard>
+
+                <controls:SectionCard Header="{loc:Localize Key=battery.status}">
+                    <StackPanel Spacing="2">
+                        <controls:InfoRow Label="{loc:Localize Key=battery.status}" Value="{Binding Battery.Status}" />
+                        <controls:InfoRow Label="{loc:Localize Key=battery.health}" Value="{Binding Battery.Health}" />
+                        <controls:InfoRow Label="{loc:Localize Key=battery.temp}" Value="{Binding Battery.TemperatureCelsius}" />
+                        <controls:InfoRow Label="{loc:Localize Key=battery.voltage}" Value="{Binding Battery.VoltageMillivolts}" />
+                        <controls:InfoRow Label="{loc:Localize Key=battery.tech}" Value="{Binding Battery.Technology}" />
+                        <controls:InfoRow Label="{loc:Localize Key=battery.cycle}" Value="{Binding Battery.CycleCount}" />
+                    </StackPanel>
+                </controls:SectionCard>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading skeleton -->
+        <StackPanel IsVisible="{Binding IsLoading}" Margin="4" Spacing="12">
+            <controls:SkeletonBlock Height="90" />
+            <controls:SkeletonBlock Height="160" />
+        </StackPanel>
+    </Grid>
+</UserControl>

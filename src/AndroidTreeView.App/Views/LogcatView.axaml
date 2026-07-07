@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:views="using:AndroidTreeView.App.Views"
+             xmlns:logs="using:AndroidTreeView.Models.Logs"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             d:DesignWidth="800" d:DesignHeight="520"
+             x:Class="AndroidTreeView.App.Views.LogcatView"
+             x:DataType="vm:LogcatViewModel"
+             x:CompileBindings="True">
+
+  <Grid RowDefinitions="Auto,Auto,*">
+
+    <!-- Toolbar: Start / Stop / Clear + priority selector + text filter -->
+    <Border Grid.Row="0" Padding="12,10">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*" VerticalAlignment="Center">
+        <Button Grid.Column="0"
+                Margin="0,0,8,0"
+                Command="{Binding StartCommand}"
+                Content="{loc:Localize Key=logcat.start}" />
+        <Button Grid.Column="1"
+                Margin="0,0,8,0"
+                Command="{Binding StopCommand}"
+                Content="{loc:Localize Key=logcat.stop}" />
+        <Button Grid.Column="2"
+                Margin="0,0,12,0"
+                Command="{Binding ClearCommand}"
+                Content="{loc:Localize Key=logcat.clear}" />
+        <ComboBox Grid.Column="3"
+                  Margin="0,0,12,0"
+                  MinWidth="130"
+                  ItemsSource="{x:Static views:LogcatView.PriorityOptions}"
+                  SelectedItem="{Binding MinPriority, Mode=TwoWay}" />
+        <TextBox Grid.Column="4"
+                 Text="{Binding FilterText, Mode=TwoWay}"
+                 Watermark="{loc:Localize Key=logcat.filter}" />
+      </Grid>
+    </Border>
+
+    <!-- Error banner -->
+    <Border Grid.Row="1"
+            Margin="12,0,12,8"
+            Padding="12,8"
+            CornerRadius="6"
+            Background="#22FF5252"
+            BorderBrush="#55FF5252"
+            BorderThickness="1"
+            IsVisible="{Binding HasError}">
+      <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Entry list + loading overlay -->
+    <Grid Grid.Row="2">
+      <ListBox ItemsSource="{Binding Entries}"
+               Background="Transparent"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="logs:LogcatEntry">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*" Margin="0,1">
+              <TextBlock Grid.Column="0"
+                         Margin="0,0,10,0"
+                         FontFamily="Consolas, Courier New, monospace"
+                         Opacity="0.7"
+                         Text="{Binding Timestamp}" />
+              <TextBlock Grid.Column="1"
+                         Margin="0,0,10,0"
+                         FontWeight="SemiBold"
+                         Foreground="{Binding Priority, Converter={StaticResource LogPriorityToBrush}}"
+                         Text="{Binding Priority}" />
+              <TextBlock Grid.Column="2"
+                         Margin="0,0,10,0"
+                         Opacity="0.85"
+                         Text="{Binding Tag}" />
+              <TextBlock Grid.Column="3"
+                         FontFamily="Consolas, Courier New, monospace"
+                         Foreground="{Binding Priority, Converter={StaticResource LogPriorityToBrush}}"
+                         Text="{Binding Message}"
+                         TextWrapping="Wrap" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <Border Background="#40000000" IsVisible="{Binding IsLoading}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+          <ProgressBar IsIndeterminate="True" Width="160" />
+          <TextBlock HorizontalAlignment="Center" Text="{loc:Localize Key=common.loading}" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+  </Grid>
+</UserControl>

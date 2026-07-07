@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignWidth="640" d:DesignHeight="520"
+             x:Class="AndroidTreeView.App.Views.AboutView"
+             x:DataType="vm:AboutViewModel"
+             x:CompileBindings="True">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" Padding="24">
+        <StackPanel Spacing="18" MaxWidth="560" HorizontalAlignment="Center">
+
+            <TextBlock Text="{loc:Localize Key=about.title}"
+                       FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" />
+
+            <controls:SectionCard Header="{loc:Localize Key=app.title}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{Binding AppName}" FontSize="20" FontWeight="SemiBold" />
+                    <controls:InfoRow Label="{loc:Localize Key=update.current}" Value="{Binding Version}" />
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{loc:Localize Key=about.project}" Opacity="0.8" />
+                        <Button Content="{Binding ProjectUrl}" Command="{Binding OpenProjectCommand}"
+                                HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </controls:SectionCard>
+
+            <controls:SectionCard Header="{loc:Localize Key=update.check}">
+                <StackPanel Spacing="10">
+                    <controls:InfoRow Label="{loc:Localize Key=update.latest}" Value="{Binding LatestVersion}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="{loc:Localize Key=update.check}" Command="{Binding CheckUpdatesCommand}"
+                                Classes="accent" />
+                        <Button Content="{loc:Localize Key=update.openrelease}" Command="{Binding OpenReleasesCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding UpdateStatusText}" Opacity="0.85" TextWrapping="Wrap" />
+                </StackPanel>
+            </controls:SectionCard>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

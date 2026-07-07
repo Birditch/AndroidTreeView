@@ -1,0 +1,55 @@
+# ---- .NET build output ----
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+
+# ---- Build / restore state ----
+*.binlog
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# ---- Test / coverage ----
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+.coverlet/
+
+# ---- Visual Studio ----
+.vs/
+*.user
+*.suo
+*.userprefs
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+
+# ---- Rider / JetBrains ----
+.idea/
+*.sln.iml
+*.DotSettings.user
+
+# ---- Visual Studio Code ----
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ---- OMC agent state ----
+.omc/
+.agents/
+
+# ---- OS cruft ----
+.DS_Store
+Thumbs.db
+desktop.ini

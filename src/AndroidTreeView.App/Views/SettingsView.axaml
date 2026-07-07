@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:conv="using:AndroidTreeView.App.Converters"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             xmlns:opt="using:AndroidTreeView.Core.Options"
+             mc:Ignorable="d"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignWidth="720" d:DesignHeight="900"
+             x:Class="AndroidTreeView.App.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.Resources>
+        <conv:SettingsEnumMatchConverter x:Key="EnumMatch" />
+    </UserControl.Resources>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" Padding="20">
+        <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Stretch">
+
+            <TextBlock Text="{loc:Localize Key=settings.title}"
+                       FontSize="22" FontWeight="SemiBold" Margin="0,0,0,4" />
+
+            <!-- ADB path -->
+            <controls:SectionCard Header="{loc:Localize Key=settings.adbpath}">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBox Grid.Column="0" Text="{Binding AdbPath}" />
+                        <Button Grid.Column="1"
+                                Content="{loc:Localize Key=common.browse}"
+                                Command="{Binding BrowseAdbCommand}" />
+                    </Grid>
+                </StackPanel>
+            </controls:SectionCard>
+
+            <!-- Appearance: theme + accent -->
+            <controls:SectionCard Header="{loc:Localize Key=settings.theme}">
+                <StackPanel Spacing="10">
+                    <StackPanel Spacing="4">
+                        <RadioButton GroupName="ThemeGroup"
+                                     Content="{loc:Localize Key=settings.theme.system}"
+                                     IsChecked="{Binding Theme, Converter={StaticResource EnumMatch}, ConverterParameter={x:Static opt:ThemeMode.System}}" />
+                        <RadioButton GroupName="ThemeGroup"
+                                     Content="{loc:Localize Key=settings.theme.light}"
+                                     IsChecked="{Binding Theme, Converter={StaticResource EnumMatch}, ConverterParameter={x:Static opt:ThemeMode.Light}}" />
+                        <RadioButton GroupName="ThemeGroup"
+                                     Content="{loc:Localize Key=settings.theme.dark}"
+                                     IsChecked="{Binding Theme, Converter={StaticResource EnumMatch}, ConverterParameter={x:Static opt:ThemeMode.Dark}}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{loc:Localize Key=settings.accent}" Opacity="0.8" />
+                        <TextBox Text="{Binding AccentColor}" Watermark="#0A84FF" MaxWidth="200" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </controls:SectionCard>
+
+            <!-- Language -->
+            <controls:SectionCard Header="{loc:Localize Key=settings.language}">
+                <StackPanel Spacing="4">
+                    <RadioButton GroupName="LanguageGroup"
+                                 Content="{loc:Localize Key=settings.language.system}"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumMatch}, ConverterParameter={x:Static opt:AppLanguage.System}}" />
+                    <RadioButton GroupName="LanguageGroup"
+                                 Content="{loc:Localize Key=settings.language.zh}"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumMatch}, ConverterParameter={x:Static opt:AppLanguage.ChineseSimplified}}" />
+                    <RadioButton GroupName="LanguageGroup"
+                                 Content="{loc:Localize Key=settings.language.en}"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumMatch}, ConverterParameter={x:Static opt:AppLanguage.English}}" />
+                </StackPanel>
+            </controls:SectionCard>
+
+            <!-- Refresh intervals -->
+            <controls:SectionCard Header="{loc:Localize Key=settings.autorefresh}">
+                <StackPanel Spacing="10">
+                    <CheckBox Content="{loc:Localize Key=settings.autorefresh}"
+                              IsChecked="{Binding AutoRefreshEnabled}" />
+                    <Grid ColumnDefinitions="*,120" ColumnSpacing="12" VerticalAlignment="Center">
+                        <TextBlock Grid.Column="0" Text="{loc:Localize Key=settings.refreshinterval}" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" Text="{Binding DeviceRefreshIntervalSeconds}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,120" ColumnSpacing="12" VerticalAlignment="Center">
+                        <TextBlock Grid.Column="0" Text="{loc:Localize Key=settings.batteryinterval}" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" Text="{Binding BatteryRefreshIntervalSeconds}" />
+                    </Grid>
+                </StackPanel>
+            </controls:SectionCard>
+
+            <!-- Logcat -->
+            <controls:SectionCard Header="{loc:Localize Key=settings.logcatmax}">
+                <Grid ColumnDefinitions="*,120" ColumnSpacing="12" VerticalAlignment="Center">
+                    <TextBlock Grid.Column="0" Text="{loc:Localize Key=settings.logcatmax}" VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" Text="{Binding LogcatMaxLines}" />
+                </Grid>
+            </controls:SectionCard>
+
+            <!-- Updates -->
+            <controls:SectionCard Header="{loc:Localize Key=update.check}">
+                <StackPanel Spacing="10">
+                    <CheckBox Content="{loc:Localize Key=settings.autoupdate}"
+                              IsChecked="{Binding AutoCheckUpdates}" />
+                    <controls:InfoRow Label="{loc:Localize Key=update.current}" Value="{Binding CurrentVersion}" />
+                    <controls:InfoRow Label="{loc:Localize Key=update.latest}" Value="{Binding LatestVersion}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="{loc:Localize Key=update.check}" Command="{Binding CheckUpdatesCommand}" />
+                        <Button Content="{loc:Localize Key=update.openrelease}" Command="{Binding OpenReleasesCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding UpdateStatusText}" Opacity="0.8" TextWrapping="Wrap" />
+                </StackPanel>
+            </controls:SectionCard>
+
+            <!-- Startup -->
+            <controls:SectionCard Header="{loc:Localize Key=settings.startup}">
+                <StackPanel Spacing="10">
+                    <ComboBox ItemsSource="{x:Static vm:SettingsOptions.StartupOptions}"
+                              SelectedItem="{Binding Startup}"
+                              MinWidth="220" HorizontalAlignment="Left" />
+                    <CheckBox Content="{loc:Localize Key=settings.remember}"
+                              IsChecked="{Binding RememberLastSelectedDevice}" />
+                </StackPanel>
+            </controls:SectionCard>
+
+            <!-- Actions -->
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,4,0,0">
+                <Button Content="{loc:Localize Key=common.reset}" Command="{Binding ResetCommand}" />
+                <Button Content="{loc:Localize Key=common.save}" Command="{Binding SaveCommand}" Classes="accent" />
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

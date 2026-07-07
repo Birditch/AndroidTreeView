@@ -1,0 +1,69 @@
+name: 性能问题 (Performance)
+description: 反馈渲染卡顿、内存增长或扩展性问题 (Report slow rendering, jank, memory growth, or scalability limits).
+title: "[性能 Performance]: "
+labels: ["性能 (performance)", "状态：待分诊 (status: needs triage)"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        性能问题最好附带设备数量、刷新行为和可复现的测量结果。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 摘要 (Summary)
+      placeholder: 刷新 50 台连接设备卡片时出现明显掉帧。
+    validations:
+      required: true
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 场景 (Scenario)
+      description: 设备数量、刷新模式和交互路径是什么 (What is the device count, refresh pattern, and interaction path)?
+      placeholder: |
+        连接设备数量 (connected devices):
+        刷新间隔 (refresh interval):
+        可见卡片数量 (visible cards):
+        交互路径 (interaction):
+    validations:
+      required: true
+
+  - type: textarea
+    id: measurement
+    attributes:
+      label: 测量结果 (Measurements)
+      description: 请提供 Profiler、帧耗时、内存或 benchmark 输出 (Share profiler, frame timing, memory, or benchmark output).
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境信息 (Environment)
+      placeholder: |
+        AndroidTreeView 版本 / 提交 (version / commit):
+        运行系统 (host OS, e.g. Windows 11 24H2):
+        CPU / 内存 (host CPU / RAM):
+        ADB 版本 (adb version 输出):
+        连接的 Android 设备型号 (connected device models):
+        连接设备数量 (connected device count):
+        构建类型 (build type: Debug / Release):
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现方式 (Reproduction)
+      description: 如可行，请提供示例数据或代码路径 (Provide a sample dataset or code path if possible).
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 检查清单 (Checklist)
+      options:
+        - label: 在可行时，我已使用 release 构建测试 (I have tested with a release build where possible).
+          required: true
+        - label: 我提供了具体测量结果，而不只是主观描述 (I have included concrete measurements, not only a subjective report).
+          required: true

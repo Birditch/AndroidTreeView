@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.RootStatusView"
+             x:DataType="vm:RootStatusViewModel"
+             x:CompileBindings="True">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="4" Spacing="12">
+
+            <!-- Error banner -->
+            <Border IsVisible="{Binding HasError}"
+                    Background="#22D13438"
+                    BorderBrush="{DynamicResource Badge.Unauthorized}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,8">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <controls:SectionCard Header="{loc:Localize Key=detail.tab.root}">
+                <StackPanel Spacing="8">
+
+                    <!-- Loading indicator -->
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8"
+                                IsVisible="{Binding IsLoading}">
+                        <ProgressBar IsIndeterminate="True" Width="120" />
+                        <TextBlock Text="{loc:Localize Key=common.loading}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Rooted / not rooted headline -->
+                    <TextBlock Text="{loc:Localize Key=root.detected}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Badge.Root}"
+                               IsVisible="{Binding Root.IsRooted, FallbackValue=False, TargetNullValue=False}" />
+                    <TextBlock Text="{loc:Localize Key=root.notdetected}"
+                               FontWeight="SemiBold"
+                               Opacity="0.7"
+                               IsVisible="{Binding Root.IsRooted, Converter={StaticResource InverseBool}, FallbackValue=False, TargetNullValue=False}" />
+
+                    <controls:InfoRow Label="{loc:Localize Key=root.selinux}"
+                                      Value="{Binding Root.SelinuxMode}" />
+                    <controls:InfoRow Label="Magisk"
+                                      Value="{Binding Root.MagiskVersion}" />
+                    <controls:InfoRow Label="UID"
+                                      Value="{Binding Root.CurrentUserId}" />
+                    <controls:InfoRow Label="su"
+                                      Value="{Binding Root.RootUserId}" />
+                </StackPanel>
+            </controls:SectionCard>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

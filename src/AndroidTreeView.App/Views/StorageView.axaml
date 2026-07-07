@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:models="using:AndroidTreeView.Models.Storage"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.StorageView"
+             x:DataType="vm:StorageViewModel"
+             x:CompileBindings="True">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="4" Spacing="12">
+
+            <!-- Error banner -->
+            <Border IsVisible="{Binding HasError}"
+                    Background="#22D13438"
+                    BorderBrush="{DynamicResource Badge.Unauthorized}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,8">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <controls:SectionCard Header="{loc:Localize Key=detail.tab.storage}">
+                <StackPanel Spacing="8">
+
+                    <!-- Loading indicator -->
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8"
+                                IsVisible="{Binding IsLoading}">
+                        <ProgressBar IsIndeterminate="True" Width="120" />
+                        <TextBlock Text="{loc:Localize Key=common.loading}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Partitions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:StoragePartition">
+                                <Border CornerRadius="8"
+                                        Padding="12"
+                                        Margin="0,4"
+                                        Background="{DynamicResource Glass.Card.Background}"
+                                        BorderBrush="{DynamicResource Glass.Card.Border}"
+                                        BorderThickness="1">
+                                    <StackPanel Spacing="6">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right"
+                                                       Text="{Binding UsePercent, StringFormat='{}{0:0}%'}"
+                                                       Opacity="0.7" />
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+
+                                        <TextBlock Text="{Binding MountPoint}"
+                                                   Opacity="0.6"
+                                                   FontSize="12" />
+
+                                        <ProgressBar Minimum="0"
+                                                     Maximum="100"
+                                                     Value="{Binding UsePercent, FallbackValue=0, TargetNullValue=0}"
+                                                     Height="6" />
+
+                                        <Grid ColumnDefinitions="*,*,*" Margin="0,4,0,0">
+                                            <controls:InfoRow Grid.Column="0"
+                                                              Label="{loc:Localize Key=storage.total}"
+                                                              Value="{Binding TotalBytes, Converter={StaticResource BytesToHuman}}" />
+                                            <controls:InfoRow Grid.Column="1"
+                                                              Label="{loc:Localize Key=storage.used}"
+                                                              Value="{Binding UsedBytes, Converter={StaticResource BytesToHuman}}" />
+                                            <controls:InfoRow Grid.Column="2"
+                                                              Label="{loc:Localize Key=storage.free}"
+                                                              Value="{Binding AvailableBytes, Converter={StaticResource BytesToHuman}}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </controls:SectionCard>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>AndroidTreeView.Adb</RootNamespace>
+    <AssemblyName>AndroidTreeView.Adb</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AndroidTreeView.Models\AndroidTreeView.Models.csproj" />
+    <ProjectReference Include="..\AndroidTreeView.Core\AndroidTreeView.Core.csproj" />
+  </ItemGroup>
+
+</Project>

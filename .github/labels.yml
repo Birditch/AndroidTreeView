@@ -1,0 +1,163 @@
+# AndroidTreeView 的 GitHub Issue 标签体系 (GitHub issue label taxonomy).
+# 说明：name / description 均使用双引号包裹，因为其中包含 ": " (冒号+空格)，
+# 未加引号会破坏 YAML 解析，导致 label 同步工具报错。
+
+- name: "缺陷 (bug)"
+  color: d73a4a
+  description: "功能未按预期工作 (Something is not working as expected)."
+
+- name: "文档 (documentation)"
+  color: 0075ca
+  description: "文档、README、示例或贡献指南 (Documentation, README, examples, or contribution guidance)."
+
+- name: "功能增强 (enhancement)"
+  color: a2eeef
+  description: "新能力、产品改进或体验请求 (New capability, product improvement, or UX request)."
+
+- name: "性能 (performance)"
+  color: fbca04
+  description: "性能、内存、刷新、渲染或扩展性问题 (Performance, memory, refresh, rendering, or scalability issue)."
+
+- name: "问题 (question)"
+  color: d876e3
+  description: "聚焦的使用、设计或集成问题 (Focused usage, design, or integration question)."
+
+- name: "重复 (duplicate)"
+  color: cfd3d7
+  description: "已存在相同 Issue 或 PR (This issue or pull request already exists)."
+
+- name: "无效 (invalid)"
+  color: e4e669
+  description: "超出项目范围或无法处理 (Outside project scope or cannot be acted on)."
+
+- name: "不计划修复 (wontfix)"
+  color: ffffff
+  description: "暂不计划处理 (This will not be worked on)."
+
+- name: "新手友好 (good first issue)"
+  color: 7057ff
+  description: "适合首次贡献者 (Good entry point for first-time contributors)."
+
+- name: "需要帮助 (help wanted)"
+  color: 008672
+  description: "欢迎社区协助 (Maintainers would welcome community help)."
+
+- name: "状态：待分诊 (status: needs triage)"
+  color: ededed
+  description: "等待维护者审查和分类 (Awaiting maintainer review and classification)."
+
+- name: "状态：需要复现 (status: needs reproduction)"
+  color: fbca04
+  description: "需要复现步骤、日志、截图或设备信息 (Needs reproduction steps, logs, screenshots, or device details)."
+
+- name: "状态：已接受 (status: accepted)"
+  color: 0e8a16
+  description: "已确认并接受处理 (Confirmed and accepted for implementation or fixing)."
+
+- name: "状态：受阻 (status: blocked)"
+  color: b60205
+  description: "等待外部信息、依赖或决策 (Waiting on external information, dependency, or decision)."
+
+- name: "优先级：高 (priority: high)"
+  color: b60205
+  description: "重要回归、阻塞问题或高影响问题 (Important regression, blocker, or high-impact issue)."
+
+- name: "优先级：中 (priority: medium)"
+  color: d93f0b
+  description: "中等影响的问题或改进 (Useful improvement or issue with moderate impact)."
+
+- name: "优先级：低 (priority: low)"
+  color: fbca04
+  description: "锦上添花或低影响问题 (Nice-to-have improvement or low-impact issue)."
+
+- name: "范围：设备发现 (area: device discovery)"
+  color: 5319e7
+  description: "设备检测、加载或可用性 (Device detection, loading, or availability)."
+
+- name: "范围：设备卡片 (area: device card)"
+  color: 1d76db
+  description: "设备卡片摘要 UI 与交互 (Device card summary UI and interactions)."
+
+- name: "范围：详情页 (area: detail page)"
+  color: 0052cc
+  description: "单设备详情页和深度设备信息 (Per-device detail page and deeper device information)."
+
+- name: "范围：电量 (area: battery)"
+  color: 0e7a5f
+  description: "电量展示、解析或刷新行为 (Battery level display, parsing, or refresh behavior)."
+
+- name: "范围：循环次数 (area: cycle count)"
+  color: 2e7d32
+  description: "循环次数展示、解析或理解方式 (Battery cycle count display, parsing, or interpretation)."
+
+- name: "范围：连接 (area: connection)"
+  color: 006b75
+  description: "连接状态、权限或线缆/设备状态变化 (Connection state, permissions, or cable/device state changes)."
+
+- name: "范围：刷新 (area: refresh)"
+  color: 1f883d
+  description: "手动或自动刷新行为 (Manual or automatic refresh behavior)."
+
+- name: "范围：无障碍 (area: accessibility)"
+  color: 7057ff
+  description: "无障碍、焦点、语义、标签或点击区域 (Accessibility, focus, semantics, labels, or tap targets)."
+
+- name: "范围：界面 (area: ui)"
+  color: c5def5
+  description: "视觉设计、布局、间距或导航打磨 (Visual design, layout, spacing, or navigation polish)."
+
+- name: "范围：ADB 检测 (area: adb detection)"
+  color: 0366d6
+  description: "ADB 定位、引导页或可执行文件路径 (ADB location, setup screen, or executable path)."
+
+- name: "范围：存储 (area: storage)"
+  color: 1d76db
+  description: "存储分区解析与展示 (Storage partition parsing and display)."
+
+- name: "范围：网络 (area: network)"
+  color: 0052cc
+  description: "网络接口、Wi-Fi IP/MAC 或 DNS 信息 (Network interfaces, Wi-Fi IP/MAC, or DNS info)."
+
+- name: "范围：Root (area: root)"
+  color: 6f42c1
+  description: "Root 检测、SELinux 或 Magisk 信息 (Root detection, SELinux, or Magisk info)."
+
+- name: "范围：日志 (area: logcat)"
+  color: 5319e7
+  description: "Logcat 流、过滤或优先级处理 (Logcat streaming, filtering, or priority handling)."
+
+- name: "范围：设置 (area: settings)"
+  color: c5def5
+  description: "设置页、主题、语言或持久化选项 (Settings page, theme, language, or persisted options)."
+
+- name: "范围：更新检查 (area: update check)"
+  color: bfdadc
+  description: "GitHub Releases 更新检查与提示横幅 (GitHub Releases update check and banner)."
+
+- name: "范围：本地化 (area: i18n)"
+  color: fef2c0
+  description: "中英文本地化、资源键或语言切换 (Chinese/English localization, resource keys, or language switching)."
+
+- name: "范围：打包 / MSI (area: packaging)"
+  color: d4c5f9
+  description: "WiX / MSI 打包、安装体验或运行时检测 (WiX/MSI packaging, install experience, or runtime detection)."
+
+- name: "范围：构建 / CI (area: build/ci)"
+  color: 0e8a16
+  description: "构建脚本、GitHub Actions 工作流或发布流程 (Build scripts, GitHub Actions workflows, or release process)."
+
+- name: "平台：Windows (platform: windows)"
+  color: 0078d4
+  description: "Windows 平台特有的问题或行为 (Windows-specific issue or behavior)."
+
+- name: "硬件：摩托罗拉 (hardware: motorola)"
+  color: ff6f00
+  description: "与摩托罗拉测试设备相关的问题或验证 (Issue or validation related to Motorola test devices)."
+
+- name: "地区：非中国大陆 (region: non-mainland-cn)"
+  color: f9d0c4
+  description: "在非中国大陆设备或固件版本上复现 (Reproduced on non-mainland China device or firmware variant)."
+
+- name: "地区：中国大陆 (region: mainland-cn)"
+  color: c2e0c6
+  description: "在中国大陆设备或固件版本上复现 (Reproduced on mainland China device or firmware variant)."

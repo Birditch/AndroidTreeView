@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sys="using:System"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.HardwareView"
+             x:DataType="vm:HardwareViewModel"
+             x:CompileBindings="True">
+
+    <Grid>
+        <!-- Loaded content -->
+        <ScrollViewer IsVisible="{Binding !IsLoading}"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="4" Spacing="12">
+
+                <!-- Error banner -->
+                <Border IsVisible="{Binding HasError}"
+                        Background="#22D13438"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="&#x26A0;" FontSize="18" Foreground="{DynamicResource Badge.Unauthorized}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <controls:SectionCard Header="{loc:Localize Key=hardware.cpu}">
+                    <StackPanel Spacing="8">
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.cpu}" Value="{Binding Hardware.CpuModel}" />
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.arch}" Value="{Binding Hardware.CpuArchitecture}" />
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.cores}" Value="{Binding Hardware.CpuCoreCount}" />
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{loc:Localize Key=hardware.abi}" FontSize="12" Opacity="0.7" />
+                            <ItemsControl ItemsSource="{Binding Hardware.AbiList}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="sys:String">
+                                        <Border Margin="0,0,6,6" Padding="8,3" CornerRadius="6" Background="#20808080">
+                                            <TextBlock Text="{Binding}" FontSize="12" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </controls:SectionCard>
+
+                <controls:SectionCard Header="{loc:Localize Key=hardware.screen}">
+                    <StackPanel Spacing="2">
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.ram}" Value="{Binding Hardware.RamTotalBytes, Converter={StaticResource BytesToHuman}}" />
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.screen}" Value="{Binding Hardware.ScreenResolution}" />
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.density}" Value="{Binding Hardware.ScreenDensityDpi}" />
+                    </StackPanel>
+                </controls:SectionCard>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading skeleton -->
+        <StackPanel IsVisible="{Binding IsLoading}" Margin="4" Spacing="12">
+            <controls:SkeletonBlock Height="160" />
+            <controls:SkeletonBlock Height="120" />
+        </StackPanel>
+    </Grid>
+</UserControl>

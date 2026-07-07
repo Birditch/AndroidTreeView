@@ -1,0 +1,69 @@
+name: 功能建议 (Feature request)
+description: 提出新能力或改进建议 (Suggest a new capability or improvement).
+title: "[功能 Feature]: "
+labels: ["功能增强 (enhancement)", "状态：待分诊 (status: needs triage)"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        好的功能建议会先解释产品问题，再说明期望的 API 或行为。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 摘要 (Summary)
+      placeholder: 支持按电量或循环次数排序设备卡片。
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题背景 (Problem)
+      description: 当前有哪些使用场景很难实现 (What use case is difficult or impossible today)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 方案建议 (Proposed solution)
+      description: 描述你希望的行为、API 或用户体验 (Describe the behavior, API, or user experience you want).
+    validations:
+      required: true
+
+  - type: textarea
+    id: api
+    attributes:
+      label: API 草图 (API sketch)
+      description: 如有必要，请展示调用侧可能的样子 (If relevant, show what the call site could look like).
+      render: csharp
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 备选方案 (Alternatives considered)
+      description: 你考虑过哪些替代方案 (What workarounds or alternative designs have you considered)?
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级 (Priority)
+      options:
+        - 锦上添花 (Nice to have)
+        - 对接入很重要 (Important for adoption)
+        - 阻塞生产使用 (Blocking production use)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 检查清单 (Checklist)
+      options:
+        - label: 我已搜索过现有 Issue 和 PR (I have searched existing issues and pull requests).
+          required: true
+        - label: 这个请求属于 AndroidTreeView 的连接设备体验范畴，而不是业务应用专属逻辑 (This request is about AndroidTreeView's connected-device experience).
+          required: true
+        - label: 我愿意参与设计或实现这个功能 (I am willing to help design or implement this feature).
+          required: false

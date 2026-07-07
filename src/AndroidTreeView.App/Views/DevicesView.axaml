@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.DevicesView"
+             x:DataType="vm:DevicesViewModel"
+             x:CompileBindings="True">
+
+    <Grid RowDefinitions="Auto,*" Margin="16">
+
+        <!-- Title + search -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="8,0,8,12">
+            <TextBlock Grid.Column="0"
+                       Text="{loc:Localize Key=devices.title}"
+                       FontSize="24"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center" />
+            <TextBox Grid.Column="1"
+                     Width="260"
+                     Text="{Binding SearchText}"
+                     Watermark="{loc:Localize Key=common.search}"
+                     VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Card grid -->
+        <ScrollViewer Grid.Row="1"
+                      IsVisible="{Binding HasDevices}"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Devices}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Empty state (ADB present, no devices connected) -->
+        <StackPanel Grid.Row="1"
+                    IsVisible="{Binding IsEmpty}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MaxWidth="460"
+                    Spacing="12">
+            <TextBlock Text="&#x1F50C;"
+                       FontSize="48"
+                       Opacity="0.5"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="{loc:Localize Key=devices.empty.title}"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center" />
+            <TextBlock Text="{loc:Localize Key=devices.empty.body}"
+                       Opacity="0.7"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</UserControl>

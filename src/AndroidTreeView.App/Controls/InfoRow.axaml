@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             x:Class="AndroidTreeView.App.Controls.InfoRow"
+             x:CompileBindings="False"
+             Margin="0,3">
+    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding Label, RelativeSource={RelativeSource AncestorType=controls:InfoRow}}"
+                   Opacity="0.65"
+                   FontSize="13"
+                   TextWrapping="NoWrap"
+                   VerticalAlignment="Top" />
+        <TextBlock Grid.Column="1"
+                   Text="{Binding Value, RelativeSource={RelativeSource AncestorType=controls:InfoRow}, Converter={StaticResource NullOrEmptyToDash}}"
+                   FontSize="13"
+                   HorizontalAlignment="Right"
+                   TextAlignment="End"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Top" />
+    </Grid>
+</UserControl>

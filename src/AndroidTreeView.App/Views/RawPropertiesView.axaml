@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             d:DesignWidth="800" d:DesignHeight="520"
+             x:Class="AndroidTreeView.App.Views.RawPropertiesView"
+             x:DataType="vm:RawPropertiesViewModel"
+             x:CompileBindings="True">
+
+  <Grid RowDefinitions="Auto,Auto,*">
+
+    <!-- Filter box -->
+    <TextBox Grid.Row="0"
+             Margin="12,10"
+             Text="{Binding FilterText, Mode=TwoWay}"
+             Watermark="{loc:Localize Key=raw.filter}" />
+
+    <!-- Error banner -->
+    <Border Grid.Row="1"
+            Margin="12,0,12,8"
+            Padding="12,8"
+            CornerRadius="6"
+            Background="#22FF5252"
+            BorderBrush="#55FF5252"
+            BorderThickness="1"
+            IsVisible="{Binding HasError}">
+      <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Searchable key/value table + loading overlay -->
+    <Grid Grid.Row="2">
+      <DataGrid Margin="12,0,12,12"
+                ItemsSource="{Binding FilteredProperties}"
+                IsReadOnly="True"
+                CanUserReorderColumns="False"
+                CanUserResizeColumns="True"
+                CanUserSortColumns="False"
+                HeadersVisibility="None"
+                GridLinesVisibility="Horizontal">
+        <DataGrid.Columns>
+          <DataGridTextColumn Width="Auto"
+                              MinWidth="160"
+                              MaxWidth="380"
+                              Binding="{CompiledBinding Key, DataType=vm:PropertyRow}"
+                              FontWeight="SemiBold" />
+          <DataGridTextColumn Width="*"
+                              Binding="{CompiledBinding Value, DataType=vm:PropertyRow}" />
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <Border Background="#40000000" IsVisible="{Binding IsLoading}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+          <ProgressBar IsIndeterminate="True" Width="160" />
+          <TextBlock HorizontalAlignment="Center" Text="{loc:Localize Key=common.loading}" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+  </Grid>
+</UserControl>

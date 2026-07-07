@@ -1,0 +1,117 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.DeviceCardView"
+             x:DataType="vm:DeviceCardViewModel"
+             x:CompileBindings="True">
+
+    <!-- Whole card is clickable: a chromeless Button forwards to the Open command; the inner Border
+         carries the liquid-glass visuals and hover state. -->
+    <Button Command="{Binding OpenCommand}"
+            Cursor="Hand"
+            Margin="8"
+            Padding="0"
+            MinWidth="0"
+            MinHeight="0"
+            Background="Transparent"
+            BorderThickness="0"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch">
+        <Border Classes="deviceCard"
+                Width="320"
+                CornerRadius="14"
+                Padding="18"
+                Background="{DynamicResource Glass.Card.Background}"
+                BorderBrush="{DynamicResource Glass.Card.Border}"
+                BorderThickness="1">
+            <StackPanel Spacing="12">
+
+                <!-- Header: name + device index -->
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding Index, StringFormat='#{0}'}"
+                               Opacity="0.6"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding DisplayName}"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+
+                <!-- Status badges -->
+                <WrapPanel Orientation="Horizontal">
+                    <controls:StatusBadge Text="{Binding StatusText}"
+                                          Kind="{Binding StatusKind}"
+                                          Margin="0,0,6,6" />
+
+                    <Border IsVisible="{Binding IsRooted, TargetNullValue=false}"
+                            Background="{DynamicResource Badge.Root}"
+                            CornerRadius="8"
+                            Padding="8,3"
+                            Margin="0,0,6,6">
+                        <TextBlock Text="{loc:Localize Key=status.rooted}"
+                                   Foreground="White"
+                                   FontSize="11"
+                                   FontWeight="SemiBold" />
+                    </Border>
+
+                    <Border IsVisible="{Binding IsCharging}"
+                            Background="{DynamicResource Badge.Charging}"
+                            CornerRadius="8"
+                            Padding="8,3"
+                            Margin="0,0,6,6">
+                        <TextBlock Text="{loc:Localize Key=status.charging}"
+                                   Foreground="White"
+                                   FontSize="11"
+                                   FontWeight="SemiBold" />
+                    </Border>
+
+                    <Border IsVisible="{Binding IsLowBattery}"
+                            Background="{DynamicResource Badge.LowBattery}"
+                            CornerRadius="8"
+                            Padding="8,3"
+                            Margin="0,0,6,6">
+                        <TextBlock Text="{loc:Localize Key=status.lowbattery}"
+                                   Foreground="White"
+                                   FontSize="11"
+                                   FontWeight="SemiBold" />
+                    </Border>
+                </WrapPanel>
+
+                <!-- Battery -->
+                <controls:BatteryIndicator Level="{Binding BatteryPercent}"
+                                           IsCharging="{Binding IsCharging}"
+                                           IsLow="{Binding IsLowBattery}" />
+
+                <!-- Device facts -->
+                <StackPanel Spacing="2">
+                    <controls:InfoRow Label="{loc:Localize Key=overview.manufacturer}" Value="{Binding Manufacturer}" />
+                    <controls:InfoRow Label="{loc:Localize Key=overview.model}" Value="{Binding Model}" />
+                    <controls:InfoRow Label="{loc:Localize Key=overview.android}" Value="{Binding AndroidVersion}" />
+                    <controls:InfoRow Label="{loc:Localize Key=card.charging}" Value="{Binding ChargingText}" />
+                    <controls:InfoRow Label="{loc:Localize Key=card.temperature}" Value="{Binding TemperatureText}" />
+                    <controls:InfoRow Label="{loc:Localize Key=card.root}" Value="{Binding RootText}" />
+                    <controls:InfoRow Label="{loc:Localize Key=card.serial}" Value="{Binding Serial}" />
+                </StackPanel>
+
+                <!-- Cycle count (self-describing; shows the localized "Unavailable" text when unknown) -->
+                <TextBlock Text="{Binding CycleCountText}"
+                           FontSize="12"
+                           Opacity="0.8"
+                           TextTrimming="CharacterEllipsis" />
+
+                <!-- Last refresh -->
+                <TextBlock Text="{Binding LastRefreshText}"
+                           FontSize="11"
+                           Opacity="0.55" />
+            </StackPanel>
+        </Border>
+    </Button>
+</UserControl>

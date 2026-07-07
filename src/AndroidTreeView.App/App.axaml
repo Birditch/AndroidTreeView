@@ -1,0 +1,28 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:AndroidTreeView.App"
+             x:Class="AndroidTreeView.App.App"
+             RequestedThemeVariant="Default">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://AndroidTreeView.App/Styles/Colors.axaml" />
+                <ResourceInclude Source="avares://AndroidTreeView.App/Styles/Glass.axaml" />
+                <ResourceInclude Source="avares://AndroidTreeView.App/Styles/Badges.axaml" />
+                <ResourceInclude Source="avares://AndroidTreeView.App/Converters/Converters.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://AndroidTreeView.App/Styles/Controls.axaml" />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+    </Application.Styles>
+
+</Application>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>AndroidTreeView.Models</RootNamespace>
+    <AssemblyName>AndroidTreeView.Models</AssemblyName>
+  </PropertyGroup>
+
+</Project>

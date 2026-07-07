@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:models="using:AndroidTreeView.Models.Network"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.NetworkView"
+             x:DataType="vm:NetworkViewModel"
+             x:CompileBindings="True">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="4" Spacing="12">
+
+            <!-- Error banner -->
+            <Border IsVisible="{Binding HasError}"
+                    Background="#22D13438"
+                    BorderBrush="{DynamicResource Badge.Unauthorized}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,8">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <controls:SectionCard Header="{loc:Localize Key=detail.tab.network}">
+                <StackPanel Spacing="8">
+
+                    <!-- Loading indicator -->
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8"
+                                IsVisible="{Binding IsLoading}">
+                        <ProgressBar IsIndeterminate="True" Width="120" />
+                        <TextBlock Text="{loc:Localize Key=common.loading}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <controls:InfoRow Label="{loc:Localize Key=network.wifiip}"
+                                      Value="{Binding Network.WifiIpAddress}" />
+                    <controls:InfoRow Label="{loc:Localize Key=network.wifimac}"
+                                      Value="{Binding Network.WifiMacAddress}" />
+
+                    <ItemsControl ItemsSource="{Binding Interfaces}" Margin="0,4,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:NetworkInterfaceInfo">
+                                <Border CornerRadius="8"
+                                        Padding="12,8"
+                                        Margin="0,4"
+                                        Background="{DynamicResource Glass.Card.Background}"
+                                        BorderBrush="{DynamicResource Glass.Card.Border}"
+                                        BorderThickness="1">
+                                    <StackPanel Spacing="4">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right"
+                                                       Text="{Binding State}"
+                                                       Opacity="0.7"
+                                                       FontSize="12" />
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="SemiBold" />
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding IpAddress}"
+                                                   Opacity="0.8"
+                                                   FontSize="12" />
+                                        <TextBlock Text="{Binding MacAddress}"
+                                                   Opacity="0.6"
+                                                   FontSize="12" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </controls:SectionCard>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

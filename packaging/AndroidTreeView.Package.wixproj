@@ -1,0 +1,53 @@
+<!--
+  AndroidTreeView — WiX v5 MSI packaging project.
+
+  Packages the `dotnet publish` output of src/AndroidTreeView.App for a single
+  RuntimeIdentifier (win-x64 or win-x86) into a per-machine MSI.
+
+  This project is NOT part of AndroidTreeView.sln and is never built by the normal
+  solution build. Drive it through packaging/build-msi.ps1, which first publishes the
+  app and then invokes this project with the right properties, e.g.:
+
+      dotnet build packaging/AndroidTreeView.Package.wixproj -c Release ^
+          -p:Platform=x64 -p:ProductVersion=1.0.0 -p:SelfContained=false ^
+          -p:PublishDir=<abs path to publish folder, trailing '\'>
+
+  Requires the WiX v5 SDK, restored automatically from nuget.org via the Sdk attribute.
+-->
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <PropertyGroup>
+    <!-- MSI target platform: x64 (default) or x86. Sets both the Windows Installer
+         target platform (-arch) and the $(var.Platform) preprocessor variable. -->
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+
+    <!-- Product version. Keep in sync with AndroidTreeView.Core.AppInfo.Version and the
+         App project's <Version>. MSI ProductVersion range is 0-255.0-255.0-65535. -->
+    <ProductVersion Condition="'$(ProductVersion)' == ''">1.0.0</ProductVersion>
+
+    <!-- 'true' when the harvested publish output already bundles the .NET runtime
+         (dotnet publish with self-contained=true). When 'false' (framework-dependent),
+         Product.wxs adds a best-effort .NET Desktop Runtime launch condition. -->
+    <SelfContained Condition="'$(SelfContained)' == ''">false</SelfContained>
+
+    <!-- Absolute path (with trailing directory separator) to the publish folder to
+         harvest. build-msi.ps1 sets this; the default is only for manual runs. -->
+    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\artifacts\publish\$(Platform)\</PublishDir>
+
+    <!-- Produces AndroidTreeView-1.0.0-x64.msi / AndroidTreeView-1.0.0-x86.msi. -->
+    <OutputName>AndroidTreeView-$(ProductVersion)-$(Platform)</OutputName>
+    <OutputType>Package</OutputType>
+
+    <!-- Surface the MSBuild properties above to the WiX preprocessor as $(var.Xxx). -->
+    <DefineConstants>ProductVersion=$(ProductVersion);Platform=$(Platform);SelfContained=$(SelfContained);PublishDir=$(PublishDir)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Bundle.wxs is an OPTIONAL Burn bootstrapper built separately with the `wix`
+         CLI (see docs/packaging.md). Keep it out of this MSI package so it is not
+         compiled as part of the .msi. -->
+    <Compile Remove="Bundle.wxs" />
+  </ItemGroup>
+
+</Project>

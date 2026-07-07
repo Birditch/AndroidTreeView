@@ -1,0 +1,39 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Badges.axaml — status pill brushes consumed by the StatusBadge control and the
+        BadgeKindToBrush converter. Colours are theme-neutral, medium-saturation fills that keep
+        white foreground text readable on both light and dark surfaces. Each background brush has a
+        matching *.Foreground brush.
+        Keys (background): Badge.Online, Badge.Offline, Badge.Unauthorized, Badge.Root,
+        Badge.Charging, Badge.LowBattery.
+    -->
+
+    <!-- Online — green -->
+    <SolidColorBrush x:Key="Badge.Online" Color="#16A34A" />
+    <SolidColorBrush x:Key="Badge.Online.Foreground" Color="#FFFFFF" />
+
+    <!-- Offline — gray -->
+    <SolidColorBrush x:Key="Badge.Offline" Color="#5B616B" />
+    <SolidColorBrush x:Key="Badge.Offline.Foreground" Color="#FFFFFF" />
+
+    <!-- Unauthorized — orange/red -->
+    <SolidColorBrush x:Key="Badge.Unauthorized" Color="#EA580C" />
+    <SolidColorBrush x:Key="Badge.Unauthorized.Foreground" Color="#FFFFFF" />
+
+    <!-- Root — purple -->
+    <SolidColorBrush x:Key="Badge.Root" Color="#7C3AED" />
+    <SolidColorBrush x:Key="Badge.Root.Foreground" Color="#FFFFFF" />
+
+    <!-- Charging — accent -->
+    <SolidColorBrush x:Key="Badge.Charging" Color="#3B82F6" />
+    <SolidColorBrush x:Key="Badge.Charging.Foreground" Color="#FFFFFF" />
+
+    <!-- Low battery — red -->
+    <SolidColorBrush x:Key="Badge.LowBattery" Color="#DC2626" />
+    <SolidColorBrush x:Key="Badge.LowBattery.Foreground" Color="#FFFFFF" />
+
+    <!-- Neutral fallback pill (used by StatusBadge for DeviceBadgeKind.Other) -->
+    <SolidColorBrush x:Key="Badge.Neutral" Color="#64748B" />
+    <SolidColorBrush x:Key="Badge.Neutral.Foreground" Color="#FFFFFF" />
+</ResourceDictionary>

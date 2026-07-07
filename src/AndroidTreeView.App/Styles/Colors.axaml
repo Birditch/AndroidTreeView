@@ -1,0 +1,90 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Colors.axaml — light + dark palette (layered backgrounds, surfaces, foregrounds, borders)
+        plus the theme-neutral accent. Theme-varying resources live in ThemeDictionaries keyed by
+        ThemeVariant (Light / Dark); the accent stays neutral so IThemeService.ApplyAccent can
+        override "AccentBrush" cleanly at runtime.
+    -->
+
+    <!-- Theme-neutral accent (default; ThemeService may override AccentBrush) -->
+    <Color x:Key="AccentColor">#3B82F6</Color>
+    <Color x:Key="AccentColorHover">#60A5FA</Color>
+    <Color x:Key="AccentColorPressed">#2563EB</Color>
+    <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentBrushHover" Color="{DynamicResource AccentColorHover}" />
+    <SolidColorBrush x:Key="AccentBrushPressed" Color="{DynamicResource AccentColorPressed}" />
+    <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ================= LIGHT ================= -->
+        <ResourceDictionary x:Key="Light">
+            <!-- Layered background palette -->
+            <Color x:Key="BackgroundBaseTopColor">#EEF2F8</Color>
+            <Color x:Key="BackgroundBaseBottomColor">#DFE6F0</Color>
+            <Color x:Key="BackgroundLayer1Color">#F5F7FB</Color>
+            <Color x:Key="BackgroundLayer2Color">#FFFFFF</Color>
+            <!-- Surfaces -->
+            <Color x:Key="SurfaceColor">#FFFFFF</Color>
+            <Color x:Key="SurfaceAltColor">#EEF1F6</Color>
+            <!-- Foregrounds -->
+            <Color x:Key="ForegroundColor">#171A1F</Color>
+            <Color x:Key="ForegroundSecondaryColor">#4B515A</Color>
+            <Color x:Key="ForegroundTertiaryColor">#7C838E</Color>
+            <!-- Borders / dividers -->
+            <Color x:Key="BorderSubtleColor">#D5DBE4</Color>
+            <Color x:Key="DividerColor">#E4E8EF</Color>
+
+            <!-- Background: soft vertical gradient for depth behind glass -->
+            <LinearGradientBrush x:Key="BackgroundBaseBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Offset="0" Color="#EEF2F8" />
+                <GradientStop Offset="1" Color="#DFE6F0" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="BackgroundLayer1Brush" Color="{DynamicResource BackgroundLayer1Color}" />
+            <SolidColorBrush x:Key="BackgroundLayer2Brush" Color="{DynamicResource BackgroundLayer2Color}" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="{DynamicResource SurfaceColor}" />
+            <SolidColorBrush x:Key="SurfaceAltBrush" Color="{DynamicResource SurfaceAltColor}" />
+            <SolidColorBrush x:Key="ForegroundBrush" Color="{DynamicResource ForegroundColor}" />
+            <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="{DynamicResource ForegroundSecondaryColor}" />
+            <SolidColorBrush x:Key="ForegroundTertiaryBrush" Color="{DynamicResource ForegroundTertiaryColor}" />
+            <SolidColorBrush x:Key="BorderSubtleBrush" Color="{DynamicResource BorderSubtleColor}" />
+            <SolidColorBrush x:Key="DividerBrush" Color="{DynamicResource DividerColor}" />
+        </ResourceDictionary>
+
+        <!-- ================= DARK ================= -->
+        <ResourceDictionary x:Key="Dark">
+            <!-- Layered background palette -->
+            <Color x:Key="BackgroundBaseTopColor">#12151A</Color>
+            <Color x:Key="BackgroundBaseBottomColor">#0B0D11</Color>
+            <Color x:Key="BackgroundLayer1Color">#161A20</Color>
+            <Color x:Key="BackgroundLayer2Color">#1D222A</Color>
+            <!-- Surfaces -->
+            <Color x:Key="SurfaceColor">#1B2027</Color>
+            <Color x:Key="SurfaceAltColor">#232935</Color>
+            <!-- Foregrounds -->
+            <Color x:Key="ForegroundColor">#F5F7FA</Color>
+            <Color x:Key="ForegroundSecondaryColor">#B7C0CD</Color>
+            <Color x:Key="ForegroundTertiaryColor">#7E8794</Color>
+            <!-- Borders / dividers -->
+            <Color x:Key="BorderSubtleColor">#333B47</Color>
+            <Color x:Key="DividerColor">#262D38</Color>
+
+            <!-- Background: soft vertical gradient for depth behind glass -->
+            <LinearGradientBrush x:Key="BackgroundBaseBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Offset="0" Color="#12151A" />
+                <GradientStop Offset="1" Color="#0B0D11" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="BackgroundLayer1Brush" Color="{DynamicResource BackgroundLayer1Color}" />
+            <SolidColorBrush x:Key="BackgroundLayer2Brush" Color="{DynamicResource BackgroundLayer2Color}" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="{DynamicResource SurfaceColor}" />
+            <SolidColorBrush x:Key="SurfaceAltBrush" Color="{DynamicResource SurfaceAltColor}" />
+            <SolidColorBrush x:Key="ForegroundBrush" Color="{DynamicResource ForegroundColor}" />
+            <SolidColorBrush x:Key="ForegroundSecondaryBrush" Color="{DynamicResource ForegroundSecondaryColor}" />
+            <SolidColorBrush x:Key="ForegroundTertiaryBrush" Color="{DynamicResource ForegroundTertiaryColor}" />
+            <SolidColorBrush x:Key="BorderSubtleBrush" Color="{DynamicResource BorderSubtleColor}" />
+            <SolidColorBrush x:Key="DividerBrush" Color="{DynamicResource DividerColor}" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

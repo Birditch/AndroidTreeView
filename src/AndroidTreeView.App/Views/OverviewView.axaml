@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.OverviewView"
+             x:DataType="vm:OverviewViewModel"
+             x:CompileBindings="True">
+
+    <Grid>
+        <!-- Loaded content -->
+        <ScrollViewer IsVisible="{Binding !IsLoading}"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="4" Spacing="12">
+
+                <!-- Error banner -->
+                <Border IsVisible="{Binding HasError}"
+                        Background="#22D13438"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="&#x26A0;" FontSize="18" Foreground="{DynamicResource Badge.Unauthorized}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <controls:SectionCard Header="{loc:Localize Key=detail.tab.overview}">
+                    <StackPanel Spacing="2">
+                        <controls:InfoRow Label="{loc:Localize Key=overview.manufacturer}" Value="{Binding Overview.Manufacturer}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.brand}" Value="{Binding Overview.Brand}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.model}" Value="{Binding Overview.Model}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.android}" Value="{Binding Overview.AndroidVersion}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.api}" Value="{Binding Overview.ApiLevel}" />
+                    </StackPanel>
+                </controls:SectionCard>
+
+                <controls:SectionCard Header="{loc:Localize Key=overview.build}">
+                    <StackPanel Spacing="2">
+                        <controls:InfoRow Label="{loc:Localize Key=overview.build}" Value="{Binding Overview.BuildNumber}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.fingerprint}" Value="{Binding Overview.BuildFingerprint}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.patch}" Value="{Binding Overview.SecurityPatch}" />
+                        <controls:InfoRow Label="{loc:Localize Key=card.serial}" Value="{Binding Overview.SerialNumber}" />
+                    </StackPanel>
+                </controls:SectionCard>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading skeleton -->
+        <StackPanel IsVisible="{Binding IsLoading}" Margin="4" Spacing="12">
+            <controls:SkeletonBlock Height="120" />
+            <controls:SkeletonBlock Height="120" />
+        </StackPanel>
+    </Grid>
+</UserControl>

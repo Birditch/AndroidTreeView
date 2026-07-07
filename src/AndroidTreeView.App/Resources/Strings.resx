@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Neutral culture resources = English fallback for AndroidTreeView.App.
+    Base name: AndroidTreeView.App.Resources.Strings
+    Every key from docs/app-contract.md is present here; the zh-Hans satellite mirrors these keys.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="app.title" xml:space="preserve">
+    <value>AndroidTreeView</value>
+  </data>
+  <data name="nav.devices" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="nav.settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="nav.about" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="common.refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="common.back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="common.retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="common.browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="common.save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="common.reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="common.loading" xml:space="preserve">
+    <value>Loading…</value>
+  </data>
+  <data name="common.unavailable" xml:space="preserve">
+    <value>Unavailable</value>
+  </data>
+  <data name="common.yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="common.no" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="common.none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="common.search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="status.online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="status.offline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
+  <data name="status.unauthorized" xml:space="preserve">
+    <value>Unauthorized</value>
+  </data>
+  <data name="status.rooted" xml:space="preserve">
+    <value>Rooted</value>
+  </data>
+  <data name="status.charging" xml:space="preserve">
+    <value>Charging</value>
+  </data>
+  <data name="status.lowbattery" xml:space="preserve">
+    <value>Low Battery</value>
+  </data>
+  <data name="adb.status.ready" xml:space="preserve">
+    <value>ADB ready</value>
+  </data>
+  <data name="adb.status.missing" xml:space="preserve">
+    <value>ADB not found</value>
+  </data>
+  <data name="adb.status.devices" xml:space="preserve">
+    <value>{0} device(s)</value>
+  </data>
+  <data name="devices.title" xml:space="preserve">
+    <value>Android Devices</value>
+  </data>
+  <data name="devices.empty.title" xml:space="preserve">
+    <value>No devices detected</value>
+  </data>
+  <data name="devices.empty.body" xml:space="preserve">
+    <value>Enable Developer Options and USB debugging, connect your phone, and accept the debugging prompt.</value>
+  </data>
+  <data name="devices.count" xml:space="preserve">
+    <value>{0} connected</value>
+  </data>
+  <data name="card.serial" xml:space="preserve">
+    <value>Serial</value>
+  </data>
+  <data name="card.battery" xml:space="preserve">
+    <value>Battery</value>
+  </data>
+  <data name="card.charging" xml:space="preserve">
+    <value>Charging</value>
+  </data>
+  <data name="card.cycle" xml:space="preserve">
+    <value>Cycle Count</value>
+  </data>
+  <data name="card.cycle.unavailable" xml:space="preserve">
+    <value>Cycle Count: Unavailable</value>
+  </data>
+  <data name="card.temperature" xml:space="preserve">
+    <value>Temperature</value>
+  </data>
+  <data name="card.root" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="card.lastrefresh" xml:space="preserve">
+    <value>Last refresh</value>
+  </data>
+  <data name="detail.tab.overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="detail.tab.hardware" xml:space="preserve">
+    <value>Hardware</value>
+  </data>
+  <data name="detail.tab.battery" xml:space="preserve">
+    <value>Battery</value>
+  </data>
+  <data name="detail.tab.system" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="detail.tab.storage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="detail.tab.network" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="detail.tab.root" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="detail.tab.logcat" xml:space="preserve">
+    <value>Logcat</value>
+  </data>
+  <data name="detail.tab.raw" xml:space="preserve">
+    <value>Raw Properties</value>
+  </data>
+  <data name="overview.manufacturer" xml:space="preserve">
+    <value>Manufacturer</value>
+  </data>
+  <data name="overview.brand" xml:space="preserve">
+    <value>Brand</value>
+  </data>
+  <data name="overview.model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="overview.android" xml:space="preserve">
+    <value>Android Version</value>
+  </data>
+  <data name="overview.api" xml:space="preserve">
+    <value>API Level</value>
+  </data>
+  <data name="overview.build" xml:space="preserve">
+    <value>Build Number</value>
+  </data>
+  <data name="overview.fingerprint" xml:space="preserve">
+    <value>Fingerprint</value>
+  </data>
+  <data name="overview.patch" xml:space="preserve">
+    <value>Security Patch</value>
+  </data>
+  <data name="hardware.cpu" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="hardware.arch" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+  <data name="hardware.cores" xml:space="preserve">
+    <value>Cores</value>
+  </data>
+  <data name="hardware.abi" xml:space="preserve">
+    <value>ABI List</value>
+  </data>
+  <data name="hardware.ram" xml:space="preserve">
+    <value>RAM</value>
+  </data>
+  <data name="hardware.screen" xml:space="preserve">
+    <value>Screen</value>
+  </data>
+  <data name="hardware.density" xml:space="preserve">
+    <value>Density</value>
+  </data>
+  <data name="battery.level" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="battery.status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="battery.health" xml:space="preserve">
+    <value>Health</value>
+  </data>
+  <data name="battery.temp" xml:space="preserve">
+    <value>Temperature</value>
+  </data>
+  <data name="battery.voltage" xml:space="preserve">
+    <value>Voltage</value>
+  </data>
+  <data name="battery.tech" xml:space="preserve">
+    <value>Technology</value>
+  </data>
+  <data name="battery.cycle" xml:space="preserve">
+    <value>Cycle Count</value>
+  </data>
+  <data name="system.kernel" xml:space="preserve">
+    <value>Kernel</value>
+  </data>
+  <data name="system.selinux" xml:space="preserve">
+    <value>SELinux</value>
+  </data>
+  <data name="system.uptime" xml:space="preserve">
+    <value>Uptime</value>
+  </data>
+  <data name="system.locale" xml:space="preserve">
+    <value>Locale</value>
+  </data>
+  <data name="system.timezone" xml:space="preserve">
+    <value>Timezone</value>
+  </data>
+  <data name="storage.total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="storage.used" xml:space="preserve">
+    <value>Used</value>
+  </data>
+  <data name="storage.free" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="network.wifiip" xml:space="preserve">
+    <value>Wi-Fi IP</value>
+  </data>
+  <data name="network.wifimac" xml:space="preserve">
+    <value>Wi-Fi MAC</value>
+  </data>
+  <data name="root.detected" xml:space="preserve">
+    <value>Root detected</value>
+  </data>
+  <data name="root.notdetected" xml:space="preserve">
+    <value>Not rooted</value>
+  </data>
+  <data name="root.selinux" xml:space="preserve">
+    <value>SELinux Mode</value>
+  </data>
+  <data name="logcat.start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="logcat.stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="logcat.clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="logcat.filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="raw.filter" xml:space="preserve">
+    <value>Filter properties</value>
+  </data>
+  <data name="settings.title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="settings.adbpath" xml:space="preserve">
+    <value>ADB Path</value>
+  </data>
+  <data name="settings.theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="settings.theme.system" xml:space="preserve">
+    <value>Follow System</value>
+  </data>
+  <data name="settings.theme.light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="settings.theme.dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="settings.language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="settings.language.system" xml:space="preserve">
+    <value>Follow System</value>
+  </data>
+  <data name="settings.language.zh" xml:space="preserve">
+    <value>简体中文</value>
+  </data>
+  <data name="settings.language.en" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="settings.autorefresh" xml:space="preserve">
+    <value>Auto Refresh</value>
+  </data>
+  <data name="settings.refreshinterval" xml:space="preserve">
+    <value>Device Refresh Interval (s)</value>
+  </data>
+  <data name="settings.batteryinterval" xml:space="preserve">
+    <value>Battery Refresh Interval (s)</value>
+  </data>
+  <data name="settings.logcatmax" xml:space="preserve">
+    <value>Logcat Max Lines</value>
+  </data>
+  <data name="settings.autoupdate" xml:space="preserve">
+    <value>Auto Check Updates</value>
+  </data>
+  <data name="settings.accent" xml:space="preserve">
+    <value>Accent Color</value>
+  </data>
+  <data name="settings.remember" xml:space="preserve">
+    <value>Remember Last Device</value>
+  </data>
+  <data name="settings.startup" xml:space="preserve">
+    <value>Startup Behavior</value>
+  </data>
+  <data name="update.current" xml:space="preserve">
+    <value>Current Version</value>
+  </data>
+  <data name="update.latest" xml:space="preserve">
+    <value>Latest Version</value>
+  </data>
+  <data name="update.check" xml:space="preserve">
+    <value>Check for Updates</value>
+  </data>
+  <data name="update.available" xml:space="preserve">
+    <value>Update available: {0}</value>
+  </data>
+  <data name="update.uptodate" xml:space="preserve">
+    <value>You are on the latest version</value>
+  </data>
+  <data name="update.checking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="update.failed" xml:space="preserve">
+    <value>Update check failed</value>
+  </data>
+  <data name="update.openrelease" xml:space="preserve">
+    <value>View Release</value>
+  </data>
+  <data name="about.title" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="about.project" xml:space="preserve">
+    <value>Project Home</value>
+  </data>
+  <data name="setup.title" xml:space="preserve">
+    <value>ADB Not Found</value>
+  </data>
+  <data name="setup.body" xml:space="preserve">
+    <value>AndroidTreeView needs Android platform-tools (adb). Install it and add adb to PATH, or select adb manually.</value>
+  </data>
+  <data name="setup.download" xml:space="preserve">
+    <value>Download platform-tools</value>
+  </data>
+  <data name="setup.selectadb" xml:space="preserve">
+    <value>Select adb executable</value>
+  </data>
+  <data name="error.generic" xml:space="preserve">
+    <value>Something went wrong</value>
+  </data>
+  <data name="error.unauthorized" xml:space="preserve">
+    <value>Device unauthorized — accept the USB debugging prompt on the device</value>
+  </data>
+  <data name="error.offline" xml:space="preserve">
+    <value>Device offline</value>
+  </data>
+  <data name="error.loadfailed" xml:space="preserve">
+    <value>Failed to load {0}</value>
+  </data>
+</root>

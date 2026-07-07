@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignWidth="640" d:DesignHeight="520"
+             x:Class="AndroidTreeView.App.Views.SetupView"
+             x:DataType="vm:SetupViewModel"
+             x:CompileBindings="True">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" Padding="24">
+        <StackPanel Spacing="18" MaxWidth="560" VerticalAlignment="Center" HorizontalAlignment="Center">
+
+            <TextBlock Text="{loc:Localize Key=setup.title}"
+                       FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" />
+
+            <controls:SectionCard Header="{loc:Localize Key=setup.title}">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="{Binding InstructionsText}" TextWrapping="Wrap" Opacity="0.9" />
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{loc:Localize Key=settings.adbpath}" Opacity="0.8" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Grid.Column="0" Text="{Binding AdbPath}" />
+                            <Button Grid.Column="1"
+                                    Content="{loc:Localize Key=setup.selectadb}"
+                                    Command="{Binding BrowseCommand}" />
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="{loc:Localize Key=setup.download}"
+                                Command="{Binding OpenDownloadPageCommand}" />
+                        <Button Content="{loc:Localize Key=common.retry}"
+                                Command="{Binding RetryCommand}"
+                                Classes="accent" />
+                        <ProgressBar IsIndeterminate="True"
+                                     IsVisible="{Binding IsChecking}"
+                                     Width="120" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding StatusMessage}"
+                               TextWrapping="Wrap"
+                               Opacity="0.85"
+                               IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+            </controls:SectionCard>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

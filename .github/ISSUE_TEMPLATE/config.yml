@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞 (Security vulnerability)
+    url: https://github.com/Birditch/AndroidTreeView/security/advisories/new
+    about: 请通过私密渠道报告安全漏洞，不要创建公开 Issue (Please report vulnerabilities privately instead of opening a public issue).
+  - name: 贡献指南 (Contribution guide)
+    url: https://github.com/Birditch/AndroidTreeView/blob/main/CONTRIBUTING.md
+    about: 提交较大改动前，请先阅读贡献流程 (Read the contribution workflow before opening larger proposals).
+  - name: 支持说明 (Support guide)
+    url: https://github.com/Birditch/AndroidTreeView/blob/main/SUPPORT.md
+    about: 查看使用问题的推荐求助路径 (Check the recommended support paths for usage questions).

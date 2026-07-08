@@ -6,6 +6,7 @@ namespace AndroidTreeView.Core.Services;
 public enum AdbLocationSource
 {
     Configured,
+    Bundled,
     EnvironmentPath,
     CommonSdkLocation,
     NotFound

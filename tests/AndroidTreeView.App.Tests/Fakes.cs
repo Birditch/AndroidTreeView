@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using AndroidTreeView.App.Services;
 using AndroidTreeView.Core.Interfaces;
 using AndroidTreeView.Core.Options;
 using AndroidTreeView.Models;
@@ -165,4 +168,76 @@ internal sealed class FakeLogcatService : ILogcatService
         ClearCallCount++;
         return Task.CompletedTask;
     }
+}
+
+/// <summary>No-op <see cref="IDeviceActionsService"/> double for view-model construction in tests.</summary>
+internal sealed class FakeDeviceActionsService : IDeviceActionsService
+{
+    public Task RebootAsync(string serial, RebootTarget target, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task PowerOffAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task EnableNetworkAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task RemoveFrpAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task DisableCaptivePortalAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task SetChinaNtpAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task<bool> IsCaptivePortalDisabledAsync(string serial, CancellationToken ct = default) => Task.FromResult(false);
+
+    public Task<bool> IsChinaNtpSetAsync(string serial, CancellationToken ct = default) => Task.FromResult(false);
+
+    public Task<bool> IsFrpRemovedAsync(string serial, CancellationToken ct = default) => Task.FromResult(false);
+}
+
+/// <summary>Auto-confirming <see cref="IDialogService"/> double so action commands proceed in tests.</summary>
+internal sealed class FakeDialogService : IDialogService
+{
+    public bool IsOpen => false;
+
+    public string Title => string.Empty;
+
+    public string Message => string.Empty;
+
+    public string ConfirmText => string.Empty;
+
+    public string CancelText => string.Empty;
+
+    public ICommand ConfirmCommand { get; } = new NoopCommand();
+
+    public ICommand CancelCommand { get; } = new NoopCommand();
+
+    public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
+
+    public Task<bool> ConfirmAsync(string title, string message, string confirmText, string cancelText) =>
+        Task.FromResult(true);
+
+    private sealed class NoopCommand : ICommand
+    {
+        public bool CanExecute(object? parameter) => true;
+
+        public void Execute(object? parameter)
+        {
+        }
+
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+    }
+}
+
+/// <summary>No-op <see cref="IFastbootService"/> double (no fastboot devices) for view-model tests.</summary>
+internal sealed class FakeFastbootService : IFastbootService
+{
+    public string? ExecutablePath => null;
+
+    public Task<IReadOnlyList<string>> ListSerialsAsync(CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
+    public Task<IReadOnlyDictionary<string, string>> GetVariablesAsync(string serial, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
+
+    public Task RebootAsync(string serial, FastbootTarget target, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task PowerOffAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
 }

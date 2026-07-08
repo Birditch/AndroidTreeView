@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Simplified Chinese (zh-Hans) satellite resources for AndroidTreeView.App.
@@ -85,7 +85,7 @@
     <value>重试</value>
   </data>
   <data name="common.browse" xml:space="preserve">
-    <value>浏览…</value>
+    <value>浏览...</value>
   </data>
   <data name="common.save" xml:space="preserve">
     <value>保存</value>
@@ -94,7 +94,7 @@
     <value>重置</value>
   </data>
   <data name="common.loading" xml:space="preserve">
-    <value>加载中…</value>
+    <value>加载中...</value>
   </data>
   <data name="common.unavailable" xml:space="preserve">
     <value>不可用</value>
@@ -126,8 +126,107 @@
   <data name="status.charging" xml:space="preserve">
     <value>充电中</value>
   </data>
+  <data name="status.mirroring" xml:space="preserve">
+    <value>投屏中</value>
+  </data>
+  <data name="common.confirm" xml:space="preserve">
+    <value>确认</value>
+  </data>
+  <data name="common.cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="confirm.title" xml:space="preserve">
+    <value>确认操作</value>
+  </data>
+  <data name="confirm.reboot.msg" xml:space="preserve">
+    <value>设备将立即重启，未保存的数据可能丢失。继续？</value>
+  </data>
+  <data name="confirm.recovery.msg" xml:space="preserve">
+    <value>设备将重启进入 Recovery 模式。继续？</value>
+  </data>
+  <data name="confirm.fastboot.msg" xml:space="preserve">
+    <value>设备将重启进入 Fastboot / Bootloader 模式。继续？</value>
+  </data>
+  <data name="confirm.poweroff.msg" xml:space="preserve">
+    <value>设备将立即关机，需要手动开机。继续？</value>
+  </data>
+  <data name="confirm.network.msg" xml:space="preserve">
+    <value>将开启设备的 Wi-Fi 和移动数据。继续？</value>
+  </data>
+  <data name="confirm.frp.msg" xml:space="preserve">
+    <value>将把设备标记为已完成初始化以清除 FRP（非破坏性；已设置过的设备无实际影响）。继续？</value>
+  </data>
+  <data name="confirm.captive.msg" xml:space="preserve">
+    <value>将关闭联网检测（去除 Wi-Fi "!"/"x" 标记）。需要登录页的公共 Wi-Fi 可能不再弹出登录提示。继续？</value>
+  </data>
+  <data name="confirm.ntp.msg" xml:space="preserve">
+    <value>将把系统 NTP 时间服务器设置为国内服务器（ntp.aliyun.com）。继续？</value>
+  </data>
+  <data name="confirm.batchnetwork.msg" xml:space="preserve">
+    <value>将对选中的 {0} 台设备开启 Wi-Fi 和移动数据。继续？</value>
+  </data>
   <data name="status.lowbattery" xml:space="preserve">
     <value>电量低</value>
+  </data>
+  <data name="status.fastboot" xml:space="preserve">
+    <value>Fastboot 模式</value>
+  </data>
+  <data name="status.recovery" xml:space="preserve">
+    <value>Recovery 模式</value>
+  </data>
+  <data name="menu.cli" xml:space="preserve">
+    <value>CLI 终端</value>
+  </data>
+  <data name="menu.detail" xml:space="preserve">
+    <value>详情</value>
+  </data>
+  <data name="fastboot.product" xml:space="preserve">
+    <value>产品代号</value>
+  </data>
+  <data name="fastboot.bootloader" xml:space="preserve">
+    <value>Bootloader 版本</value>
+  </data>
+  <data name="fastboot.baseband" xml:space="preserve">
+    <value>基带版本</value>
+  </data>
+  <data name="fastboot.unlocked" xml:space="preserve">
+    <value>已解锁</value>
+  </data>
+  <data name="fastboot.slot" xml:space="preserve">
+    <value>当前槽位</value>
+  </data>
+  <data name="fastboot.board" xml:space="preserve">
+    <value>主板</value>
+  </data>
+  <data name="fastboot.cpu" xml:space="preserve">
+    <value>SoC / CPU</value>
+  </data>
+  <data name="fastboot.ram" xml:space="preserve">
+    <value>内存</value>
+  </data>
+  <data name="fastboot.storage" xml:space="preserve">
+    <value>存储</value>
+  </data>
+  <data name="fastboot.secure" xml:space="preserve">
+    <value>安全</value>
+  </data>
+  <data name="fastboot.frp" xml:space="preserve">
+    <value>FRP 状态</value>
+  </data>
+  <data name="fastboot.carrier" xml:space="preserve">
+    <value>运营商</value>
+  </data>
+  <data name="fastboot.imei" xml:space="preserve">
+    <value>IMEI</value>
+  </data>
+  <data name="fastboot.sku" xml:space="preserve">
+    <value>SKU</value>
+  </data>
+  <data name="fastboot.date" xml:space="preserve">
+    <value>出厂日期</value>
+  </data>
+  <data name="fastboot.battid" xml:space="preserve">
+    <value>电池 ID</value>
   </data>
   <data name="adb.status.ready" xml:space="preserve">
     <value>ADB 就绪</value>
@@ -139,13 +238,13 @@
     <value>{0} 台设备</value>
   </data>
   <data name="devices.title" xml:space="preserve">
-    <value>安卓设备</value>
+    <value>Android 设备</value>
   </data>
   <data name="devices.empty.title" xml:space="preserve">
     <value>未检测到设备</value>
   </data>
   <data name="devices.empty.body" xml:space="preserve">
-    <value>请开启开发者选项与 USB 调试，连接手机并允许调试授权。</value>
+    <value>请开启开发者选项中的 USB 调试，连接手机并允许调试授权。</value>
   </data>
   <data name="devices.count" xml:space="preserve">
     <value>已连接 {0} 台</value>
@@ -211,7 +310,7 @@
     <value>型号</value>
   </data>
   <data name="overview.android" xml:space="preserve">
-    <value>安卓版本</value>
+    <value>Android 版本</value>
   </data>
   <data name="overview.api" xml:space="preserve">
     <value>API 级别</value>
@@ -233,6 +332,87 @@
   </data>
   <data name="hardware.cores" xml:space="preserve">
     <value>核心数</value>
+  </data>
+  <data name="hardware.platform" xml:space="preserve">
+    <value>平台</value>
+  </data>
+  <data name="hardware.board" xml:space="preserve">
+    <value>主板</value>
+  </data>
+  <data name="menu.network" xml:space="preserve">
+    <value>一键联网</value>
+  </data>
+  <data name="menu.adbtools" xml:space="preserve">
+    <value>ADB 工具</value>
+  </data>
+  <data name="menu.frp" xml:space="preserve">
+    <value>移除 FRP</value>
+  </data>
+  <data name="menu.captive" xml:space="preserve">
+    <value>修复 Wi-Fi ! / x 标记</value>
+  </data>
+  <data name="menu.ntp" xml:space="preserve">
+    <value>设置国内 NTP</value>
+  </data>
+  <data name="menu.power" xml:space="preserve">
+    <value>电源</value>
+  </data>
+  <data name="menu.reboot" xml:space="preserve">
+    <value>重启</value>
+  </data>
+  <data name="menu.recovery" xml:space="preserve">
+    <value>重启到 Recovery</value>
+  </data>
+  <data name="menu.fastboot" xml:space="preserve">
+    <value>进入 Fastboot</value>
+  </data>
+  <data name="menu.poweroff" xml:space="preserve">
+    <value>关机</value>
+  </data>
+  <data name="batch.selected" xml:space="preserve">
+    <value>已选 {0} 台</value>
+  </data>
+  <data name="batch.network" xml:space="preserve">
+    <value>一键联网</value>
+  </data>
+  <data name="batch.selectall" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="batch.clear" xml:space="preserve">
+    <value>清除</value>
+  </data>
+  <data name="menu.screen" xml:space="preserve">
+    <value>投屏</value>
+  </data>
+  <data name="screen.failed" xml:space="preserve">
+    <value>截图失败</value>
+  </data>
+  <data name="screen.installing" xml:space="preserve">
+    <value>安装中...</value>
+  </data>
+  <data name="screen.installed" xml:space="preserve">
+    <value>已安装</value>
+  </data>
+  <data name="screen.installfailed" xml:space="preserve">
+    <value>安装失败</value>
+  </data>
+  <data name="screen.drophint" xml:space="preserve">
+    <value>将 APK 拖到此处即可安装到该设备。</value>
+  </data>
+  <data name="screen.back" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="screen.home" xml:space="preserve">
+    <value>主屏</value>
+  </data>
+  <data name="screen.recents" xml:space="preserve">
+    <value>多任务</value>
+  </data>
+  <data name="action.done" xml:space="preserve">
+    <value>完成：{0}</value>
+  </data>
+  <data name="action.failed" xml:space="preserve">
+    <value>失败：{0}</value>
   </data>
   <data name="hardware.abi" xml:space="preserve">
     <value>ABI 列表</value>
@@ -334,10 +514,10 @@
     <value>跟随系统</value>
   </data>
   <data name="settings.theme.light" xml:space="preserve">
-    <value>亮色</value>
+    <value>浅色</value>
   </data>
   <data name="settings.theme.dark" xml:space="preserve">
-    <value>暗色</value>
+    <value>深色</value>
   </data>
   <data name="settings.language" xml:space="preserve">
     <value>语言</value>
@@ -391,13 +571,61 @@
     <value>已是最新版本</value>
   </data>
   <data name="update.checking" xml:space="preserve">
-    <value>检查中…</value>
+    <value>检查中...</value>
   </data>
   <data name="update.failed" xml:space="preserve">
     <value>检查更新失败</value>
   </data>
   <data name="update.openrelease" xml:space="preserve">
     <value>查看发布</value>
+  </data>
+  <data name="update.install" xml:space="preserve">
+    <value>安装更新</value>
+  </data>
+  <data name="update.downloading" xml:space="preserve">
+    <value>正在下载更新...</value>
+  </data>
+  <data name="update.install.started" xml:space="preserve">
+    <value>更新已启动，应用会自动重启。</value>
+  </data>
+  <data name="update.install.noupdate" xml:space="preserve">
+    <value>当前没有可安装的更新</value>
+  </data>
+  <data name="update.install.missingdownload" xml:space="preserve">
+    <value>更新通道没有提供可下载的安装包</value>
+  </data>
+  <data name="update.install.checksum" xml:space="preserve">
+    <value>下载的更新包未通过校验</value>
+  </data>
+  <data name="update.install.unsupported" xml:space="preserve">
+    <value>更新包内没有受支持的 x64 发布包</value>
+  </data>
+  <data name="update.install.failed" xml:space="preserve">
+    <value>无法启动更新流程</value>
+  </data>
+  <data name="update.ready" xml:space="preserve">
+    <value>可以检查内网更新通道</value>
+  </data>
+  <data name="update.source" xml:space="preserve">
+    <value>更新源</value>
+  </data>
+  <data name="update.key" xml:space="preserve">
+    <value>包标识</value>
+  </data>
+  <data name="update.norelease" xml:space="preserve">
+    <value>这个通道还没有上传版本</value>
+  </data>
+  <data name="update.network" xml:space="preserve">
+    <value>无法连接内网更新服务</value>
+  </data>
+  <data name="update.ratelimited" xml:space="preserve">
+    <value>更新服务拒绝了本次请求</value>
+  </data>
+  <data name="update.invalid" xml:space="preserve">
+    <value>更新信息不完整</value>
+  </data>
+  <data name="update.disabled" xml:space="preserve">
+    <value>自动检查更新已关闭</value>
   </data>
   <data name="about.title" xml:space="preserve">
     <value>关于</value>
@@ -421,7 +649,7 @@
     <value>出现错误</value>
   </data>
   <data name="error.unauthorized" xml:space="preserve">
-    <value>设备未授权 —— 请在设备上允许 USB 调试</value>
+    <value>设备未授权 - 请在设备上允许 USB 调试</value>
   </data>
   <data name="error.offline" xml:space="preserve">
     <value>设备离线</value>
@@ -430,3 +658,4 @@
     <value>加载 {0} 失败</value>
   </data>
 </root>
+

@@ -1,8 +1,10 @@
 using System;
 using System.Threading.Tasks;
+using AndroidTreeView.App.Services;
 using AndroidTreeView.App.ViewModels;
 using AndroidTreeView.App.Views;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +30,23 @@ public partial class App : Application
             && ServiceProvider is { } provider)
         {
             var viewModel = provider.GetRequiredService<MainWindowViewModel>();
+            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             desktop.MainWindow = new MainWindow { DataContext = viewModel };
+
+            // Close any app-owned helper windows/processes when the main window closes.
+            var mirrors = provider.GetService<IScreenMirrorLauncher>();
+            var cli = provider.GetService<ICliLauncher>();
+            if (mirrors is not null || cli is not null)
+            {
+                void ShutdownOwned()
+                {
+                    mirrors?.ShutdownAll();
+                    cli?.ShutdownAll();
+                }
+
+                desktop.ShutdownRequested += (_, _) => ShutdownOwned();
+                desktop.Exit += (_, _) => ShutdownOwned();
+            }
 
             var logger = provider.GetService<ILogger<App>>();
             _ = InitializeShellAsync(viewModel, logger);

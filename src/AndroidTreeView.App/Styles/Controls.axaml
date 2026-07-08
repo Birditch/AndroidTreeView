@@ -75,6 +75,84 @@
     </Style>
 
     <!-- ============================================================
+         Toasts
+         ============================================================ -->
+    <Style Selector="Border.toast">
+        <Setter Property="Padding" Value="14,11" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Background" Value="{DynamicResource Glass.Card.Background}" />
+        <Setter Property="BorderBrush" Value="#3B82F6" />
+        <Setter Property="BorderThickness" Value="4,1,1,1" />
+        <Setter Property="BoxShadow" Value="0 10 30 0 #33101828" />
+    </Style>
+    <Style Selector="Border.toast TextBlock">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.toast.info">
+        <Setter Property="BorderBrush" Value="#3B82F6" />
+    </Style>
+    <Style Selector="Border.toast.success">
+        <Setter Property="BorderBrush" Value="#059669" />
+    </Style>
+    <Style Selector="Border.toast.warning">
+        <Setter Property="BorderBrush" Value="#D97706" />
+    </Style>
+    <Style Selector="Border.toast.error">
+        <Setter Property="BorderBrush" Value="#DC2626" />
+    </Style>
+
+    <Style Selector="Border.statusChip">
+        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Border.statusChip TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundSecondaryBrush}" />
+    </Style>
+
+    <Style Selector="Border.updateBanner">
+        <Setter Property="Padding" Value="14,11" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Background" Value="{DynamicResource Glass.Update.Background}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Glass.Update.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="Border.updateGlyph">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Border.updateGlyph TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Border.softPanel">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="Border.versionTile">
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Background" Value="{DynamicResource BackgroundLayer2Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- ============================================================
          Sidebar
          ============================================================ -->
     <Style Selector="Border.sidebar">
@@ -142,10 +220,10 @@
         <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
         <Setter Property="TextElement.Foreground" Value="{DynamicResource ForegroundBrush}" />
     </Style>
-    <Style Selector="Button.nav.selected">
+    <Style Selector="Button.nav.active">
         <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
     </Style>
-    <Style Selector="Button.nav.selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Button.nav.active /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
         <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentForegroundBrush}" />
     </Style>

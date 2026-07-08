@@ -5,8 +5,8 @@
              x:CompileBindings="False"
              HorizontalAlignment="Left"
              VerticalAlignment="Center"
-             MinWidth="48"
-             MinHeight="20">
+             MinWidth="74"
+             MinHeight="22">
     <UserControl.Styles>
         <Style Selector="controls|BatteryIndicator:low Border#PART_Body">
             <Setter Property="BorderBrush" Value="#DC2626" />
@@ -30,13 +30,22 @@
                             CornerRadius="2"
                             Background="{Binding Level, RelativeSource={RelativeSource AncestorType=controls:BatteryIndicator}, Converter={StaticResource BatteryLevelToBrush}}" />
                 </Grid>
-                <TextBlock Text="&#x26A1;"
-                           FontSize="12"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           IsVisible="{Binding IsCharging, RelativeSource={RelativeSource AncestorType=controls:BatteryIndicator}}" />
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="1">
+                    <TextBlock Text="&#x26A1;"
+                               FontSize="10"
+                               FontWeight="Bold"
+                               Foreground="Black"
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding IsCharging, RelativeSource={RelativeSource AncestorType=controls:BatteryIndicator}}" />
+                    <TextBlock Text="{Binding Level, RelativeSource={RelativeSource AncestorType=controls:BatteryIndicator}, StringFormat='{}{0}%'}"
+                               FontSize="10"
+                               FontWeight="Bold"
+                               Foreground="Black"
+                               VerticalAlignment="Center" />
+                </StackPanel>
             </Grid>
         </Border>
 

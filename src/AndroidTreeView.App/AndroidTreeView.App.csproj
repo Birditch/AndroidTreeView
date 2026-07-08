@@ -1,17 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>AndroidTreeView.App</RootNamespace>
     <AssemblyName>AndroidTreeView.App</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/atv-icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.0.4</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
+    <InformationalVersion>1.0.4</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- Never bundle the .NET runtime: ship framework-dependent (users install the .NET Desktop Runtime).
+         Keeps the download small; publishing with -r win-x64 stays framework-dependent. -->
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,7 +34,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.9" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
@@ -42,6 +45,8 @@
     <ProjectReference Include="..\AndroidTreeView.Core\AndroidTreeView.Core.csproj" />
     <ProjectReference Include="..\AndroidTreeView.Adb\AndroidTreeView.Adb.csproj" />
     <ProjectReference Include="..\AndroidTreeView.Infrastructure\AndroidTreeView.Infrastructure.csproj" />
+    <ProjectReference Include="..\AndroidTreeView.Shared\AndroidTreeView.Shared.csproj" />
   </ItemGroup>
+  <Import Project="..\..\build\AndroidTreeView.Scrcpy.targets" />
 
 </Project>

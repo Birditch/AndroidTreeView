@@ -32,6 +32,12 @@ public sealed partial class AdbLocator : IAdbLocator
             return configured;
         }
 
+        var bundled = await TryBundledAsync(ct).ConfigureAwait(false);
+        if (bundled is not null)
+        {
+            return bundled;
+        }
+
         var onPath = await TryPathAsync(ct).ConfigureAwait(false);
         if (onPath is not null)
         {
@@ -39,6 +45,24 @@ public sealed partial class AdbLocator : IAdbLocator
         }
 
         return await TrySdkLocationsAsync(ct).ConfigureAwait(false);
+    }
+
+    private async Task<AdbLocation?> TryBundledAsync(CancellationToken ct)
+    {
+        // adb shipped alongside the app. Tools are consolidated into a single "scrcpy" folder
+        // (scrcpy ships its own adb, so we no longer keep a separate platform-tools copy); an older
+        // "platform-tools" layout is still probed as a fallback for compatibility.
+        foreach (var folder in new[] { "scrcpy", "platform-tools" })
+        {
+            var candidate = Path.Combine(AppContext.BaseDirectory, folder, ExecutableName);
+            var location = await ValidateAsync(candidate, AdbLocationSource.Bundled, ct).ConfigureAwait(false);
+            if (location is not null)
+            {
+                return location;
+            }
+        }
+
+        return null;
     }
 
     private async Task<AdbLocation?> TryConfiguredAsync(string? configuredPath, CancellationToken ct)

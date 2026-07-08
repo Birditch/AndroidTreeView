@@ -9,36 +9,55 @@ using Xunit;
 
 namespace AndroidTreeView.Infrastructure.Tests;
 
-public sealed class GitHubUpdateServiceTests
+public sealed class NekoIndexUpdateServiceTests
 {
-    private static GitHubUpdateService CreateService(
+    private static NekoIndexUpdateService CreateService(
         FakeHttpMessageHandler handler,
         out FakeSettingsService settings)
     {
         settings = new FakeSettingsService();
         var client = new HttpClient(handler);
-        return new GitHubUpdateService(client, settings, NullLogger<GitHubUpdateService>.Instance);
+        return new NekoIndexUpdateService(client, settings, NullLogger<NekoIndexUpdateService>.Instance);
     }
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode status, string body) =>
         new(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
 
-    private static string ReleaseJson(string tag) =>
-        $$"""
-        { "tag_name": "{{tag}}", "html_url": "https://github.com/AndroidTreeView/AndroidTreeView/releases/tag/{{tag}}", "body": "Release notes for {{tag}}." }
+    private static string UpdateJson(
+        string version,
+        string downloadUrl = "/api/resources/android-tree-view-app/versions/latest/archive",
+        string sha256 = "0123456789abcdef",
+        string appKey = AppInfo.AppUpdateKey)
+        => $$"""
+        {
+          "ok": true,
+          "data": {
+            "appKey": "{{appKey}}",
+            "title": "AndroidTreeView",
+            "version": "{{version}}",
+            "releasedAt": "2026-07-08T07:40:04.829Z",
+            "zip": {
+              "size": 1344,
+              "sha256": "{{sha256}}",
+              "downloadUrl": "{{downloadUrl}}"
+            },
+            "files": []
+          },
+          "error": null
+        }
         """;
 
     [Fact]
     public void CurrentVersion_MatchesAppInfo()
     {
-        var service = CreateService(new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, ReleaseJson("1.0.0"))), out _);
+        var service = CreateService(new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, UpdateJson("1.0.0"))), out _);
         Assert.Equal(AppInfo.Version, service.CurrentVersion);
     }
 
     [Fact]
     public async Task CheckForUpdates_SameVersion_ReturnsUpToDate()
     {
-        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, ReleaseJson(AppInfo.Version)));
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, UpdateJson(AppInfo.Version)));
         var service = CreateService(handler, out _);
 
         var result = await service.CheckForUpdatesAsync(userInitiated: true);
@@ -51,7 +70,7 @@ public sealed class GitHubUpdateServiceTests
     [Fact]
     public async Task CheckForUpdates_NewerVersion_ReturnsUpdateAvailable()
     {
-        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, ReleaseJson("v2.5.1")));
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, UpdateJson("v2.5.1")));
         var service = CreateService(handler, out _);
 
         var result = await service.CheckForUpdatesAsync(userInitiated: true);
@@ -59,22 +78,57 @@ public sealed class GitHubUpdateServiceTests
         Assert.Equal(UpdateCheckStatus.UpdateAvailable, result.Status);
         Assert.True(result.UpdateAvailable);
         Assert.Equal("2.5.1", result.LatestVersion);
-        Assert.Equal("https://github.com/AndroidTreeView/AndroidTreeView/releases/tag/v2.5.1", result.ReleaseUrl);
-        Assert.Equal("Release notes for v2.5.1.", result.ReleaseNotes);
+        Assert.Equal("http://192.168.89.71:14000/api/resources/android-tree-view-app/versions/latest/archive", result.ReleaseUrl);
+        Assert.Equal(result.ReleaseUrl, result.DownloadUrl);
+        Assert.Equal("0123456789abcdef", result.Sha256);
+        Assert.Equal("AndroidTreeView", result.ReleaseNotes);
     }
 
     [Fact]
-    public async Task CheckForUpdates_SendsRequiredGitHubHeaders()
+    public async Task CheckForUpdates_SendsRequiredInternalApiHeaders()
     {
-        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, ReleaseJson("1.0.0")));
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, UpdateJson("1.0.0")));
         var service = CreateService(handler, out _);
 
         await service.CheckForUpdatesAsync(userInitiated: true);
 
         Assert.NotNull(handler.LastRequest);
         Assert.True(handler.LastRequest!.Headers.UserAgent.Count > 0);
-        Assert.Contains(handler.LastRequest.Headers.Accept, h => h.MediaType == "application/vnd.github+json");
+        Assert.Contains(handler.LastRequest.Headers.Accept, h => h.MediaType == "application/json");
         Assert.Equal(AppInfo.LatestReleaseApiUrl, handler.LastRequest.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task CheckForUpdates_UsesConfiguredMiniUpdateChannel()
+    {
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(
+            HttpStatusCode.OK,
+            UpdateJson("2.0.0", appKey: AppInfo.MiniUpdateKey)));
+        var settings = new FakeSettingsService();
+        var product = UpdateProductOptions.ForMiniApp();
+        var service = new NekoIndexUpdateService(
+            new HttpClient(handler),
+            settings,
+            NullLogger<NekoIndexUpdateService>.Instance,
+            product);
+
+        await service.CheckForUpdatesAsync(userInitiated: true);
+
+        Assert.Equal(product.LatestReleaseApiUrl, handler.LastRequest!.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task CheckForUpdates_MismatchedAppKey_ReturnsInvalidData()
+    {
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(
+            HttpStatusCode.OK,
+            UpdateJson("2.0.0", appKey: AppInfo.MiniUpdateKey)));
+        var service = CreateService(handler, out _);
+
+        var result = await service.CheckForUpdatesAsync(userInitiated: true);
+
+        Assert.Equal(UpdateCheckStatus.InvalidData, result.Status);
+        Assert.False(result.UpdateAvailable);
     }
 
     [Fact]
@@ -112,15 +166,27 @@ public sealed class GitHubUpdateServiceTests
     }
 
     [Fact]
-    public async Task CheckForUpdates_InvalidTag_ReturnsInvalidData()
+    public async Task CheckForUpdates_InvalidVersion_ReturnsInvalidData()
     {
-        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, ReleaseJson("not-a-version")));
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, UpdateJson("not-a-version")));
         var service = CreateService(handler, out _);
 
         var result = await service.CheckForUpdatesAsync(userInitiated: true);
 
         Assert.Equal(UpdateCheckStatus.InvalidData, result.Status);
         Assert.False(result.UpdateAvailable);
+    }
+
+    [Fact]
+    public async Task CheckForUpdates_OkFalse_ReturnsInvalidData()
+    {
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """{"ok":false,"data":null,"error":"missing"}"""));
+        var service = CreateService(handler, out _);
+
+        var result = await service.CheckForUpdatesAsync(userInitiated: true);
+
+        Assert.Equal(UpdateCheckStatus.InvalidData, result.Status);
+        Assert.Equal("missing", result.ErrorMessage);
     }
 
     [Fact]
@@ -141,7 +207,7 @@ public sealed class GitHubUpdateServiceTests
         var handler = new FakeHttpMessageHandler(_ =>
         {
             called = true;
-            return JsonResponse(HttpStatusCode.OK, ReleaseJson("9.9.9"));
+            return JsonResponse(HttpStatusCode.OK, UpdateJson("9.9.9"));
         });
         var service = CreateService(handler, out var settings);
         settings.Current = new AppSettings { AutoCheckUpdates = false };
@@ -156,7 +222,7 @@ public sealed class GitHubUpdateServiceTests
     [Fact]
     public async Task CheckForUpdates_DisabledButUserInitiated_StillChecks()
     {
-        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, ReleaseJson("3.0.0")));
+        var handler = new FakeHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, UpdateJson("3.0.0")));
         var service = CreateService(handler, out var settings);
         settings.Current = new AppSettings { AutoCheckUpdates = false };
 

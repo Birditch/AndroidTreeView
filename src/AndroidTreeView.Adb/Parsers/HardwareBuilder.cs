@@ -24,29 +24,69 @@ public static class HardwareBuilder
 
         return new HardwareInfo
         {
-            CpuModel = cpu.Model,
-            CpuArchitecture = cpu.Architecture ?? (abiList.Count > 0 ? abiList[0] : null),
-            CpuCoreCount = cpu.CoreCount,
-            AbiList = abiList,
-            RamTotalBytes = memory.TotalBytes,
+            CpuModel        = ResolveCpuModel(props, cpu),
+            CpuArchitecture = ResolveCpuArchitecture(props, cpu, abiList),
+            CpuCoreCount    = cpu.CoreCount,
+            AbiList         = abiList,
+            RamTotalBytes   = memory.TotalBytes,
             RamAvailableBytes = memory.AvailableBytes,
             ScreenResolution = screen.Resolution,
             ScreenDensityDpi = screen.DensityDpi,
-            Gpu = null,
+            Gpu              = null,
             HardwarePlatform = Get(props, PropKeys.BoardPlatform),
-            BoardName = Get(props, PropKeys.ProductBoard)
+            BoardName        = Get(props, PropKeys.ProductBoard)
         };
     }
+
+    /// <summary>
+    /// Resolves the CPU model name with priority:
+    /// ro.soc.manufacturer + ro.soc.model → ro.board.platform → ro.hardware → cpuinfo.
+    /// </summary>
+    private static string? ResolveCpuModel(IReadOnlyDictionary<string, string> props, CpuInfo cpu)
+    {
+        var socMfr   = Get(props, PropKeys.SocManufacturer);
+        var socModel = Get(props, PropKeys.SocModel);
+        if (socMfr != null || socModel != null)
+            return socMfr != null && socModel != null ? $"{socMfr} {socModel}" : (socMfr ?? socModel);
+
+        return Get(props, PropKeys.BoardPlatform)
+            ?? Get(props, PropKeys.Hardware)
+            ?? cpu.Model;
+    }
+
+    /// <summary>
+    /// Resolves the CPU architecture with priority:
+    /// ro.product.cpu.abi → mapped architecture number → first ABI list entry.
+    /// Never returns a bare numeric string such as "8".
+    /// </summary>
+    private static string? ResolveCpuArchitecture(
+        IReadOnlyDictionary<string, string> props,
+        CpuInfo cpu,
+        IReadOnlyList<string> abiList)
+    {
+        var cpuAbi = Get(props, PropKeys.CpuAbi);
+        if (cpuAbi != null)
+            return cpuAbi;
+
+        if (cpu.Architecture != null)
+            return MapArchNumber(cpu.Architecture);
+
+        return abiList.Count > 0 ? abiList[0] : null;
+    }
+
+    private static string MapArchNumber(string architecture) => architecture.Trim() switch
+    {
+        "8" => "ARMv8-A",
+        "7" => "ARMv7-A",
+        _   => architecture
+    };
 
     private static IReadOnlyList<string> SplitAbiList(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
             return Array.Empty<string>();
-        }
 
-        return value
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
     private static string? Get(IReadOnlyDictionary<string, string> props, string key) =>

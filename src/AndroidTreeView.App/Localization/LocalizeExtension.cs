@@ -40,10 +40,15 @@ public sealed class LocalizeExtension
             return Key;
         }
 
-        return new Binding($"[{Key}]")
+        // Bind to the service's LanguageTick (a plain property that changes on every language switch) and
+        // resolve the key in the converter. This refreshes reliably on language change, unlike binding the
+        // indexer directly (whose "Item[]" notification did not re-read in this Avalonia version).
+        return new Binding(nameof(LocalizationService.LanguageTick))
         {
             Mode = BindingMode.OneWay,
             Source = service,
+            Converter = LocalizeKeyConverter.Instance,
+            ConverterParameter = Key,
         };
     }
 }

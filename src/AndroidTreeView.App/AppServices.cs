@@ -1,17 +1,11 @@
 using System;
-using System.Net.Http;
-using AndroidTreeView.Adb.Services;
 using AndroidTreeView.App.Localization;
 using AndroidTreeView.App.Services;
 using AndroidTreeView.App.ViewModels;
-using AndroidTreeView.Core;
 using AndroidTreeView.Core.Interfaces;
 using AndroidTreeView.Core.Options;
-using AndroidTreeView.Core.Services;
-using AndroidTreeView.Infrastructure.Settings;
-using AndroidTreeView.Infrastructure.Update;
+using AndroidTreeView.Shared;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace AndroidTreeView.App;
 
@@ -29,25 +23,15 @@ public static class AppServices
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddLogging(builder => builder.AddConsole());
-
-        services.AddSingleton(CreateHttpClient());
-        services.AddSingleton<AdbOptions>();
-
-        // ADB / Core / Infrastructure services (singletons; concrete names fixed by earlier phases).
-        services.AddSingleton<IAdbEnvironment, AdbEnvironment>();
-        services.AddSingleton<IAdbLocator, AdbLocator>();
-        services.AddSingleton<IAdbCommandExecutor, AdbCommandExecutor>();
-        services.AddSingleton<IDeviceService, AdbDeviceService>();
-        services.AddSingleton<ILogcatService, LogcatService>();
-        services.AddSingleton<IDeviceMonitor, DeviceMonitor>();
-        services.AddSingleton<ISettingsService, SettingsService>();
-        services.AddSingleton<IUpdateService, GitHubUpdateService>();
+        services.AddAndroidTreeViewSharedServices(UpdateProductOptions.ForMainApp());
 
         // App-owned services.
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IFilePickerService, FilePickerService>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
+        services.AddSingleton<IScreenMirrorLauncher, ScreenMirrorLauncher>();
+        services.AddSingleton<ICliLauncher, CliLauncher>();
+        services.AddSingleton<IDialogService, DialogService>();
 
         // Shell + device grid view models (singletons).
         services.AddSingleton<MainWindowViewModel>();
@@ -58,6 +42,7 @@ public static class AppServices
         services.AddTransient<SetupViewModel>();
         services.AddTransient<AboutViewModel>();
         services.AddTransient<DeviceDetailViewModel>();
+        services.AddTransient<ScreenMirrorViewModel>();
 
         // Category view models (transient).
         services.AddTransient<OverviewViewModel>();
@@ -73,14 +58,8 @@ public static class AppServices
         // Factories so the shell can create transient content on demand.
         services.AddTransient<Func<AboutViewModel>>(sp => sp.GetRequiredService<AboutViewModel>);
         services.AddTransient<Func<DeviceDetailViewModel>>(sp => sp.GetRequiredService<DeviceDetailViewModel>);
+        services.AddTransient<Func<ScreenMirrorViewModel>>(sp => sp.GetRequiredService<ScreenMirrorViewModel>);
 
         return services;
-    }
-
-    private static HttpClient CreateHttpClient()
-    {
-        var client = new HttpClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd($"{AppInfo.Name}/{AppInfo.Version}");
-        return client;
     }
 }

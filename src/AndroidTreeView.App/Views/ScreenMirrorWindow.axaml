@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AndroidTreeView.App.ViewModels"
+        xmlns:loc="using:AndroidTreeView.App.Localization"
+        x:Class="AndroidTreeView.App.Views.ScreenMirrorWindow"
+        x:DataType="vm:ScreenMirrorViewModel"
+        x:CompileBindings="True"
+        Title="{Binding Title}"
+        Width="440" Height="860"
+        MinWidth="300" MinHeight="480"
+        DragDrop.AllowDrop="True">
+
+    <DockPanel Margin="10">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
+            <Button Content="{loc:Localize Key=logcat.start}"
+                    Command="{Binding StartCommand}"
+                    IsVisible="{Binding !IsRunning}" />
+            <Button Content="{loc:Localize Key=logcat.stop}"
+                    Command="{Binding StopCommand}"
+                    IsVisible="{Binding IsRunning}" />
+            <Button Content="{loc:Localize Key=screen.recents}" Command="{Binding RecentsCommand}" />
+            <Button Content="{loc:Localize Key=screen.home}" Command="{Binding HomeCommand}" />
+            <Button Content="{loc:Localize Key=screen.back}" Command="{Binding BackCommand}" />
+            <TextBlock Text="{Binding StatusMessage}"
+                       VerticalAlignment="Center"
+                       Opacity="0.7"
+                       TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+
+        <Border DockPanel.Dock="Bottom"
+                Margin="0,10,0,0"
+                Padding="10,6"
+                CornerRadius="8"
+                Background="{DynamicResource Glass.Card.Background}"
+                BorderBrush="{DynamicResource Glass.Card.Border}"
+                BorderThickness="1">
+            <TextBlock Text="{loc:Localize Key=screen.drophint}"
+                       Opacity="0.7"
+                       FontSize="12"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <Border Background="#111417" CornerRadius="10" ClipToBounds="True">
+            <Image x:Name="Screen"
+                   Source="{Binding Frame}"
+                   Stretch="Uniform"
+                   Cursor="Hand"
+                   PointerPressed="OnScreenPointerPressed"
+                   PointerReleased="OnScreenPointerReleased" />
+        </Border>
+    </DockPanel>
+</Window>

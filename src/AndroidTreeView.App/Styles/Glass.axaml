@@ -1,17 +1,18 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
-        Glass.axaml — translucent "liquid glass" brushes and card shadows.
-        Brushes are semi-transparent so they read as frosted panels over the layered background even
-        when the OS provides no blur (graceful degradation). Theme-varying values live in
-        ThemeDictionaries (Light / Dark); shared geometry (corner radii) stays neutral at the root.
+        Glass.axaml — card / sidebar surface brushes.
+        NOTE: the "liquid glass" (translucent + acrylic blur) look was removed by request. These are now
+        fully OPAQUE, high-contrast surfaces for a clean, readable developer-tool style. Keys are kept so
+        existing views/controls keep working. Theme-varying values live in ThemeDictionaries (Light/Dark);
+        shared geometry (corner radii) stays neutral at the root.
 
         Required keys: Glass.Card.Background, Glass.Card.BackgroundHover, Glass.Card.Border,
         Glass.Sidebar.Background, plus card BoxShadows (Glass.Card.Shadow / Glass.Card.ShadowHover).
     -->
 
     <!-- Shared geometry (theme-neutral) -->
-    <CornerRadius x:Key="Card.CornerRadius">12</CornerRadius>
+    <CornerRadius x:Key="Card.CornerRadius">8</CornerRadius>
     <CornerRadius x:Key="Control.CornerRadius">8</CornerRadius>
     <CornerRadius x:Key="Pill.CornerRadius">999</CornerRadius>
 
@@ -19,28 +20,32 @@
 
         <!-- ================= LIGHT ================= -->
         <ResourceDictionary x:Key="Light">
-            <!-- Frosted white cards; subtle dark hairline border for definition without blur -->
-            <SolidColorBrush x:Key="Glass.Card.Background" Color="#C2FFFFFF" />
-            <SolidColorBrush x:Key="Glass.Card.BackgroundHover" Color="#E8FFFFFF" />
-            <SolidColorBrush x:Key="Glass.Card.Border" Color="#24101828" />
-            <SolidColorBrush x:Key="Glass.Sidebar.Background" Color="#99FFFFFF" />
+            <!-- Solid white cards on the light gray-blue background; crisp hairline border -->
+            <SolidColorBrush x:Key="Glass.Card.Background" Color="#FFFFFFFE" />
+            <SolidColorBrush x:Key="Glass.Card.BackgroundHover" Color="#FFF2F6F1" />
+            <SolidColorBrush x:Key="Glass.Card.Border" Color="#FFD8DED6" />
+            <SolidColorBrush x:Key="Glass.Sidebar.Background" Color="#FFF1F4EF" />
+            <SolidColorBrush x:Key="Glass.Update.Background" Color="#FFE9F8F1" />
+            <SolidColorBrush x:Key="Glass.Update.Border" Color="#FF8DD6BD" />
 
-            <!-- Soft, low-alpha ambient shadows -->
-            <BoxShadows x:Key="Glass.Card.Shadow">0 8 24 0 #1A101828</BoxShadows>
-            <BoxShadows x:Key="Glass.Card.ShadowHover">0 14 36 0 #2E101828</BoxShadows>
+            <!-- Subtle drop shadow for depth (not a glass effect) -->
+            <BoxShadows x:Key="Glass.Card.Shadow">0 2 10 0 #120B1410</BoxShadows>
+            <BoxShadows x:Key="Glass.Card.ShadowHover">0 8 22 0 #1F0B1410</BoxShadows>
         </ResourceDictionary>
 
         <!-- ================= DARK ================= -->
         <ResourceDictionary x:Key="Dark">
-            <!-- Translucent light-slate cards over the dark base; soft light hairline border -->
-            <SolidColorBrush x:Key="Glass.Card.Background" Color="#802A323F" />
-            <SolidColorBrush x:Key="Glass.Card.BackgroundHover" Color="#A63A4453" />
-            <SolidColorBrush x:Key="Glass.Card.Border" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="Glass.Sidebar.Background" Color="#73161A20" />
+            <!-- Solid slate cards, lifted above the dark base; clear border for separation -->
+            <SolidColorBrush x:Key="Glass.Card.Background" Color="#FF20221F" />
+            <SolidColorBrush x:Key="Glass.Card.BackgroundHover" Color="#FF292D28" />
+            <SolidColorBrush x:Key="Glass.Card.Border" Color="#FF373D35" />
+            <SolidColorBrush x:Key="Glass.Sidebar.Background" Color="#FF171916" />
+            <SolidColorBrush x:Key="Glass.Update.Background" Color="#FF10231F" />
+            <SolidColorBrush x:Key="Glass.Update.Border" Color="#FF1F7A68" />
 
-            <!-- Deeper shadows read on dark backgrounds -->
-            <BoxShadows x:Key="Glass.Card.Shadow">0 8 24 0 #66000000</BoxShadows>
-            <BoxShadows x:Key="Glass.Card.ShadowHover">0 14 36 0 #85000000</BoxShadows>
+            <!-- Subtle drop shadow for depth (not a glass effect) -->
+            <BoxShadows x:Key="Glass.Card.Shadow">0 2 8 0 #40000000</BoxShadows>
+            <BoxShadows x:Key="Glass.Card.ShadowHover">0 6 16 0 #59000000</BoxShadows>
         </ResourceDictionary>
 
     </ResourceDictionary.ThemeDictionaries>

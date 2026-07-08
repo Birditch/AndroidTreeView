@@ -1,174 +1,111 @@
-# AndroidTreeView — Windows MSI Packaging
+﻿# AndroidTreeView x64 ZIP Packaging
 
-> 中文摘要：本文档说明如何在本机使用 **WiX Toolset v5** 为 AndroidTreeView 构建
-> win-x64 与 win-x86 的 MSI 安装包，包含自包含 / 依赖运行时两种模式、.NET 10 桌面运行时
-> 检测行为、可选的 Burn 引导安装程序、以及校验和生成方式。所有产物输出到 `artifacts/`。
+Packaging files live under `packaging/`.
 
-All packaging lives under [`packaging/`](../packaging) and is intentionally **not** part of
-`AndroidTreeView.sln`. Nothing here is built by the normal solution build.
+Current default product version: `1.0.4`.
+
+## Release Output
+
+Release uploads are x64 ZIP packages only:
+
+```text
+artifacts/AndroidTreeView-1.0.4-x64.zip
+artifacts/AndroidTreeView-1.0.4-x64.zip.sha256
+artifacts/AndroidTreeView-Mini-1.0.4-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.4-x64.zip.sha256
+```
+
+Each ZIP contains the published application files plus `release.json`.
+
+## Files
 
 | File | Purpose |
 | --- | --- |
-| `packaging/AndroidTreeView.Package.wixproj` | WiX v5 SDK-style project that packages one publish output into an MSI. |
-| `packaging/Product.wxs` | Package / Feature / Component authoring: files, Start Menu + optional desktop shortcut, icon, upgrade logic, .NET runtime launch condition. |
-| `packaging/Bundle.wxs` | *Optional* Burn bootstrapper (`.exe`) that installs the .NET 10 Desktop Runtime if missing, then the MSI. |
-| `packaging/build-msi.ps1` | End-to-end: publish → build MSI → checksum → print path. |
-| `packaging/build-msi.cmd` | Thin `cmd` wrapper around `build-msi.ps1`. |
+| `build-update-zip.ps1` | Main release script. Publishes App/Mini x64, writes `release.json`, creates upload ZIP, and writes SHA-256 sidecar. |
+| `AndroidTreeView.Package.wixproj` | Optional x64 WiX MSI project kept for diagnostics or fallback packaging. |
+| `Product.wxs` | Product-parameterized WiX authoring. |
+| `build-msi.ps1` | Optional x64 MSI build script. Not used for the current upload flow. |
 
-Output naming: `artifacts/AndroidTreeView-<version>-<arch>.msi` (e.g.
-`AndroidTreeView-1.0.0-x64.msi`) plus a `.sha256` sibling.
+## Build Upload ZIPs
 
----
-
-## 1. Prerequisites
-
-* **.NET 10 SDK** on `PATH` (`dotnet --info`). Required to publish the app and to build the
-  MSI (the WiX SDK is an MSBuild SDK restored via NuGet).
-* **Internet access to nuget.org** for the first restore. The repo's `nuget.config` already
-  adds `https://api.nuget.org/v3/index.json`. The `WixToolset.Sdk/5.0.2` referenced by the
-  `.wixproj` is restored automatically the first time you build it.
-* **Optional — the global `wix` CLI.** Only needed to build the optional `Bundle.wxs`
-  bootstrapper (the MSI itself does not need it):
-
-  ```powershell
-  dotnet tool install --global wix --version 5.0.2
-  wix --version
-  wix extension add -g WixToolset.BootstrapperApplications.wixext
-  wix extension add -g WixToolset.Netfx.wixext
-  ```
-
-WiX v5 runs cross-platform, but building a Windows MSI is only supported on Windows.
-
----
-
-## 2. Build the MSIs locally
-
-From the repository root (Windows PowerShell or PowerShell 7):
+From the repository root:
 
 ```powershell
-# Framework-dependent (smaller; requires .NET 10 Desktop Runtime on the target machine)
-./packaging/build-msi.ps1 -Arch x64
-./packaging/build-msi.ps1 -Arch x86
-
-# Self-contained (larger; NO runtime prerequisite)
-./packaging/build-msi.ps1 -Arch x64 -SelfContained
-./packaging/build-msi.ps1 -Arch x86 -SelfContained
+./packaging/build-update-zip.ps1 -Product App -Arch x64
+./packaging/build-update-zip.ps1 -Product Mini -Arch x64
 ```
 
-Or via the `cmd` wrapper:
+Only `x64` is accepted. Passing `x86` is rejected.
 
-```bat
-packaging\build-msi.cmd x64
-packaging\build-msi.cmd x86 selfcontained
+The script:
+
+1. runs `dotnet publish` for `win-x64`
+2. writes `release.json`
+3. compresses the publish folder to `artifacts/`
+4. writes `<zip>.sha256`
+
+## release.json
+
+The updater uses `release.json` to distinguish an automated release ZIP from a random loose-file archive:
+
+```json
+{
+  "packageKind": "portable-x64",
+  "product": "App",
+  "productName": "AndroidTreeView",
+  "appKey": "android-tree-view-app",
+  "version": "1.0.4",
+  "arch": "x64",
+  "executable": "AndroidTreeView.App.exe"
+}
 ```
 
-What the script does:
+Mini uses:
 
-1. `dotnet publish src/AndroidTreeView.App -c Release -r win-<arch> --self-contained <bool>`
-   into `artifacts/publish/<arch>` (PDBs suppressed).
-2. `dotnet build packaging/AndroidTreeView.Package.wixproj` with `-p:Platform=<arch>`,
-   `-p:ProductVersion=<version>`, `-p:SelfContained=<bool>`, `-p:PublishDir=<publish folder>`.
-3. Copies the MSI to `artifacts/AndroidTreeView-<version>-<arch>.msi`, writes
-   `…​.msi.sha256`, and prints both paths.
+```json
+{
+  "packageKind": "portable-x64",
+  "product": "Mini",
+  "productName": "AndroidTreeView Mini",
+  "appKey": "android-tree-view-mini",
+  "version": "1.0.4",
+  "arch": "x64",
+  "executable": "AndroidTreeView.App.mini.exe"
+}
+```
 
-### Building the wixproj directly (advanced)
+`UpdateInstaller` rejects ZIP packages that do not contain a supported manifest and executable.
 
-`build-msi.ps1` is just orchestration. You can invoke the project yourself after publishing:
+## Optional MSI
+
+MSI packaging is no longer the release upload path, but the x64 WiX project remains available:
 
 ```powershell
-dotnet build packaging/AndroidTreeView.Package.wixproj -c Release `
-    -p:Platform=x64 `
-    -p:ProductVersion=1.0.0 `
-    -p:SelfContained=false `
-    "-p:PublishDir=D:\AndroidTreeView\artifacts\publish\x64\"
+./packaging/build-msi.ps1 -Product App -Arch x64
+./packaging/build-msi.ps1 -Product Mini -Arch x64
 ```
 
-`PublishDir` **must** be an absolute path **with a trailing `\`** because `Product.wxs`
-harvests `$(var.PublishDir)**`.
+The WiX project rejects non-x64 platforms.
 
----
+## Checksums
 
-## 3. Self-contained vs framework-dependent
-
-| Mode | Command | Size | Target machine needs .NET runtime? |
-| --- | --- | --- | --- |
-| Framework-dependent (default) | `build-msi.ps1 -Arch x64` | Small | **Yes** — .NET 10 Desktop Runtime (matching arch) |
-| Self-contained | `build-msi.ps1 -Arch x64 -SelfContained` | Large | **No** — runtime is bundled |
-
-Ship **self-contained** for the simplest end-user experience. Ship **framework-dependent**
-plus the `Bundle.wxs` bootstrapper (below) if you prefer smaller downloads and are willing to
-install the shared runtime.
-
----
-
-## 4. .NET 10 Desktop Runtime check behavior
-
-There are three layers, and they are complementary:
-
-1. **App host dialog (always, precise).** A framework-dependent `AndroidTreeView.App.exe`
-   launched without the matching runtime shows the OS/apphost dialog *"You must install the
-   .NET Desktop Runtime 10.0"* with a direct download link. This is the authoritative check.
-2. **MSI launch condition (framework-dependent MSIs only, best-effort).** `Product.wxs` adds
-   a `<Launch>` condition that reads
-   `HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\<arch>\sharedhost\Version`. If **no** .NET
-   host is present at all, the install is blocked with a message pointing to
-   <https://dotnet.microsoft.com/download/dotnet/10.0>. This is a courtesy gate — it does not
-   assert the exact 10.0 Desktop version (that is the apphost's job). Bypass it with
-   `msiexec /i AndroidTreeView-1.0.0-x64.msi CHECKDOTNET=0`. Self-contained MSIs emit no such
-   condition.
-3. **Burn bundle (optional, auto-install).** `Bundle.wxs` uses
-   `netfx:DotNetCoreSearch` to detect the .NET 10 Desktop Runtime and silently installs it
-   from the official installer before chaining the MSI. This is the smoothest option for
-   framework-dependent distribution.
-
----
-
-## 5. Optional: build the runtime-aware bootstrapper (`Bundle.wxs`)
-
-Only needed for framework-dependent distribution where you want the runtime installed
-automatically. Requires the global `wix` CLI and extensions from §1, an already-built MSI, and
-a locally downloaded runtime installer
-(`windowsdesktop-runtime-10.0.x-win-<arch>.exe` from
-<https://dotnet.microsoft.com/download/dotnet/10.0>).
+`build-update-zip.ps1` writes checksums automatically. Manual verification:
 
 ```powershell
-wix build packaging/Bundle.wxs -arch x64 `
-    -d ProductVersion=1.0.0 `
-    -d Platform=x64 `
-    -d MsiPath=artifacts\AndroidTreeView-1.0.0-x64.msi `
-    -d DotNetRuntimeExe=C:\downloads\windowsdesktop-runtime-10.0.0-win-x64.exe `
-    -ext WixToolset.BootstrapperApplications.wixext `
-    -ext WixToolset.Netfx.wixext `
-    -o artifacts\AndroidTreeView-1.0.0-x64-setup.exe
+Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-1.0.4-x64.zip
+Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-Mini-1.0.4-x64.zip
 ```
 
-The bundle installs the runtime as **permanent** (it is left in place when AndroidTreeView is
-uninstalled).
+The sidecar uses `<hash> *<filename>` format for compatibility with `sha256sum -c`.
 
----
+## Version Sync
 
-## 6. Checksums
+Keep these fields aligned:
 
-`build-msi.ps1` writes `artifacts/AndroidTreeView-<version>-<arch>.msi.sha256` automatically.
-To verify or regenerate manually:
+- `src/AndroidTreeView.Core/AppInfo.cs` -> `AppInfo.Version`
+- App csproj version fields
+- Mini csproj version fields
+- App manifest assembly identity
+- `packaging/build-update-zip.ps1` default `Version`
 
-```powershell
-Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-1.0.0-x64.msi
-```
-
-The checksum file uses the `<hash> *<filename>` format so it is compatible with
-`sha256sum -c` on machines that have coreutils.
-
----
-
-## 7. Keeping the version in sync
-
-The product version appears in three places and must match for a release:
-
-* `src/AndroidTreeView.Core/AppInfo.cs` → `AppInfo.Version` (`1.0.0`).
-* `src/AndroidTreeView.App/*.csproj` → `<Version>` / `<InformationalVersion>` (owned by the
-  shell agent).
-* `packaging/build-msi.ps1` `-Version` (default `1.0.0`) → flows to the wixproj
-  `ProductVersion`.
-
-See [`publishing.md`](./publishing.md) for the release/tag flow.
+See [publishing.md](./publishing.md) for the release checklist and update-channel requirements.

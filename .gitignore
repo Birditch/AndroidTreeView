@@ -49,6 +49,9 @@ coverage*.info
 .omc/
 .agents/
 
+# ---- Bundled tooling (Android platform-tools, fetched at build time) ----
+tools/
+
 # ---- OS cruft ----
 .DS_Store
 Thumbs.db

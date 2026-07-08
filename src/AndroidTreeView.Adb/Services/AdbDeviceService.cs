@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using AndroidTreeView.Adb.Commands;
 using AndroidTreeView.Adb.Parsers;
 using AndroidTreeView.Core.Exceptions;
@@ -28,15 +29,18 @@ namespace AndroidTreeView.Adb.Services;
 public sealed class AdbDeviceService : IDeviceService
 {
     private readonly IAdbCommandExecutor _executor;
+    private readonly IFastbootService _fastboot;
     private readonly AdbOptions _options;
     private readonly ILogger<AdbDeviceService> _logger;
 
     public AdbDeviceService(
         IAdbCommandExecutor executor,
+        IFastbootService fastboot,
         AdbOptions options,
         ILogger<AdbDeviceService> logger)
     {
         _executor = executor;
+        _fastboot = fastboot;
         _options = options;
         _logger = logger;
     }
@@ -51,7 +55,51 @@ public sealed class AdbDeviceService : IDeviceService
 
         // May propagate AdbNotFoundException so the UI can show the setup screen.
         var result = await _executor.ExecuteAsync(request, ct).ConfigureAwait(false);
-        return AdbDevicesParser.Parse(result.StandardOutput);
+        var devices = AdbDevicesParser.Parse(result.StandardOutput);
+        return await AppendFastbootAsync(devices, ct).ConfigureAwait(false);
+    }
+
+    // Merge devices in fastboot / bootloader mode (they never appear in `adb devices`). Best-effort:
+    // any fastboot failure leaves the adb list unchanged.
+    private async Task<IReadOnlyList<AdbDevice>> AppendFastbootAsync(
+        IReadOnlyList<AdbDevice> adbDevices, CancellationToken ct)
+    {
+        IReadOnlyList<string> serials;
+        try
+        {
+            serials = await _fastboot.ListSerialsAsync(ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Listing fastboot devices failed.");
+            return adbDevices;
+        }
+
+        if (serials.Count == 0)
+        {
+            return adbDevices;
+        }
+
+        var known = new HashSet<string>(adbDevices.Select(d => d.Serial), StringComparer.Ordinal);
+        var merged = new List<AdbDevice>(adbDevices);
+        foreach (var serial in serials)
+        {
+            if (known.Add(serial))
+            {
+                merged.Add(new AdbDevice
+                {
+                    Serial = serial,
+                    State = DeviceConnectionState.Bootloader,
+                    RawState = "fastboot"
+                });
+            }
+        }
+
+        return merged;
     }
 
     public async Task<DeviceProperties> GetPropertiesAsync(string serial, CancellationToken ct = default)
@@ -136,17 +184,32 @@ public sealed class AdbDeviceService : IDeviceService
 
     public async Task<RootStatus> GetRootStatusAsync(string serial, CancellationToken ct = default)
     {
-        var id = await TryShellAsync(serial, AdbArgs.Id, ct).ConfigureAwait(false);
+        // Run all independent probes concurrently so total latency ≈ the slowest probe,
+        // not the sum. su -c id gets a tighter cap so a prompting/denying su can't stall
+        // the UI for more than ~2 s; all other probes cap at ~3 s.
+        var probeTimeout = TimeSpan.FromSeconds(3);
+        var suIdTimeout = TimeSpan.FromSeconds(2);
 
-        var whichSu = await TryShellAsync(serial, AdbArgs.WhichSu, ct).ConfigureAwait(false);
+        var idTask = TryShellAsync(serial, AdbArgs.Id, ct, probeTimeout);
+        var whichSuTask = TryShellAsync(serial, AdbArgs.WhichSu, ct, probeTimeout);
+        var commandVSuTask = TryShellAsync(serial, AdbArgs.CommandVSu, ct, probeTimeout);
+        var getenforceTask = TryShellAsync(serial, AdbArgs.Getenforce, ct, probeTimeout);
+        var magiskTask = TryShellAsync(serial, AdbArgs.MagiskClientVersion, ct, probeTimeout);
+        var suIdTask = TryShellAsync(serial, AdbArgs.SuId, ct, suIdTimeout);
+
+        await Task.WhenAll(idTask, whichSuTask, commandVSuTask, getenforceTask, magiskTask, suIdTask)
+            .ConfigureAwait(false);
+
+        var id = await idTask.ConfigureAwait(false);
+        var whichSu = await whichSuTask.ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(whichSu))
         {
-            whichSu = await TryShellAsync(serial, AdbArgs.CommandVSu, ct).ConfigureAwait(false);
+            whichSu = await commandVSuTask.ConfigureAwait(false);
         }
 
-        var suId = await TryShellAsync(serial, AdbArgs.SuId, ct).ConfigureAwait(false);
-        var getenforce = await TryShellAsync(serial, AdbArgs.Getenforce, ct).ConfigureAwait(false);
-        var magisk = await TryShellAsync(serial, AdbArgs.MagiskClientVersion, ct).ConfigureAwait(false);
+        var suId = await suIdTask.ConfigureAwait(false);
+        var getenforce = await getenforceTask.ConfigureAwait(false);
+        var magisk = await magiskTask.ConfigureAwait(false);
 
         return RootStatusParser.Parse(id, whichSu, suId, getenforce, magisk);
     }
@@ -177,7 +240,11 @@ public sealed class AdbDeviceService : IDeviceService
         return null;
     }
 
-    private async Task<string?> TryShellAsync(string serial, string[] args, CancellationToken ct)
+    private async Task<string?> TryShellAsync(
+        string serial,
+        string[] args,
+        CancellationToken ct,
+        TimeSpan? timeout = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(serial);
 
@@ -187,7 +254,8 @@ public sealed class AdbDeviceService : IDeviceService
             {
                 Serial = serial,
                 Arguments = args,
-                RunInShell = true
+                RunInShell = true,
+                Timeout = timeout
             };
 
             var result = await _executor.ExecuteAsync(request, ct).ConfigureAwait(false);

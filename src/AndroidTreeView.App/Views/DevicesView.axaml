@@ -9,15 +9,21 @@
              x:DataType="vm:DevicesViewModel"
              x:CompileBindings="True">
 
-    <Grid RowDefinitions="Auto,*" Margin="16">
+    <Grid RowDefinitions="Auto,Auto,*" Margin="16">
 
         <!-- Title + search -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="8,0,8,12">
-            <TextBlock Grid.Column="0"
-                       Text="{loc:Localize Key=devices.title}"
-                       FontSize="24"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock Text="{loc:Localize Key=devices.title}"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding LastRefreshText}"
+                           FontSize="12"
+                           Opacity="0.55"
+                           VerticalAlignment="Bottom"
+                           Margin="0,0,0,5" />
+            </StackPanel>
             <TextBox Grid.Column="1"
                      Width="260"
                      Text="{Binding SearchText}"
@@ -25,8 +31,25 @@
                      VerticalAlignment="Center" />
         </Grid>
 
+        <!-- Batch action bar (visible when one or more devices are checked) -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding HasSelection}"
+                Margin="8,0,8,12"
+                Padding="12,8"
+                CornerRadius="8"
+                Background="{DynamicResource Glass.Card.Background}"
+                BorderBrush="{DynamicResource Glass.Card.Border}"
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Text="{Binding SelectionText}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <Button Content="{loc:Localize Key=batch.network}" Command="{Binding BatchEnableNetworkCommand}" />
+                <Button Content="{loc:Localize Key=batch.selectall}" Command="{Binding SelectAllCommand}" />
+                <Button Content="{loc:Localize Key=batch.clear}" Command="{Binding ClearSelectionCommand}" />
+            </StackPanel>
+        </Border>
+
         <!-- Card grid -->
-        <ScrollViewer Grid.Row="1"
+        <ScrollViewer Grid.Row="2"
                       IsVisible="{Binding HasDevices}"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
@@ -40,7 +63,7 @@
         </ScrollViewer>
 
         <!-- Empty state (ADB present, no devices connected) -->
-        <StackPanel Grid.Row="1"
+        <StackPanel Grid.Row="2"
                     IsVisible="{Binding IsEmpty}"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
@@ -60,6 +83,32 @@
                        TextWrapping="Wrap"
                        HorizontalAlignment="Center"
                        TextAlignment="Center" />
+        </StackPanel>
+
+        <!-- ADB-missing state (kept inside the device list so the app always lands here) -->
+        <StackPanel Grid.Row="2"
+                    IsVisible="{Binding IsAdbMissing}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MaxWidth="480"
+                    Spacing="14">
+            <TextBlock Text="&#x1F50D;"
+                       FontSize="48"
+                       Opacity="0.5"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="{loc:Localize Key=setup.title}"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center" />
+            <TextBlock Text="{loc:Localize Key=setup.body}"
+                       Opacity="0.7"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center" />
+            <Button HorizontalAlignment="Center"
+                    Command="{Binding OpenSetupCommand}"
+                    Content="{loc:Localize Key=setup.selectadb}" />
         </StackPanel>
     </Grid>
 </UserControl>

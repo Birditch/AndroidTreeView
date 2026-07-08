@@ -6,7 +6,7 @@
         white foreground text readable on both light and dark surfaces. Each background brush has a
         matching *.Foreground brush.
         Keys (background): Badge.Online, Badge.Offline, Badge.Unauthorized, Badge.Root,
-        Badge.Charging, Badge.LowBattery.
+        Badge.Charging, Badge.LowBattery, Badge.Mirroring.
     -->
 
     <!-- Online — green -->
@@ -32,6 +32,10 @@
     <!-- Low battery — red -->
     <SolidColorBrush x:Key="Badge.LowBattery" Color="#DC2626" />
     <SolidColorBrush x:Key="Badge.LowBattery.Foreground" Color="#FFFFFF" />
+
+    <!-- Mirroring — cyan/teal (distinct from the charging blue) -->
+    <SolidColorBrush x:Key="Badge.Mirroring" Color="#0891B2" />
+    <SolidColorBrush x:Key="Badge.Mirroring.Foreground" Color="#FFFFFF" />
 
     <!-- Neutral fallback pill (used by StatusBadge for DeviceBadgeKind.Other) -->
     <SolidColorBrush x:Key="Badge.Neutral" Color="#64748B" />

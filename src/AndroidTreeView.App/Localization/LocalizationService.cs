@@ -44,6 +44,16 @@ public sealed class LocalizationService : ILocalizationService, INotifyPropertyC
     /// <inheritdoc />
     public CultureInfo CurrentCulture { get; private set; } = ChineseCulture;
 
+    private int _languageTick;
+
+    /// <summary>
+    /// Monotonic counter bumped on every language change. <c>{loc:Localize}</c> bindings watch this plain
+    /// property (through <see cref="LocalizeKeyConverter"/>) and re-resolve their key against the new
+    /// culture — reflection bindings refresh reliably on a normal property's INotifyPropertyChanged,
+    /// whereas the indexer ("Item[]") notification did not in this Avalonia version.
+    /// </summary>
+    public int LanguageTick => _languageTick;
+
     /// <inheritdoc />
     public event EventHandler? LanguageChanged;
 
@@ -55,8 +65,11 @@ public sealed class LocalizationService : ILocalizationService, INotifyPropertyC
     {
         ApplyLanguage(language);
         LanguageChanged?.Invoke(this, EventArgs.Empty);
-        // A null/empty property name signals "everything changed" and forces indexer bindings to re-read.
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        // Bump the plain LanguageTick property; {loc:Localize} bindings watch it and re-resolve their key
+        // against the new culture. (A normal property's INotifyPropertyChanged refreshes reflection
+        // bindings reliably, unlike the indexer "Item[]" notification used previously.)
+        _languageTick++;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LanguageTick)));
     }
 
     /// <inheritdoc />

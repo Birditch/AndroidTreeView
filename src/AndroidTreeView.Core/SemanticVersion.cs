@@ -3,7 +3,7 @@ using System.Globalization;
 namespace AndroidTreeView.Core;
 
 /// <summary>
-/// A tolerant semantic-version value used to compare the running app version against GitHub release
+/// A tolerant semantic-version value used to compare the running app version against published update
 /// tags. Accepts an optional leading <c>v</c>, 1–3 numeric components, an optional <c>-prerelease</c>
 /// suffix, and ignores <c>+build</c> metadata.
 /// </summary>

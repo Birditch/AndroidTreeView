@@ -12,10 +12,10 @@
              x:CompileBindings="True">
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" Padding="24">
-        <StackPanel Spacing="18" MaxWidth="560" HorizontalAlignment="Center">
+        <StackPanel Spacing="18" HorizontalAlignment="Stretch">
 
             <TextBlock Text="{loc:Localize Key=about.title}"
-                       FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                       FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Left" />
 
             <controls:SectionCard Header="{loc:Localize Key=app.title}">
                 <StackPanel Spacing="12">
@@ -30,14 +30,42 @@
             </controls:SectionCard>
 
             <controls:SectionCard Header="{loc:Localize Key=update.check}">
-                <StackPanel Spacing="10">
-                    <controls:InfoRow Label="{loc:Localize Key=update.latest}" Value="{Binding LatestVersion}" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                <StackPanel Spacing="12">
+                    <Border Classes="softPanel">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{Binding UpdateStatusText}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Border Classes="versionTile">
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Text="{loc:Localize Key=update.current}" Classes="caption" />
+                                        <TextBlock Text="{Binding Version}" FontSize="18" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="1" Classes="versionTile">
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Text="{loc:Localize Key=update.latest}" Classes="caption" />
+                                        <TextBlock Text="{Binding LatestVersion, Converter={StaticResource NullOrEmptyToDash}}"
+                                                   FontSize="18"
+                                                   FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <controls:InfoRow Label="{loc:Localize Key=update.source}" Value="{Binding UpdateSource}" />
+                    <controls:InfoRow Label="{loc:Localize Key=update.key}" Value="{Binding UpdateKey}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button Content="{loc:Localize Key=update.openrelease}" Command="{Binding OpenReleasesCommand}" />
+                        <Button Content="{loc:Localize Key=update.install}"
+                                Command="{Binding InstallUpdateCommand}"
+                                IsEnabled="{Binding CanInstallUpdate}" />
                         <Button Content="{loc:Localize Key=update.check}" Command="{Binding CheckUpdatesCommand}"
                                 Classes="accent" />
-                        <Button Content="{loc:Localize Key=update.openrelease}" Command="{Binding OpenReleasesCommand}" />
                     </StackPanel>
-                    <TextBlock Text="{Binding UpdateStatusText}" Opacity="0.85" TextWrapping="Wrap" />
                 </StackPanel>
             </controls:SectionCard>
 

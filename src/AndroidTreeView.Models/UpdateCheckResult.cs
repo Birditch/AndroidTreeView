@@ -1,4 +1,4 @@
-namespace AndroidTreeView.Models;
+﻿namespace AndroidTreeView.Models;
 
 /// <summary>Outcome classification of an update check.</summary>
 public enum UpdateCheckStatus
@@ -9,13 +9,13 @@ public enum UpdateCheckStatus
     /// <summary>A newer release is available.</summary>
     UpdateAvailable,
 
-    /// <summary>No published release was found for the repository.</summary>
+    /// <summary>No published release was found for the configured app key.</summary>
     NoRelease,
 
     /// <summary>The check failed because of a network/connectivity problem.</summary>
     NetworkError,
 
-    /// <summary>The GitHub API rate limit was hit.</summary>
+    /// <summary>The update API rate limit was hit.</summary>
     RateLimited,
 
     /// <summary>The release payload could not be parsed into a valid version.</summary>
@@ -26,12 +26,12 @@ public enum UpdateCheckStatus
 }
 
 /// <summary>
-/// Result of checking GitHub Releases for a newer version. Never throws to callers; all failure
+/// Result of checking the configured update source for a newer version. Never throws to callers; all failure
 /// modes are represented by <see cref="Status"/>.
 /// </summary>
 public sealed class UpdateCheckResult
 {
-    /// <summary>The version currently running (e.g. <c>1.0.0</c>).</summary>
+    /// <summary>The version currently running (e.g. <c>1.0.4</c>).</summary>
     public required string CurrentVersion { get; init; }
 
     /// <summary>The latest published version, when known.</summary>
@@ -40,8 +40,17 @@ public sealed class UpdateCheckResult
     /// <summary>True when <see cref="LatestVersion"/> is strictly newer than <see cref="CurrentVersion"/>.</summary>
     public bool UpdateAvailable { get; init; }
 
-    /// <summary>URL of the release page to open in a browser.</summary>
+    /// <summary>URL opened by the UI for the available update.</summary>
     public string? ReleaseUrl { get; init; }
+
+    /// <summary>Direct download URL of the update package, when available.</summary>
+    public string? DownloadUrl { get; init; }
+
+    /// <summary>URL of a companion SHA-256 checksum file, when available.</summary>
+    public string? Sha256Url { get; init; }
+
+    /// <summary>SHA-256 checksum of the package, when the update API provides it inline.</summary>
+    public string? Sha256 { get; init; }
 
     /// <summary>Release notes / body, when provided.</summary>
     public string? ReleaseNotes { get; init; }

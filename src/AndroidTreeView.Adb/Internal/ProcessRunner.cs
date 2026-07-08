@@ -13,6 +13,17 @@ internal sealed record ProcessRunResult(
     TimeSpan Duration);
 
 /// <summary>
+/// Buffered binary result of a completed process run.
+/// Used when stdout contains binary data (e.g. PNG frames from <c>adb exec-out screencap -p</c>).
+/// </summary>
+internal sealed record ProcessRunBinaryResult(
+    int ExitCode,
+    byte[] StandardOutput,
+    string StandardError,
+    bool TimedOut,
+    TimeSpan Duration);
+
+/// <summary>
 /// Async wrapper over <see cref="Process"/>. Redirects and drains stdout/stderr concurrently
 /// (so full pipe buffers never deadlock), applies a timeout via a linked
 /// <see cref="CancellationTokenSource"/>, and kills the whole process tree on cancel/timeout.
@@ -67,6 +78,59 @@ internal static class ProcessRunner
 
         var exitCode = timedOut ? -1 : SafeExitCode(process);
         return new ProcessRunResult(exitCode, stdout, stderr, timedOut, stopwatch.Elapsed);
+    }
+
+    /// <summary>
+    /// Runs a process to completion, capturing stdout as raw bytes. Safe for binary payloads
+    /// such as PNG frames from <c>adb exec-out screencap -p</c> (reading stdout as text would
+    /// corrupt binary data). Stderr is still captured as text. Timeout and cancellation behaviour
+    /// is identical to <see cref="RunAsync"/>: on timeout <see cref="ProcessRunBinaryResult.TimedOut"/>
+    /// is set; on external cancellation an <see cref="OperationCanceledException"/> is thrown after
+    /// the process tree is killed.
+    /// </summary>
+    public static async Task<ProcessRunBinaryResult> RunBinaryAsync(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout,
+        CancellationToken ct)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        using var process = new Process { StartInfo = BuildStartInfo(fileName, arguments) };
+
+        process.Start();
+
+        // Drain stdout as raw bytes and stderr as text concurrently to prevent pipe deadlock.
+        using var stdoutBuffer = new MemoryStream();
+        var stdoutTask = process.StandardOutput.BaseStream.CopyToAsync(stdoutBuffer);
+        var stderrTask = process.StandardError.ReadToEndAsync();
+
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+        var timedOut = false;
+        try
+        {
+            await process.WaitForExitAsync(linked.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            timedOut = timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested;
+            KillTree(process);
+            await SafeWaitForExitAsync(process).ConfigureAwait(false);
+
+            if (!timedOut)
+            {
+                // A genuine external cancellation: surface it after cleanup.
+                ct.ThrowIfCancellationRequested();
+            }
+        }
+
+        var stdoutBytes = await SafeReadBinaryAsync(stdoutTask, stdoutBuffer).ConfigureAwait(false);
+        var stderr = await SafeReadAsync(stderrTask).ConfigureAwait(false);
+        stopwatch.Stop();
+
+        var exitCode = timedOut ? -1 : SafeExitCode(process);
+        return new ProcessRunBinaryResult(exitCode, stdoutBytes, stderr, timedOut, stopwatch.Elapsed);
     }
 
     /// <summary>
@@ -182,6 +246,24 @@ internal static class ProcessRunner
         {
             return string.Empty;
         }
+    }
+
+    private static async Task<byte[]> SafeReadBinaryAsync(Task copyTask, MemoryStream buffer)
+    {
+        try
+        {
+            await copyTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Process was killed; return whatever bytes were buffered before termination.
+        }
+        catch (IOException)
+        {
+            // Pipe closed abruptly; return whatever bytes were buffered.
+        }
+
+        return buffer.ToArray();
     }
 
     private static int SafeExitCode(Process process)

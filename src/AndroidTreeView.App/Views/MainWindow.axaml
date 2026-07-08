@@ -2,27 +2,22 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AndroidTreeView.App.ViewModels"
         xmlns:loc="using:AndroidTreeView.App.Localization"
+        xmlns:conv="using:AndroidTreeView.App.Converters"
         x:Class="AndroidTreeView.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="{loc:Localize Key=app.title}"
-        Width="1280" Height="820"
+        Title="{Binding AppTitle}"
+        Width="1440" Height="880"
         MinWidth="360" MinHeight="480"
         Icon="/Assets/atv-icon.ico"
-        Background="Transparent"
-        TransparencyLevelHint="AcrylicBlur, Mica, Blur">
+        Background="{DynamicResource BackgroundBaseBrush}">
+
+    <Window.Resources>
+        <conv:BoolToBlurConverter x:Key="BoolToBlur" />
+    </Window.Resources>
 
     <Panel>
-        <!-- Liquid-glass backdrop; degrades to a tinted panel where OS blur is unavailable. -->
-        <ExperimentalAcrylicBorder IsHitTestVisible="False">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
-                                             TintColor="Black"
-                                             TintOpacity="1"
-                                             MaterialOpacity="0.35" />
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
-
-        <Grid ColumnDefinitions="Auto,*">
+        <Grid ColumnDefinitions="Auto,*"
+              Effect="{Binding Dialog.IsOpen, Converter={StaticResource BoolToBlur}}">
 
             <!-- Navigation sidebar (collapsible; hidden entirely in narrow via the toggle). -->
             <Border Grid.Column="0"
@@ -32,9 +27,10 @@
                     Background="{DynamicResource Glass.Sidebar.Background}">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top"
-                               Text="{loc:Localize Key=app.title}"
+                               Text="{Binding AppName}"
                                FontSize="20"
                                FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis"
                                Margin="4,4,4,24" />
 
                     <StackPanel DockPanel.Dock="Top" Spacing="6">
@@ -77,11 +73,11 @@
             <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*">
 
                 <Grid Grid.Row="0"
-                      Margin="12"
+                      Margin="16,14,16,12"
                       ColumnDefinitions="Auto,Auto,*,Auto,Auto"
-                      ColumnSpacing="8">
+                      ColumnSpacing="10">
                     <Button Grid.Column="0"
-                            Width="40"
+                            Width="36"
                             Command="{Binding ToggleSidebarCommand}"
                             Content="&#9776;" />
                     <Button Grid.Column="1"
@@ -89,46 +85,93 @@
                             Command="{Binding BackCommand}"
                             Content="{loc:Localize Key=common.back}" />
                     <TextBlock Grid.Column="2"
-                               VerticalAlignment="Center"
-                               FontSize="16"
+                               Text="{Binding CurrentTitle}"
+                               FontSize="18"
                                FontWeight="SemiBold"
-                               Text="{loc:Localize Key=devices.title}" />
-                    <TextBlock Grid.Column="3"
                                VerticalAlignment="Center"
-                               Opacity="0.85"
-                               Text="{Binding AdbStatusText}" />
+                               TextTrimming="CharacterEllipsis" />
+                    <Border Grid.Column="3"
+                            Classes="statusChip"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsDevicesSection}">
+                        <TextBlock Text="{Binding AdbStatusText}" />
+                    </Border>
                     <Button Grid.Column="4"
+                            Width="36"
                             Command="{Binding RefreshCommand}"
-                            Content="{loc:Localize Key=common.refresh}" />
+                            ToolTip.Tip="{loc:Localize Key=common.refresh}"
+                            Content="&#8635;" />
                 </Grid>
 
                 <Border Grid.Row="1"
-                        Margin="12,0,12,12"
-                        Padding="12,8"
-                        CornerRadius="8"
-                        IsVisible="{Binding ShowUpdateBanner}"
-                        Background="{DynamicResource Glass.Card.Background}"
-                        BorderBrush="{DynamicResource Glass.Card.Border}"
-                        BorderThickness="1">
-                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                        <TextBlock Grid.Column="0"
+                        Classes="updateBanner"
+                        Margin="16,0,16,14"
+                        IsVisible="{Binding ShowUpdateBanner}">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                        <Border Grid.Column="0" Classes="updateGlyph">
+                            <TextBlock Text="&#8593;" />
+                        </Border>
+                        <TextBlock Grid.Column="1"
                                    VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
                                    TextWrapping="Wrap"
                                    Text="{Binding UpdateBannerText}" />
-                        <Button Grid.Column="1"
-                                Command="{Binding OpenReleaseCommand}"
-                                Content="{loc:Localize Key=update.openrelease}" />
                         <Button Grid.Column="2"
+                                Classes="accent"
+                                Command="{Binding InstallUpdateCommand}"
+                                Content="{loc:Localize Key=update.install}" />
+                        <Button Grid.Column="3"
                                 Width="36"
+                                Classes="ghost"
                                 Command="{Binding DismissUpdateCommand}"
                                 Content="&#10005;" />
                     </Grid>
                 </Border>
 
-                <ContentControl Grid.Row="2"
-                                Margin="12,0,12,12"
-                                Content="{Binding CurrentContent}" />
+                <TransitioningContentControl Grid.Row="2"
+                                             Margin="12,0,12,12"
+                                             Content="{Binding CurrentContent}">
+                    <TransitioningContentControl.PageTransition>
+                        <CrossFade Duration="0:0:0.18" />
+                    </TransitioningContentControl.PageTransition>
+                </TransitioningContentControl>
             </Grid>
         </Grid>
+
+        <Border Classes="toast"
+                Classes.info="{Binding IsToastInfo}"
+                Classes.success="{Binding IsToastSuccess}"
+                Classes.warning="{Binding IsToastWarning}"
+                Classes.error="{Binding IsToastError}"
+                IsVisible="{Binding IsToastVisible}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                MinWidth="240"
+                MaxWidth="380"
+                Margin="18">
+            <TextBlock Text="{Binding ToastMessage}"
+                       TextWrapping="Wrap"
+                       TextTrimming="CharacterEllipsis"
+                       MaxLines="3" />
+        </Border>
+
+        <!-- Modal confirmation dialog: dim + blurred content behind (via the Grid Effect above), centered card on top. -->
+        <Border IsVisible="{Binding Dialog.IsOpen}" Background="#66000000">
+            <Border Width="420" MaxWidth="480"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    CornerRadius="8" Padding="24"
+                    Background="{DynamicResource Glass.Card.Background}"
+                    BorderBrush="{DynamicResource Glass.Card.Border}"
+                    BorderThickness="1">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="{Binding Dialog.Title}" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Dialog.Message}" TextWrapping="Wrap" Opacity="0.9" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <Button Content="{Binding Dialog.CancelText}" Command="{Binding Dialog.CancelCommand}" />
+                        <Button Content="{Binding Dialog.ConfirmText}" Command="{Binding Dialog.ConfirmCommand}" Classes="accent" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
     </Panel>
 </Window>

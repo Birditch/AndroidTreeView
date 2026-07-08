@@ -1,111 +1,71 @@
-# AndroidTreeView v1.0.0 — Requirements Addendum (binding)
+﻿# AndroidTreeView Requirements Addendum
 
-This addendum EXTENDS `docs/architecture.md`. Where they differ, this file wins. Version = **1.0.0**.
-Do **not** create a git tag or GitHub Release in this pass.
+Current product version: `1.0.4`.
 
-## A. Existing repo — refine, don't clobber
-- Repo already has `.git`, `.agents` (Codex), `.idea` (JetBrains). Preserve them.
-- No README/LICENSE/CONTRIBUTING/.github existed before this pass → create fresh.
-- Investigate/clean the stray top-level `AndroidTreeView/` directory (should not duplicate the real
-  `src/AndroidTreeView.App`). Consolidate into the canonical `src/` + `tests/` layout.
+This addendum extends `docs/architecture.md` and reflects the current App + Mini direction.
 
-## B. Localization / i18n (NEW, cross-cutting)
-- Languages: **Simplified Chinese (zh-Hans, DEFAULT)** and **English (en)**. Extensible for more.
-- Resource-based. Do NOT hardcode UI strings in Views/ViewModels.
-- Approach: `.resx` satellite resources + `ILocalizationService` (`AndroidTreeView.Core.Interfaces`)
-  and impl `LocalizationService` (Infrastructure or App). A XAML markup extension `LocalizeExtension`
-  (`{loc:Localize Key}`) resolves keys against the current culture and updates live on language change.
-- `AppSettings` gains `AppLanguage Language` (enum `{ System, ChineseSimplified, English }`,
-  default `ChineseSimplified`). Language selectable in Settings.
-- Resource files: `Strings.resx` (zh-Hans as the neutral/default set OR en neutral + zh-Hans satellite —
-  pick one and be consistent; recommended: neutral = en for fallback safety, `Strings.zh-Hans.resx`
-  for Chinese, and force default culture to zh-Hans at startup). Keys grouped logically.
-- All user-facing text (window title, nav, card labels, badges, settings, errors, empty states) localized.
+## Existing Repository
 
-## C. Settings additions
-- `AppLanguage Language` (default ChineseSimplified)
-- `bool AutoCheckUpdates` (default true)
-- `string? AccentColor` (optional hex; nullable)
-- Existing theme modes localized labels: 跟随系统 / 亮色 / 暗色.
+- Preserve `.git`, `.agents`, `.idea`, existing source projects, and user worktree changes.
+- Keep the canonical layout under `src/`, `tests/`, `docs/`, `packaging/`, and `build/`.
+- Do not duplicate shared code between the full App and Mini when it can live in a shared service or target.
 
-## D. Update checker (NEW)
-- `IUpdateService` (Core) + `GitHubUpdateService` (Infrastructure) using `HttpClient` against GitHub
-  Releases API (`/repos/{owner}/{repo}/releases/latest`). Owner/repo configurable via constants
-  (placeholder `AndroidTreeView/AndroidTreeView`).
-- Model `UpdateCheckResult` (`AndroidTreeView.Models`): `CurrentVersion`, `LatestVersion`,
-  `bool UpdateAvailable`, `string? ReleaseUrl`, `string? ReleaseNotes`, `UpdateCheckStatus Status`
-  (enum `{ UpToDate, UpdateAvailable, NoRelease, NetworkError, RateLimited, InvalidData, Disabled }`).
-- Semantic version compare (implement a small SemVer comparer; tolerate leading `v`).
-- Behavior: never block startup; run async/fire-and-forget after UI shows. Show non-intrusive banner
-  when update available + button to open release page (via `IFilePickerService`/OS open-url helper).
-  No auto-download/auto-install in v1. Manual "检查更新 / Check for updates" button in Settings/About.
-- Handle: no internet, API failure, rate limit, invalid version, no release, already latest — all mapped
-  to `UpdateCheckStatus`, never throw to UI.
-- App version source: assembly `InformationalVersion` (set `<Version>1.0.0</Version>` in App csproj).
+## App And Mini Sharing
 
-## E. GUI redesign — CARD GRID primary (replaces tree-primary)
-- Main screen = **responsive card grid** of connected devices (NOT a tree as the primary view).
-- Left sidebar = app navigation (Devices / Settings / About), collapsible. Optional right status panel
-  (ADB status, device count, refresh) on wide layout.
-- **Device card** shows: device name, device index (#1, #2…), manufacturer, model, serial number,
-  Android version, connection status, battery %, charging status, battery temperature, **battery cycle
-  count if available (else “Cycle Count: Unavailable” — never fake)**, root status if available, last
-  refresh time. Status badges: Online / Offline / Unauthorized / Rooted / Charging / Low Battery.
-- Click card → **Device Detail page** (navigation):
-  - Header: name, model, serial, connection status, battery %, root status, Refresh + Back buttons.
-  - Tabs/side-nav: Overview, Hardware, Battery, System, Storage, Network, Root, Logcat, Raw Properties.
-  - Content = clean grouped info cards (no giant unstyled text blobs). Raw Properties = searchable table.
-  - Loading = skeleton/loading UI. Errors = clear error cards per section.
+- Shared DI registration lives in `AndroidTreeView.Shared.AndroidTreeViewSharedServices`.
+- Full App and Mini share:
+  - ADB location/environment/device monitor services
+  - scrcpy launch logic
+  - settings service
+  - NekoIndex update checking
+  - update downloading/verification/automatic apply flow
+  - scrcpy asset distribution through `build/AndroidTreeView.Scrcpy.targets`
+- Full App and Mini use different update keys:
+  - `android-tree-view-app`
+  - `android-tree-view-mini`
 
-## F. Battery cycle count (Models + parser change)
-- Add to `BatteryInfo`: `int? CycleCount`. Presence indicated by `CycleCount != null`.
-- Parse safely, NO root required: from `dumpsys battery` (`Charge counter`/`Cycle count` when present),
-  and/or readable sysfs (`/sys/class/power_supply/battery/cycle_count`) via `adb shell cat` (non-root,
-  best-effort). Never destructive. If unavailable → null (UI shows “Unavailable”).
-- Root may add optional enhanced data but is never required.
+## Localization
 
-## G. Responsive layout (reaffirmed for card UI)
-- Wide (>=1200): left sidebar + card grid (multi-column) + optional right panel.
-- Medium (800–1199): collapsible sidebar + 2-column grid; detail page uses tabs.
-- Narrow (<800): single-column card list + top nav + Back; details as stacked cards.
-- Nothing overflows/clips at any width.
+- Neutral resources are English fallback: `Strings.resx`.
+- Simplified Chinese resources are in `Strings.zh-Hans.resx`.
+- User-facing App strings must use localization resources.
+- Mini may use direct concise bilingual strings because it is a tiny companion window, but visible strings must be readable and not mojibake.
 
-## H. Liquid-glass visual style
-- Translucent/acrylic cards where Avalonia supports it (`ExperimentalAcrylicBorder`,
-  `TransparencyLevelHint = AcrylicBlur/Mica` on the window), soft borders, subtle shadows (BoxShadow),
-  rounded corners (>=8), layered background, smooth hover/selected transitions, light/dark/system.
-  Optional accent color. Tasteful + readable, not flashy. Must degrade gracefully where blur
-  unsupported (fallback to solid translucent brushes).
+## Update Automation
 
-## I. Windows MSI packaging (NEW)
-- Targets: **win-x64** and **win-x86** (ignore macOS/Linux packaging for v1).
-- Use **WiX Toolset v5** (`.wixproj` / `wix` CLI) or equivalent reliable MSI approach.
-- MSI installs: app exe + required files + app icon + Start Menu shortcut (+ optional Desktop shortcut).
-- MSI must check for the required **.NET 10 Desktop/runtime**; if missing, show a clear message + guide
-  the user to install it (bootstrapper/launch condition + doc link). App itself also detects
-  runtime/env problems gracefully where practical.
-- Provide `build/` scripts and docs for building win-x64 + win-x86 MSIs locally.
+- `IUpdateService` + `NekoIndexUpdateService` query the internal update API.
+- `IUpdateInstaller` + `UpdateInstaller` download packages, verify SHA-256 metadata when present, extract x64 ZIP packages, and start the automated apply flow.
+- The user must not be asked to download a ZIP and replace files manually.
+- ZIP packages without a supported `release.json` and executable are rejected.
+- No internet, API failure, rate limit, invalid metadata, wrong app key, no release, disabled auto-check, and already-latest states map to explicit statuses and never throw to UI.
 
-## J. GitHub Actions — split workflows
-- `.github/workflows/ci.yml` (push + pull_request): checkout, setup .NET 10, restore, format check
-  (`dotnet format --verify-no-changes`, non-fatal-tolerant if needed), vulnerability check
-  (`dotnet list package --vulnerable --include-transitive`), build, test, optional analysis, upload
-  logs/artifacts. Fails on restore/build/test failure, serious vuln, or format (if enabled).
-- `.github/workflows/publish.yml` (only on tag `v*`): reuse build/test, build win-x64 + win-x86,
-  package MSIs, generate checksums, create GitHub Release, upload MSI + checksums + release notes.
-  Must NOT run on normal commits. Do not push a tag now.
+## UI Requirements
 
-## K. Open-source files (create/refine)
-- README.md — **primarily Chinese**, with an English section or `README.en.md` link. Sections:
-  项目介绍 / 功能特性 / 截图占位 / 安装方式 / ADB 配置说明 / USB 调试开启说明 / Windows 使用说明 /
-  MSI 安装说明 / 自动更新说明 / 开发环境 / 编译方式 / 发布方式 / 贡献指南 / 许可证.
-- LICENSE (MIT), CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, `.github/ISSUE_TEMPLATE/*`,
-  `.github/pull_request_template.md`. `.gitignore`/`.editorconfig` refine existing.
+- Main screen uses a responsive card grid, not a tree as the primary UI.
+- Device cards show real data only: name/index, manufacturer/model/serial, Android version, state, battery, charging, temperature, cycle count when available, root state, and last refresh.
+- Details include Overview, Hardware, Battery, System, Storage, Network, Root, Logcat, and Raw Properties.
+- Fastboot devices are represented without pretending Android OS data is available.
+- Destructive device actions are not allowed; potentially disruptive actions require confirmation.
+- Mirroring is shared and kept consistent between App and Mini.
 
-## L. v1.0.0 acceptance (superset — all must hold)
-App starts; Chinese default UI; English selectable; theme switch works; ADB detection + missing-ADB
-screen; devices shown as cards; online/offline/unauthorized; real basic info + battery % + cycle count
-(if available); click card → detail; detail Overview/Battery/Hardware/System/Storage/Root; raw getprop
-searchable; basic Logcat; Settings page; update-check service; CI + Publish workflows; MSI packaging
-config; refined OSS files; **project builds**; parser unit tests. No fake data for core logic; no
-destructive ADB; never modify the device.
+## Packaging
+
+- Windows target: `win-x64` only.
+- Packaging uses WiX v5.
+- ZIP package version must match `AppInfo.Version`.
+- App and Mini must both have first-class x64 upload ZIPs:
+  - `AndroidTreeView-<version>-x64.zip`
+  - `AndroidTreeView-Mini-<version>-x64.zip`
+- Framework-dependent builds must clearly require the .NET 10 Desktop Runtime.
+
+## Verification
+
+Before calling a release candidate done, run:
+
+```bash
+dotnet build src/AndroidTreeView.App/AndroidTreeView.App.csproj --no-restore
+dotnet build src/AndroidTreeView.Mini/AndroidTreeView.Mini.csproj --no-restore
+dotnet test AndroidTreeView.sln --no-restore
+```
+
+Current expected baseline: App build passes, Mini build passes, and 265 tests pass.

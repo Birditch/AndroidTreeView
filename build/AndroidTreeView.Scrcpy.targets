@@ -1,0 +1,69 @@
+<Project>
+
+  <!-- Shared bundled tools flow for both AndroidTreeView.App and AndroidTreeView.Mini.
+       scrcpy ships adb and USB DLLs; fastboot.exe is folded into the same folder when available. -->
+  <PropertyGroup>
+    <ScrcpyDir Condition="'$(ScrcpyDir)' == ''">$(MSBuildThisFileDirectory)..\tools\scrcpy</ScrcpyDir>
+    <ScrcpyUrl Condition="'$(ScrcpyUrl)' == ''">https://github.com/Genymobile/scrcpy/releases/download/v4.0/scrcpy-win64-v4.0.zip</ScrcpyUrl>
+    <PlatformToolsUrl Condition="'$(PlatformToolsUrl)' == ''">https://dl.google.com/android/repository/platform-tools-latest-windows.zip</PlatformToolsUrl>
+    <AndroidTreeViewBundleFastboot Condition="'$(AndroidTreeViewBundleFastboot)' == ''">true</AndroidTreeViewBundleFastboot>
+  </PropertyGroup>
+
+  <Target Name="AtvEnsureScrcpy" BeforeTargets="Build;Publish"
+          Condition="'$(OS)' == 'Windows_NT' and !Exists('$(ScrcpyDir)\scrcpy.exe')">
+    <Message Importance="high" Text="AndroidTreeView: fetching bundled scrcpy (screen mirror + adb)..." />
+    <MakeDir Directories="$(IntermediateOutputPath)scrcpy" />
+    <DownloadFile SourceUrl="$(ScrcpyUrl)" DestinationFolder="$(IntermediateOutputPath)scrcpy"
+                  DestinationFileName="scrcpy.zip" Retries="1" ContinueOnError="true">
+      <Output TaskParameter="DownloadedFile" PropertyName="_ScrcpyZip" />
+    </DownloadFile>
+    <Unzip Condition="'$(_ScrcpyZip)' != '' and Exists('$(_ScrcpyZip)')"
+           SourceFiles="$(_ScrcpyZip)" DestinationFolder="$(IntermediateOutputPath)scrcpy\x" ContinueOnError="true" />
+    <ItemGroup Condition="Exists('$(IntermediateOutputPath)scrcpy\x\scrcpy-win64-v4.0\scrcpy.exe')">
+      <_ScrcpyDl Include="$(IntermediateOutputPath)scrcpy\x\scrcpy-win64-v4.0\**\*" />
+    </ItemGroup>
+    <Copy Condition="'@(_ScrcpyDl)' != ''" SourceFiles="@(_ScrcpyDl)"
+          DestinationFiles="@(_ScrcpyDl->'$(ScrcpyDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+
+  <Target Name="AtvEnsureFastboot" BeforeTargets="Build;Publish" AfterTargets="AtvEnsureScrcpy"
+          Condition="'$(OS)' == 'Windows_NT' and '$(AndroidTreeViewBundleFastboot)' == 'true' and Exists('$(ScrcpyDir)\scrcpy.exe') and !Exists('$(ScrcpyDir)\fastboot.exe')">
+    <Message Importance="high" Text="AndroidTreeView: fetching fastboot into the scrcpy folder..." />
+    <MakeDir Directories="$(IntermediateOutputPath)fb" />
+    <DownloadFile SourceUrl="$(PlatformToolsUrl)" DestinationFolder="$(IntermediateOutputPath)fb"
+                  DestinationFileName="platform-tools.zip" Retries="1" ContinueOnError="true">
+      <Output TaskParameter="DownloadedFile" PropertyName="_AtvFbZip" />
+    </DownloadFile>
+    <Unzip Condition="'$(_AtvFbZip)' != '' and Exists('$(_AtvFbZip)')"
+           SourceFiles="$(_AtvFbZip)" DestinationFolder="$(IntermediateOutputPath)fb\x" ContinueOnError="true" />
+    <ItemGroup Condition="Exists('$(IntermediateOutputPath)fb\x\platform-tools\fastboot.exe')">
+      <_AtvFbFiles Include="$(IntermediateOutputPath)fb\x\platform-tools\fastboot.exe" />
+      <_AtvFbFiles Include="$(IntermediateOutputPath)fb\x\platform-tools\libwinpthread-1.dll"
+                   Condition="Exists('$(IntermediateOutputPath)fb\x\platform-tools\libwinpthread-1.dll')" />
+    </ItemGroup>
+    <Copy Condition="'@(_AtvFbFiles)' != ''" SourceFiles="@(_AtvFbFiles)"
+          DestinationFolder="$(ScrcpyDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+
+  <Target Name="AtvCopyScrcpyToOutput" AfterTargets="Build" Condition="Exists('$(ScrcpyDir)\scrcpy.exe')">
+    <ItemGroup>
+      <_ScrcpyOut Include="$(ScrcpyDir)\**\*" Exclude="$(ScrcpyDir)\.omc\**\*" />
+      <_ScrcpyOut Remove="$(ScrcpyDir)\fastboot.exe" Condition="'$(AndroidTreeViewBundleFastboot)' != 'true'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ScrcpyOut)"
+          DestinationFiles="@(_ScrcpyOut->'$(OutDir)scrcpy\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="AtvCopyScrcpyToPublish" AfterTargets="Publish" Condition="Exists('$(ScrcpyDir)\scrcpy.exe')">
+    <ItemGroup>
+      <_ScrcpyPub Include="$(ScrcpyDir)\**\*" Exclude="$(ScrcpyDir)\.omc\**\*" />
+      <_ScrcpyPub Remove="$(ScrcpyDir)\fastboot.exe" Condition="'$(AndroidTreeViewBundleFastboot)' != 'true'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ScrcpyPub)"
+          DestinationFiles="@(_ScrcpyPub->'$(PublishDir)scrcpy\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

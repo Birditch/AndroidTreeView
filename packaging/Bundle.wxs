@@ -1,36 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
-  AndroidTreeView — OPTIONAL WiX v5 Burn bootstrapper (Bundle).
+  AndroidTreeView - optional WiX v5 Burn bootstrapper.
 
-  This bundle is for framework-dependent MSIs. It detects the Microsoft .NET 10 Desktop
-  Runtime for the target architecture and, if it is missing, silently installs the runtime
-  before chaining the AndroidTreeView MSI. If the runtime is already present it installs the
-  MSI directly. If you ship a SELF-CONTAINED MSI you do not need this bundle at all.
+  This bundle is for framework-dependent MSIs. It detects the Microsoft .NET 10 Desktop Runtime for
+  the target architecture and silently installs it before chaining the AndroidTreeView MSI.
 
-  It is NOT compiled by AndroidTreeView.Package.wixproj (that project excludes Bundle.wxs).
-  Build it separately with the `wix` CLI after the MSI has been produced. First register the
-  extensions once (per machine):
-
-      wix extension add -g WixToolset.BootstrapperApplications.wixext
-      wix extension add -g WixToolset.Netfx.wixext
-
-  Then build (adjust arch / paths):
+  Build after the MSI has been produced:
 
       wix build packaging/Bundle.wxs -arch x64 ^
-          -d ProductVersion=1.0.0 ^
+          -d ProductVersion=1.0.4 ^
           -d Platform=x64 ^
-          -d MsiPath=artifacts\AndroidTreeView-1.0.0-x64.msi ^
+          -d MsiPath=artifacts\AndroidTreeView-1.0.4-x64.msi ^
           -d DotNetRuntimeExe=C:\path\windowsdesktop-runtime-10.0.x-win-x64.exe ^
           -ext WixToolset.BootstrapperApplications.wixext ^
           -ext WixToolset.Netfx.wixext ^
-          -o artifacts\AndroidTreeView-1.0.0-x64-setup.exe
-
-  Preprocessor variables (all passed with -d on the command line):
-    $(var.ProductVersion)     e.g. 1.0.0
-    $(var.Platform)           x64 | x86  (must match the MSI arch)
-    $(var.MsiPath)            path to the MSI produced by build-msi.ps1
-    $(var.DotNetRuntimeExe)   path to the official windowsdesktop-runtime-*.exe installer
-                              (download from https://dotnet.microsoft.com/download/dotnet/10.0)
+          -o artifacts\AndroidTreeView-1.0.4-x64-setup.exe
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
@@ -43,7 +27,6 @@
       UpgradeCode="{A1D2C3B4-5E6F-4708-9182-3B4C5D6E7F80}"
       AboutUrl="https://github.com/Birditch/AndroidTreeView">
 
-    <!-- Minimal built-in UI. The runtime download link is shown to the user when required. -->
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication
           Theme="hyperlinkLicense"
@@ -51,8 +34,6 @@
           LicenseUrl="https://github.com/Birditch/AndroidTreeView/blob/main/LICENSE" />
     </BootstrapperApplication>
 
-    <!-- Detect the highest installed .NET Desktop Runtime with major version 10 for this
-         architecture. Sets DotNetDesktop10 to the version string, or empty if not found. -->
     <netfx:DotNetCoreSearch
         Id="SearchDotNetDesktop10"
         RuntimeType="desktop"
@@ -61,8 +42,6 @@
         Variable="DotNetDesktop10" />
 
     <Chain>
-      <!-- Install the .NET 10 Desktop Runtime only when the search found nothing suitable.
-           Permanent: leave the runtime installed when AndroidTreeView is uninstalled. -->
       <ExePackage
           Id="DotNetDesktopRuntime10"
           DisplayName="Microsoft .NET Desktop Runtime 10 ($(var.Platform))"
@@ -79,7 +58,6 @@
         <ExitCode Value="3010" Behavior="scheduleReboot" />
       </ExePackage>
 
-      <!-- The AndroidTreeView application MSI. -->
       <MsiPackage
           Id="AndroidTreeViewApp"
           SourceFile="$(var.MsiPath)"

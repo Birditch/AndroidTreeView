@@ -2,6 +2,7 @@ using AndroidTreeView.App.Services;
 using AndroidTreeView.Core;
 using AndroidTreeView.Core.Interfaces;
 using AndroidTreeView.Core.Options;
+using AndroidTreeView.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -20,11 +21,13 @@ public sealed partial class SettingsViewModel : ViewModelBase
     private readonly IThemeService _themeService;
     private readonly ILocalizationService _localization;
     private readonly IUpdateService _updateService;
+    private readonly IUpdateInstaller _updateInstaller;
     private readonly IFilePickerService _filePicker;
     private readonly IAdbLocator _adbLocator;
     private readonly IAdbEnvironment _adbEnvironment;
 
     private string? _latestReleaseUrl;
+    private UpdateCheckResult? _latestUpdate;
 
     [ObservableProperty]
     private string? _adbPath;
@@ -65,11 +68,20 @@ public sealed partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _updateStatusText = string.Empty;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(InstallUpdateCommand))]
+    private bool _canInstallUpdate;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(InstallUpdateCommand))]
+    private bool _isInstallingUpdate;
+
     public SettingsViewModel(
         ISettingsService settingsService,
         IThemeService themeService,
         ILocalizationService localization,
         IUpdateService updateService,
+        IUpdateInstaller updateInstaller,
         IFilePickerService filePicker,
         IAdbLocator adbLocator,
         IAdbEnvironment adbEnvironment)
@@ -78,6 +90,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _themeService = themeService;
         _localization = localization;
         _updateService = updateService;
+        _updateInstaller = updateInstaller;
         _filePicker = filePicker;
         _adbLocator = adbLocator;
         _adbEnvironment = adbEnvironment;
@@ -87,16 +100,36 @@ public sealed partial class SettingsViewModel : ViewModelBase
         LanguageOptions = Enum.GetValues<AppLanguage>();
 
         LoadFrom(_settingsService.Current);
+        _updateStatusText = _localization.Get("update.ready");
     }
 
     /// <summary>The running application version (read-only).</summary>
     public string CurrentVersion { get; }
+
+    public string UpdateSource => AppInfo.UpdateServerBaseUrl;
+
+    public string UpdateKey => AppInfo.AppUpdateKey;
 
     /// <summary>Available theme options for selection controls.</summary>
     public ThemeMode[] ThemeOptions { get; }
 
     /// <summary>Available language options for selection controls.</summary>
     public AppLanguage[] LanguageOptions { get; }
+
+    // Apply the language immediately on selection (hot reload) and persist just the language so it
+    // survives a restart — without saving other in-progress (unsaved) edits on this page.
+    partial void OnLanguageChanged(AppLanguage value)
+    {
+        _localization.SetLanguage(value);
+
+        var current = _settingsService.Current;
+        if (current.Language != value)
+        {
+            var updated = current.Clone();
+            updated.Language = value;
+            _ = _settingsService.SaveAsync(updated);
+        }
+    }
 
     [RelayCommand]
     private async Task SaveAsync(CancellationToken ct)
@@ -127,7 +160,34 @@ public sealed partial class SettingsViewModel : ViewModelBase
         var result = await _updateService.CheckForUpdatesAsync(userInitiated: true, ct).ConfigureAwait(true);
         LatestVersion = result.LatestVersion;
         _latestReleaseUrl = result.ReleaseUrl;
+        _latestUpdate = result.UpdateAvailable ? result : null;
+        CanInstallUpdate = result.UpdateAvailable && !string.IsNullOrWhiteSpace(result.DownloadUrl);
         UpdateStatusText = UpdatePresentation.Describe(result, _localization);
+    }
+
+    private bool CanInstallUpdateNow() => CanInstallUpdate && !IsInstallingUpdate;
+
+    [RelayCommand(CanExecute = nameof(CanInstallUpdateNow))]
+    private async Task InstallUpdateAsync(CancellationToken ct)
+    {
+        if (_latestUpdate is null)
+        {
+            return;
+        }
+
+        IsInstallingUpdate = true;
+        UpdateStatusText = _localization.Get("update.downloading");
+
+        try
+        {
+            var result = await _updateInstaller.InstallAsync(_latestUpdate, ct).ConfigureAwait(true);
+            UpdateStatusText = UpdatePresentation.DescribeInstall(result, _localization);
+            CanInstallUpdate = !result.Started;
+        }
+        finally
+        {
+            IsInstallingUpdate = false;
+        }
     }
 
     [RelayCommand]

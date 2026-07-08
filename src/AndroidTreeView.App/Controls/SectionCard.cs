@@ -72,7 +72,7 @@ public class SectionCard : ContentControl
         var border = new Border
         {
             Child = layout,
-            CornerRadius = new CornerRadius(12),
+            CornerRadius = new CornerRadius(8),
             BorderThickness = new Thickness(1)
         };
         border.Bind(Border.BackgroundProperty, card.GetResourceObservable("Glass.Card.Background"));

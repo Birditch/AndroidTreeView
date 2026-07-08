@@ -36,6 +36,8 @@
                         <controls:InfoRow Label="{loc:Localize Key=hardware.cpu}" Value="{Binding Hardware.CpuModel}" />
                         <controls:InfoRow Label="{loc:Localize Key=hardware.arch}" Value="{Binding Hardware.CpuArchitecture}" />
                         <controls:InfoRow Label="{loc:Localize Key=hardware.cores}" Value="{Binding Hardware.CpuCoreCount}" />
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.platform}" Value="{Binding Hardware.HardwarePlatform}" />
+                        <controls:InfoRow Label="{loc:Localize Key=hardware.board}" Value="{Binding Hardware.BoardName}" />
                         <StackPanel Spacing="4">
                             <TextBlock Text="{loc:Localize Key=hardware.abi}" FontSize="12" Opacity="0.7" />
                             <ItemsControl ItemsSource="{Binding Hardware.AbiList}">

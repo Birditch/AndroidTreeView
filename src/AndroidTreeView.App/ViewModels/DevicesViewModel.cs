@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
+using AndroidTreeView.App.Services;
 using AndroidTreeView.Core.Interfaces;
 using AndroidTreeView.Models.Devices;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,6 +20,9 @@ namespace AndroidTreeView.App.ViewModels;
 public sealed partial class DevicesViewModel : ViewModelBase
 {
     private readonly ILocalizationService _localization;
+    private readonly IDeviceActionsService _actions;
+    private readonly IFastbootService _fastboot;
+    private readonly IDialogService _dialog;
 
     // Full, ordered backlog of cards (device numbering is stable across filtering).
     private readonly List<DeviceCardViewModel> _all = new();
@@ -34,14 +40,40 @@ public sealed partial class DevicesViewModel : ViewModelBase
     private bool _isAdbAvailable;
 
     [ObservableProperty]
+    private bool _isAdbMissing;
+
+    [ObservableProperty]
     private int _deviceCount;
+
+    /// <summary>Localized "last refresh: HH:mm:ss" for the whole list, shown once next to the title.</summary>
+    [ObservableProperty]
+    private string _lastRefreshText = string.Empty;
 
     [ObservableProperty]
     private DeviceCardViewModel? _selectedDevice;
 
-    public DevicesViewModel(ILocalizationService localization)
+    /// <summary>Number of cards checked for a batch operation.</summary>
+    [ObservableProperty]
+    private int _selectedCount;
+
+    /// <summary>Whether at least one card is checked (shows the batch action bar).</summary>
+    [ObservableProperty]
+    private bool _hasSelection;
+
+    /// <summary>Localized "N selected" text for the batch bar.</summary>
+    [ObservableProperty]
+    private string _selectionText = string.Empty;
+
+    public DevicesViewModel(
+        ILocalizationService localization,
+        IDeviceActionsService actions,
+        IFastbootService fastboot,
+        IDialogService dialog)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
+        _actions = actions ?? throw new ArgumentNullException(nameof(actions));
+        _fastboot = fastboot ?? throw new ArgumentNullException(nameof(fastboot));
+        _dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
     }
 
     /// <summary>Cards currently visible in the grid (filtered subset of the full device list).</summary>
@@ -53,6 +85,15 @@ public sealed partial class DevicesViewModel : ViewModelBase
     /// <summary>Raised when the user requests a manual refresh; the shell owns the monitor and reacts.</summary>
     public event EventHandler? RefreshRequested;
 
+    /// <summary>Raised when the user asks to set up ADB (from the "ADB not found" state).</summary>
+    public event EventHandler? SetupRequested;
+
+    /// <summary>Raised when the user opens screen mirror for a device; the shell shows the window.</summary>
+    public event EventHandler<DeviceCardViewModel>? ScreenRequested;
+
+    /// <summary>Raised when the user opens a CLI terminal for a device; the shell launches it.</summary>
+    public event EventHandler<DeviceCardViewModel>? CliRequested;
+
     /// <summary>
     /// Reconciles the current device list into the existing cards without recreating unchanged ones or
     /// losing the current selection.
@@ -60,6 +101,7 @@ public sealed partial class DevicesViewModel : ViewModelBase
     public void Reconcile(IReadOnlyList<AdbDevice> devices, bool adbAvailable)
     {
         IsAdbAvailable = adbAvailable;
+        IsAdbMissing = !adbAvailable;
         var incoming = devices ?? (IReadOnlyList<AdbDevice>)Array.Empty<AdbDevice>();
 
         var incomingSerials = new HashSet<string>(incoming.Select(d => d.Serial), StringComparer.Ordinal);
@@ -77,6 +119,9 @@ public sealed partial class DevicesViewModel : ViewModelBase
                 SelectedDevice = null;
             }
 
+            _all[i].PropertyChanged -= OnCardPropertyChanged;
+            _all[i].ScreenRequested -= OnCardScreenRequested;
+            _all[i].CliRequested -= OnCardCliRequested;
             _all.RemoveAt(i);
         }
 
@@ -84,8 +129,15 @@ public sealed partial class DevicesViewModel : ViewModelBase
         var ordered = new List<DeviceCardViewModel>(incoming.Count);
         foreach (var device in incoming)
         {
-            var card = _all.FirstOrDefault(c => string.Equals(c.Serial, device.Serial, StringComparison.Ordinal))
-                       ?? new DeviceCardViewModel(_localization, ActivateDevice);
+            var card = _all.FirstOrDefault(c => string.Equals(c.Serial, device.Serial, StringComparison.Ordinal));
+            if (card is null)
+            {
+                card = new DeviceCardViewModel(_localization, _actions, _fastboot, _dialog, ActivateDevice);
+                card.PropertyChanged += OnCardPropertyChanged;
+                card.ScreenRequested += OnCardScreenRequested;
+                card.CliRequested += OnCardCliRequested;
+            }
+
             card.UpdateFrom(device, battery: null, root: null);
             ordered.Add(card);
         }
@@ -103,13 +155,20 @@ public sealed partial class DevicesViewModel : ViewModelBase
         HasDevices = _all.Count > 0;
         IsEmpty = adbAvailable && _all.Count == 0;
 
+        LastRefreshText = string.Format(
+            _localization.CurrentCulture,
+            "{0}: {1}",
+            _localization.Get("card.lastrefresh"),
+            DateTimeOffset.Now.LocalDateTime.ToString("HH:mm:ss", _localization.CurrentCulture));
+
         ApplyFilter();
+        RecomputeSelection();
     }
 
     /// <summary>Marks <paramref name="card"/> as selected and raises <see cref="DeviceActivated"/>.</summary>
     public void ActivateDevice(DeviceCardViewModel card)
     {
-        if (card is null)
+        if (card is null || !card.CanOpenDetail)
         {
             return;
         }
@@ -118,10 +177,102 @@ public sealed partial class DevicesViewModel : ViewModelBase
         DeviceActivated?.Invoke(this, card);
     }
 
+    /// <summary>Finds a card by serial across the full device list (including filtered-out cards).</summary>
+    public DeviceCardViewModel? FindCard(string serial) =>
+        _all.FirstOrDefault(c => string.Equals(c.Serial, serial, StringComparison.Ordinal));
+
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
     [RelayCommand]
     private void Refresh() => RefreshRequested?.Invoke(this, EventArgs.Empty);
+
+    [RelayCommand]
+    private void OpenSetup() => SetupRequested?.Invoke(this, EventArgs.Empty);
+
+    [RelayCommand]
+    private void SelectAll()
+    {
+        foreach (var card in _all)
+        {
+            card.IsSelected = true;
+        }
+    }
+
+    [RelayCommand]
+    private void ClearSelection()
+    {
+        foreach (var card in _all)
+        {
+            card.IsSelected = false;
+        }
+    }
+
+    /// <summary>Enables Wi-Fi + mobile data on every checked, online device (batch one-click network).</summary>
+    [RelayCommand]
+    private async Task BatchEnableNetworkAsync()
+    {
+        var serials = _all.Where(c => c.IsSelected && c.IsOnline).Select(c => c.Serial).ToList();
+        if (serials.Count == 0)
+        {
+            return;
+        }
+
+        var confirmed = await _dialog.ConfirmAsync(
+            _localization.Get("confirm.title"),
+            _localization.Format("confirm.batchnetwork.msg", serials.Count),
+            _localization.Get("common.confirm"),
+            _localization.Get("common.cancel")).ConfigureAwait(true);
+        if (!confirmed)
+        {
+            return;
+        }
+
+        await Task.WhenAll(serials.Select(BatchEnableOneAsync)).ConfigureAwait(true);
+        Notifier.Notify(_localization.Format("action.done", _localization.Get("menu.network")), NotifierLevel.Success);
+    }
+
+    private async Task BatchEnableOneAsync(string serial)
+    {
+        try
+        {
+            await _actions.EnableNetworkAsync(serial).ConfigureAwait(true);
+        }
+        catch (Exception)
+        {
+            // A single device failing must not abort the batch.
+        }
+    }
+
+    private void OnCardPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DeviceCardViewModel.IsSelected))
+        {
+            RecomputeSelection();
+        }
+    }
+
+    private void OnCardScreenRequested(object? sender, EventArgs e)
+    {
+        if (sender is DeviceCardViewModel card)
+        {
+            ScreenRequested?.Invoke(this, card);
+        }
+    }
+
+    private void OnCardCliRequested(object? sender, EventArgs e)
+    {
+        if (sender is DeviceCardViewModel card)
+        {
+            CliRequested?.Invoke(this, card);
+        }
+    }
+
+    private void RecomputeSelection()
+    {
+        SelectedCount = _all.Count(c => c.IsSelected);
+        HasSelection = SelectedCount > 0;
+        SelectionText = _localization.Format("batch.selected", SelectedCount);
+    }
 
     private void ApplyFilter()
     {
@@ -138,11 +289,29 @@ public sealed partial class DevicesViewModel : ViewModelBase
 
         var target = filtered.ToList();
 
-        // Rebuild the visible collection in order. Device lists are small, so a clear/re-add is cheap.
-        Devices.Clear();
-        foreach (var card in target)
+        // Sync the visible collection to `target` IN PLACE. A full Clear()+re-add would recreate every
+        // ItemsControl container on each 1 Hz refresh — which closes any open context menu and drops
+        // hover/selection. So only apply the real add/remove/move diffs: no change => no CollectionChanged.
+        for (var i = Devices.Count - 1; i >= 0; i--)
         {
-            Devices.Add(card);
+            if (!target.Contains(Devices[i]))
+            {
+                Devices.RemoveAt(i);
+            }
+        }
+
+        for (var i = 0; i < target.Count; i++)
+        {
+            var card = target[i];
+            var currentIndex = Devices.IndexOf(card);
+            if (currentIndex < 0)
+            {
+                Devices.Insert(i, card);
+            }
+            else if (currentIndex != i)
+            {
+                Devices.Move(currentIndex, i);
+            }
         }
     }
 

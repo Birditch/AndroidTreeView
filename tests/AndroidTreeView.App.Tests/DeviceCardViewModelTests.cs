@@ -13,8 +13,13 @@ namespace AndroidTreeView.App.Tests;
 /// </summary>
 public sealed class DeviceCardViewModelTests
 {
-    private static DeviceCardViewModel CreateCard() =>
-        new(new FakeLocalizationService(), _ => { });
+    private static DeviceCardViewModel CreateCard(Action<DeviceCardViewModel>? onOpen = null) =>
+        new(
+            new FakeLocalizationService(),
+            new FakeDeviceActionsService(),
+            new FakeFastbootService(),
+            new FakeDialogService(),
+            onOpen ?? (_ => { }));
 
     private static AdbDevice Device(
         string serial = "SERIAL",
@@ -142,5 +147,33 @@ public sealed class DeviceCardViewModelTests
 
         Assert.Equal(true, card.IsRooted);
         Assert.Equal("status.rooted", card.RootText);
+    }
+
+    [Fact]
+    public void OpenCommand_opens_online_device_detail()
+    {
+        DeviceCardViewModel? opened = null;
+        var card = CreateCard(c => opened = c);
+        card.UpdateFrom(Device(state: DeviceConnectionState.Online), battery: null, root: null);
+
+        Assert.True(card.CanOpenDetail);
+        Assert.True(card.OpenCommand.CanExecute(null));
+
+        card.OpenCommand.Execute(null);
+
+        Assert.Same(card, opened);
+    }
+
+    [Fact]
+    public void OpenCommand_is_disabled_for_fastboot_device()
+    {
+        var openCount = 0;
+        var card = CreateCard(_ => openCount++);
+        card.UpdateFrom(Device(state: DeviceConnectionState.Bootloader), battery: null, root: null);
+
+        Assert.True(card.IsFastboot);
+        Assert.False(card.CanOpenDetail);
+        Assert.False(card.OpenCommand.CanExecute(null));
+        Assert.Equal(0, openCount);
     }
 }

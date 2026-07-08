@@ -45,6 +45,47 @@ public static class AdbArgs
     /// <summary>The sysfs path exposing the Wi-Fi interface MAC address (readable without root).</summary>
     public const string WlanMacPath = "/sys/class/net/wlan0/address";
 
+    // ── Device-action commands (AdbDeviceActionsService) ─────────────────────
+
+    /// <summary>NTP server used by <c>SetChinaNtpAsync</c>.</summary>
+    public const string NtpAliyunServer = "ntp.aliyun.com";
+
+    // Reboot / power (global adb commands, RunInShell = false)
+    public static readonly string[] Reboot           = { "reboot" };
+    public static readonly string[] RebootRecovery   = { "reboot", "recovery" };
+    public static readonly string[] RebootBootloader = { "reboot", "bootloader" };
+
+    // Power-off (shell)
+    public static readonly string[] PowerOff = { "reboot", "-p" };
+
+    // Network enable (shell)
+    public static readonly string[] SvcWifiEnable = { "svc", "wifi", "enable" };
+    public static readonly string[] SvcDataEnable = { "svc", "data", "enable" };
+
+    // FRP removal (shell)
+    public static readonly string[] SettingsPutSecureUserSetupComplete =
+        { "settings", "put", "secure", "user_setup_complete", "1" };
+    public static readonly string[] SettingsPutGlobalDeviceProvisioned =
+        { "settings", "put", "global", "device_provisioned", "1" };
+    public static readonly string[] SettingsGetSecureUserSetupComplete =
+        { "settings", "get", "secure", "user_setup_complete" };
+    public static readonly string[] SettingsGetGlobalDeviceProvisioned =
+        { "settings", "get", "global", "device_provisioned" };
+
+    // Captive-portal (shell)
+    public static readonly string[] SettingsPutGlobalCaptivePortalMode =
+        { "settings", "put", "global", "captive_portal_mode", "0" };
+    public static readonly string[] SettingsPutGlobalCaptivePortalDetectionEnabled =
+        { "settings", "put", "global", "captive_portal_detection_enabled", "0" };
+    public static readonly string[] SettingsGetGlobalCaptivePortalMode =
+        { "settings", "get", "global", "captive_portal_mode" };
+
+    // NTP (shell)
+    public static readonly string[] SettingsPutGlobalNtpServer =
+        { "settings", "put", "global", "ntp_server", NtpAliyunServer };
+    public static readonly string[] SettingsGetGlobalNtpServer =
+        { "settings", "get", "global", "ntp_server" };
+
     /// <summary>Builds a <c>cat &lt;path&gt;</c> shell argument array.</summary>
     public static string[] Cat(string path) => new[] { "cat", path };
 
@@ -84,4 +125,27 @@ public static class AdbArgs
         LogPriority.Silent => 'S',
         _ => 'V'
     };
+
+    // ── Screen capture / input / install (ScreenCaptureService) ──────────────
+
+    /// <summary>
+    /// The exec-out tokens for <c>adb -s &lt;serial&gt; exec-out screencap -p</c>.
+    /// Stdout is a binary PNG; always read via the binary-capable
+    /// <c>ProcessRunner.RunBinaryAsync</c> overload.
+    /// </summary>
+    public static readonly string[] ExecOutScreencap = { "exec-out", "screencap", "-p" };
+
+    /// <summary>Builds an <c>input tap x y</c> shell argument array.</summary>
+    public static string[] InputTap(int x, int y)
+        => new[] { "input", "tap", x.ToString(), y.ToString() };
+
+    /// <summary>Builds an <c>input swipe x1 y1 x2 y2 duration</c> shell argument array.</summary>
+    public static string[] InputSwipe(int x1, int y1, int x2, int y2, int durationMs)
+        => new[] { "input", "swipe", x1.ToString(), y1.ToString(), x2.ToString(), y2.ToString(), durationMs.ToString() };
+
+    /// <summary>Builds an <c>input keyevent &lt;code&gt;</c> shell argument array.</summary>
+    public static string[] InputKeyEvent(int keyCode) => new[] { "input", "keyevent", keyCode.ToString() };
+
+    /// <summary>Builds an <c>install -r &lt;apkPath&gt;</c> global argument array.</summary>
+    public static string[] InstallReplace(string apkPath) => new[] { "install", "-r", apkPath };
 }

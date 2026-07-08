@@ -50,13 +50,6 @@
                         <controls:InfoRow Label="{loc:Localize Key=card.root}" Value="{Binding RootText}" />
                     </StackPanel>
                 </StackPanel>
-
-                <!-- Refresh -->
-                <Button Grid.Column="2"
-                        Command="{Binding RefreshCommand}"
-                        Content="{loc:Localize Key=common.refresh}"
-                        VerticalAlignment="Top"
-                        Margin="16,0,0,0" />
             </Grid>
         </Border>
 

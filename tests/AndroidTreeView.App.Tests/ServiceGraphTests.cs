@@ -36,6 +36,7 @@ public sealed class ServiceGraphTests
     [InlineData(typeof(IDeviceService))]
     [InlineData(typeof(ISettingsService))]
     [InlineData(typeof(IUpdateService))]
+    [InlineData(typeof(IUpdateInstaller))]
     [InlineData(typeof(IThemeService))]
     [InlineData(typeof(IFilePickerService))]
     [InlineData(typeof(ILocalizationService))]

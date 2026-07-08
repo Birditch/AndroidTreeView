@@ -24,9 +24,13 @@ public static class PropKeys
     public const string BuildTags = "ro.build.tags";
     public const string BuildType = "ro.build.type";
 
-    // Hardware / board
+    // Hardware / board / SoC identification
+    public const string SocManufacturer = "ro.soc.manufacturer";
+    public const string SocModel = "ro.soc.model";
     public const string BoardPlatform = "ro.board.platform";
     public const string ProductBoard = "ro.product.board";
+    public const string Hardware = "ro.hardware";
+    public const string CpuAbi = "ro.product.cpu.abi";
     public const string AbiList = "ro.product.cpu.abilist";
 
     // Locale / timezone

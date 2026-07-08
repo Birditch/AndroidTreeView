@@ -16,7 +16,8 @@ public sealed class DevicesViewModelTests
         DeviceConnectionState state = DeviceConnectionState.Online) =>
         new() { Serial = serial, Model = model, State = state };
 
-    private static DevicesViewModel CreateViewModel() => new(new FakeLocalizationService());
+    private static DevicesViewModel CreateViewModel() =>
+        new(new FakeLocalizationService(), new FakeDeviceActionsService(), new FakeFastbootService(), new FakeDialogService());
 
     [Fact]
     public void Reconcile_adds_cards_and_assigns_one_based_index()
@@ -148,5 +149,21 @@ public sealed class DevicesViewModelTests
 
         Assert.Same(card, activated);
         Assert.Same(card, vm.SelectedDevice);
+    }
+
+    [Fact]
+    public void ActivateDevice_ignores_fastboot_cards()
+    {
+        var vm = CreateViewModel();
+        vm.Reconcile(new[] { Device("F", state: DeviceConnectionState.Bootloader) }, adbAvailable: true);
+        var card = vm.Devices.Single();
+
+        DeviceCardViewModel? activated = null;
+        vm.DeviceActivated += (_, c) => activated = c;
+
+        vm.ActivateDevice(card);
+
+        Assert.Null(activated);
+        Assert.Null(vm.SelectedDevice);
     }
 }

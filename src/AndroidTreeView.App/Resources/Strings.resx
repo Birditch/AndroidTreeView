@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Neutral culture resources = English fallback for AndroidTreeView.App.
@@ -85,7 +85,7 @@
     <value>Retry</value>
   </data>
   <data name="common.browse" xml:space="preserve">
-    <value>Browse…</value>
+    <value>Browse...</value>
   </data>
   <data name="common.save" xml:space="preserve">
     <value>Save</value>
@@ -94,7 +94,7 @@
     <value>Reset</value>
   </data>
   <data name="common.loading" xml:space="preserve">
-    <value>Loading…</value>
+    <value>Loading...</value>
   </data>
   <data name="common.unavailable" xml:space="preserve">
     <value>Unavailable</value>
@@ -126,8 +126,107 @@
   <data name="status.charging" xml:space="preserve">
     <value>Charging</value>
   </data>
+  <data name="status.mirroring" xml:space="preserve">
+    <value>Mirroring</value>
+  </data>
+  <data name="common.confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="common.cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="confirm.title" xml:space="preserve">
+    <value>Confirm action</value>
+  </data>
+  <data name="confirm.reboot.msg" xml:space="preserve">
+    <value>The device will reboot immediately. Unsaved data may be lost. Continue?</value>
+  </data>
+  <data name="confirm.recovery.msg" xml:space="preserve">
+    <value>The device will reboot into Recovery mode. Continue?</value>
+  </data>
+  <data name="confirm.fastboot.msg" xml:space="preserve">
+    <value>The device will reboot into Fastboot / Bootloader mode. Continue?</value>
+  </data>
+  <data name="confirm.poweroff.msg" xml:space="preserve">
+    <value>The device will power off immediately and must be turned on by hand. Continue?</value>
+  </data>
+  <data name="confirm.network.msg" xml:space="preserve">
+    <value>This will turn on the device's Wi-Fi and mobile data. Continue?</value>
+  </data>
+  <data name="confirm.frp.msg" xml:space="preserve">
+    <value>This marks setup as complete to clear FRP (non-destructive; no effect on an already set-up device). Continue?</value>
+  </data>
+  <data name="confirm.captive.msg" xml:space="preserve">
+    <value>This disables captive-portal detection (removes the Wi-Fi "!"/"x"). Networks that need a sign-in page may not prompt. Continue?</value>
+  </data>
+  <data name="confirm.ntp.msg" xml:space="preserve">
+    <value>This sets the system NTP time server to a domestic server (ntp.aliyun.com). Continue?</value>
+  </data>
+  <data name="confirm.batchnetwork.msg" xml:space="preserve">
+    <value>This will turn on Wi-Fi and mobile data on {0} selected device(s). Continue?</value>
+  </data>
   <data name="status.lowbattery" xml:space="preserve">
     <value>Low Battery</value>
+  </data>
+  <data name="status.fastboot" xml:space="preserve">
+    <value>Fastboot</value>
+  </data>
+  <data name="status.recovery" xml:space="preserve">
+    <value>Recovery</value>
+  </data>
+  <data name="menu.cli" xml:space="preserve">
+    <value>CLI Terminal</value>
+  </data>
+  <data name="menu.detail" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="fastboot.product" xml:space="preserve">
+    <value>Product</value>
+  </data>
+  <data name="fastboot.bootloader" xml:space="preserve">
+    <value>Bootloader</value>
+  </data>
+  <data name="fastboot.baseband" xml:space="preserve">
+    <value>Baseband</value>
+  </data>
+  <data name="fastboot.unlocked" xml:space="preserve">
+    <value>Unlocked</value>
+  </data>
+  <data name="fastboot.slot" xml:space="preserve">
+    <value>Current slot</value>
+  </data>
+  <data name="fastboot.board" xml:space="preserve">
+    <value>Board</value>
+  </data>
+  <data name="fastboot.cpu" xml:space="preserve">
+    <value>SoC / CPU</value>
+  </data>
+  <data name="fastboot.ram" xml:space="preserve">
+    <value>RAM</value>
+  </data>
+  <data name="fastboot.storage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="fastboot.secure" xml:space="preserve">
+    <value>Secure</value>
+  </data>
+  <data name="fastboot.frp" xml:space="preserve">
+    <value>FRP state</value>
+  </data>
+  <data name="fastboot.carrier" xml:space="preserve">
+    <value>Carrier</value>
+  </data>
+  <data name="fastboot.imei" xml:space="preserve">
+    <value>IMEI</value>
+  </data>
+  <data name="fastboot.sku" xml:space="preserve">
+    <value>SKU</value>
+  </data>
+  <data name="fastboot.date" xml:space="preserve">
+    <value>Mfg date</value>
+  </data>
+  <data name="fastboot.battid" xml:space="preserve">
+    <value>Battery ID</value>
   </data>
   <data name="adb.status.ready" xml:space="preserve">
     <value>ADB ready</value>
@@ -233,6 +332,87 @@
   </data>
   <data name="hardware.cores" xml:space="preserve">
     <value>Cores</value>
+  </data>
+  <data name="hardware.platform" xml:space="preserve">
+    <value>Platform</value>
+  </data>
+  <data name="hardware.board" xml:space="preserve">
+    <value>Board</value>
+  </data>
+  <data name="menu.network" xml:space="preserve">
+    <value>One-click Network</value>
+  </data>
+  <data name="menu.adbtools" xml:space="preserve">
+    <value>ADB Tools</value>
+  </data>
+  <data name="menu.frp" xml:space="preserve">
+    <value>Remove FRP</value>
+  </data>
+  <data name="menu.captive" xml:space="preserve">
+    <value>Fix Wi-Fi ! / x mark</value>
+  </data>
+  <data name="menu.ntp" xml:space="preserve">
+    <value>Set China NTP</value>
+  </data>
+  <data name="menu.power" xml:space="preserve">
+    <value>Power</value>
+  </data>
+  <data name="menu.reboot" xml:space="preserve">
+    <value>Reboot</value>
+  </data>
+  <data name="menu.recovery" xml:space="preserve">
+    <value>Reboot to Recovery</value>
+  </data>
+  <data name="menu.fastboot" xml:space="preserve">
+    <value>Enter Fastboot</value>
+  </data>
+  <data name="menu.poweroff" xml:space="preserve">
+    <value>Power Off</value>
+  </data>
+  <data name="batch.selected" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="batch.network" xml:space="preserve">
+    <value>One-click Network</value>
+  </data>
+  <data name="batch.selectall" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="batch.clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="menu.screen" xml:space="preserve">
+    <value>Screen Mirror</value>
+  </data>
+  <data name="screen.failed" xml:space="preserve">
+    <value>Capture failed</value>
+  </data>
+  <data name="screen.installing" xml:space="preserve">
+    <value>Installing...</value>
+  </data>
+  <data name="screen.installed" xml:space="preserve">
+    <value>Installed</value>
+  </data>
+  <data name="screen.installfailed" xml:space="preserve">
+    <value>Install failed</value>
+  </data>
+  <data name="screen.drophint" xml:space="preserve">
+    <value>Drag an APK here to install it on this device.</value>
+  </data>
+  <data name="screen.back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="screen.home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="screen.recents" xml:space="preserve">
+    <value>Recents</value>
+  </data>
+  <data name="action.done" xml:space="preserve">
+    <value>Done: {0}</value>
+  </data>
+  <data name="action.failed" xml:space="preserve">
+    <value>Failed: {0}</value>
   </data>
   <data name="hardware.abi" xml:space="preserve">
     <value>ABI List</value>
@@ -346,7 +526,7 @@
     <value>Follow System</value>
   </data>
   <data name="settings.language.zh" xml:space="preserve">
-    <value>简体中文</value>
+    <value>Simplified Chinese</value>
   </data>
   <data name="settings.language.en" xml:space="preserve">
     <value>English</value>
@@ -391,13 +571,61 @@
     <value>You are on the latest version</value>
   </data>
   <data name="update.checking" xml:space="preserve">
-    <value>Checking…</value>
+    <value>Checking...</value>
   </data>
   <data name="update.failed" xml:space="preserve">
     <value>Update check failed</value>
   </data>
   <data name="update.openrelease" xml:space="preserve">
     <value>View Release</value>
+  </data>
+  <data name="update.install" xml:space="preserve">
+    <value>Install Update</value>
+  </data>
+  <data name="update.downloading" xml:space="preserve">
+    <value>Downloading update...</value>
+  </data>
+  <data name="update.install.started" xml:space="preserve">
+    <value>Update started. The app will restart automatically.</value>
+  </data>
+  <data name="update.install.noupdate" xml:space="preserve">
+    <value>No update is available to install</value>
+  </data>
+  <data name="update.install.missingdownload" xml:space="preserve">
+    <value>The update channel did not provide a downloadable update package</value>
+  </data>
+  <data name="update.install.checksum" xml:space="preserve">
+    <value>The downloaded update did not pass checksum verification</value>
+  </data>
+  <data name="update.install.unsupported" xml:space="preserve">
+    <value>The update package does not contain a supported x64 release package</value>
+  </data>
+  <data name="update.install.failed" xml:space="preserve">
+    <value>Could not start the update process</value>
+  </data>
+  <data name="update.ready" xml:space="preserve">
+    <value>Ready to check the internal update channel</value>
+  </data>
+  <data name="update.source" xml:space="preserve">
+    <value>Update Source</value>
+  </data>
+  <data name="update.key" xml:space="preserve">
+    <value>Package Key</value>
+  </data>
+  <data name="update.norelease" xml:space="preserve">
+    <value>No build has been uploaded for this channel yet</value>
+  </data>
+  <data name="update.network" xml:space="preserve">
+    <value>Could not reach the internal update server</value>
+  </data>
+  <data name="update.ratelimited" xml:space="preserve">
+    <value>The update server rejected the request</value>
+  </data>
+  <data name="update.invalid" xml:space="preserve">
+    <value>The update metadata is incomplete</value>
+  </data>
+  <data name="update.disabled" xml:space="preserve">
+    <value>Automatic update checks are off</value>
   </data>
   <data name="about.title" xml:space="preserve">
     <value>About</value>
@@ -421,7 +649,7 @@
     <value>Something went wrong</value>
   </data>
   <data name="error.unauthorized" xml:space="preserve">
-    <value>Device unauthorized — accept the USB debugging prompt on the device</value>
+    <value>Device unauthorized - accept the USB debugging prompt on the device</value>
   </data>
   <data name="error.offline" xml:space="preserve">
     <value>Device offline</value>
@@ -430,3 +658,4 @@
     <value>Failed to load {0}</value>
   </data>
 </root>
+

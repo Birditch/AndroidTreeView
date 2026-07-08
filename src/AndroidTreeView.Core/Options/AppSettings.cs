@@ -27,7 +27,7 @@ public sealed class AppSettings
     /// <summary>UI language; defaults to Simplified Chinese.</summary>
     public AppLanguage Language { get; set; } = AppLanguage.ChineseSimplified;
 
-    /// <summary>Whether the app checks GitHub Releases for updates on startup and periodically.</summary>
+    /// <summary>Whether the app checks the configured update source on startup and periodically.</summary>
     public bool AutoCheckUpdates { get; set; } = true;
 
     /// <summary>Optional accent color as a hex string (e.g. <c>#0A84FF</c>); null uses the theme default.</summary>

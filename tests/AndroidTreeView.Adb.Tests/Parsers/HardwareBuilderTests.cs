@@ -9,9 +9,11 @@ public class HardwareBuilderTests
 {
     private static Dictionary<string, string> Props() => new()
     {
-        [PropKeys.AbiList] = "arm64-v8a,armeabi-v7a,armeabi",
-        [PropKeys.BoardPlatform] = "lito",
-        [PropKeys.ProductBoard] = "redfin"
+        [PropKeys.AbiList]         = "arm64-v8a,armeabi-v7a,armeabi",
+        [PropKeys.BoardPlatform]   = "lito",
+        [PropKeys.ProductBoard]    = "redfin",
+        [PropKeys.SocManufacturer] = "Qualcomm",
+        [PropKeys.SocModel]        = "SM7250"
     };
 
     private static readonly MemoryInfo Memory = new()
@@ -33,7 +35,7 @@ public class HardwareBuilderTests
 
         var hardware = HardwareBuilder.Build(Props(), cpu, Memory, Screen);
 
-        Assert.Equal("SDM7250", hardware.CpuModel);
+        Assert.Equal("Qualcomm SM7250", hardware.CpuModel);
         Assert.Equal(8, hardware.CpuCoreCount);
         Assert.Equal(3, hardware.AbiList.Count);
         Assert.Equal("arm64-v8a", hardware.AbiList[0]);
@@ -56,12 +58,13 @@ public class HardwareBuilderTests
     }
 
     [Fact]
-    public void Build_CpuArchitecture_PrefersParsedValue()
+    public void Build_CpuArchitecture_MapsBareNumberToHumanFriendly()
     {
+        // "CPU architecture: 8" from /proc/cpuinfo must become "ARMv8-A", never a bare "8"
         var cpu = new CpuInfo { Architecture = "8" };
 
         var hardware = HardwareBuilder.Build(Props(), cpu, Memory, Screen);
-        Assert.Equal("8", hardware.CpuArchitecture);
+        Assert.Equal("ARMv8-A", hardware.CpuArchitecture);
     }
 
     [Fact]
@@ -74,5 +77,36 @@ public class HardwareBuilderTests
             new ScreenInfo());
 
         Assert.Empty(hardware.AbiList);
+    }
+
+    [Fact]
+    public void Build_CpuModel_UsesSocGetpropWhenCpuInfoLacksModel()
+    {
+        // On ARM devices /proc/cpuinfo has no "model name" line; SoC getprop is the authoritative source.
+        var props = new Dictionary<string, string>
+        {
+            [PropKeys.SocManufacturer] = "Qualcomm",
+            [PropKeys.SocModel]        = "SM7635"
+        };
+        var cpu = new CpuInfo { Model = null };
+
+        var hardware = HardwareBuilder.Build(props, cpu, new MemoryInfo(), new ScreenInfo());
+
+        Assert.Equal("Qualcomm SM7635", hardware.CpuModel);
+    }
+
+    [Fact]
+    public void Build_CpuArchitecture_PrefersCpuAbiGetpropOverBareNumber()
+    {
+        // ro.product.cpu.abi takes priority even when cpuinfo carries a raw architecture number.
+        var props = new Dictionary<string, string>
+        {
+            [PropKeys.CpuAbi] = "arm64-v8a"
+        };
+        var cpu = new CpuInfo { Architecture = "8" };
+
+        var hardware = HardwareBuilder.Build(props, cpu, new MemoryInfo(), new ScreenInfo());
+
+        Assert.Equal("arm64-v8a", hardware.CpuArchitecture);
     }
 }

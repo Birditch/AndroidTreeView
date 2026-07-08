@@ -1,125 +1,104 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
-  AndroidTreeView MSI — WiX v5 authoring.
+  AndroidTreeView MSI - WiX v5 authoring.
 
-  Preprocessor variables (supplied by AndroidTreeView.Package.wixproj via DefineConstants):
-    $(var.ProductVersion)  e.g. 1.0.0
-    $(var.Platform)        x64 | x86  (drives Program Files folder + Windows Installer arch)
-    $(var.SelfContained)   true | false
-    $(var.PublishDir)      absolute path (trailing '\') to the dotnet publish output
+  Preprocessor variables supplied by AndroidTreeView.Package.wixproj:
+    $(var.ProductVersion)     e.g. 1.0.4
+    $(var.ProductName)        display name
+    $(var.ProductExecutable)  main executable file in PublishDir
+    $(var.ProductUpgradeCode) stable MSI UpgradeCode
+    $(var.ProductInstallFolder) install folder name
+    $(var.ProductRegistryKey) registry key suffix under Software\Birditch
+    $(var.PackagePlatform)    x64
+    $(var.SelfContained)      true | false
+    $(var.PublishDir)         absolute path with trailing '\' to the dotnet publish output
 
-  Installs (per-machine):
-    * every file from the publish output (AndroidTreeView.App.exe + dependencies) into
-      "<Program Files>\AndroidTreeView"
+  Installs per machine:
+    * every file from the publish output into <Program Files>\$(var.ProductInstallFolder)
     * a Start Menu shortcut
-    * an OPTIONAL desktop shortcut (enable with INSTALLDESKTOPSHORTCUT=1)
-  For framework-dependent builds it also adds a best-effort .NET 10 Desktop Runtime check.
+    * an optional desktop shortcut (INSTALLDESKTOPSHORTCUT=1)
+
+  Framework-dependent builds include a best-effort .NET 10 Desktop Runtime check.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-  <!-- x86 packages go under 32-bit Program Files; x64 under 64-bit Program Files. -->
-  <?if $(var.Platform) = "x86" ?>
-    <?define ProgramFilesDir = "ProgramFilesFolder" ?>
-  <?else?>
-    <?define ProgramFilesDir = "ProgramFiles64Folder" ?>
-  <?endif?>
+  <?define ProgramFilesDir = "ProgramFiles64Folder" ?>
+  <?define DotNetRegistryBitness = "always64" ?>
 
   <Package
-      Name="AndroidTreeView"
+      Name="$(var.ProductName)"
       Manufacturer="Birditch"
       Version="$(var.ProductVersion)"
-      UpgradeCode="{6C0B8E2A-4F1D-4B7C-9A3E-2D5F8B1C0E4A}"
+      UpgradeCode="$(var.ProductUpgradeCode)"
       Scope="perMachine"
       Compressed="yes"
       InstallerVersion="500"
       Language="1033">
 
-    <!-- Block downgrades and remove older versions on upgrade. Requires UpgradeCode + Version. -->
     <MajorUpgrade
-        AllowSameVersionUpgrades="yes"
         DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
 
-    <!-- Single embedded cabinet inside the .msi. -->
     <MediaTemplate EmbedCab="yes" />
 
-    <!-- Use the application executable itself as the product/shortcut icon. WiX extracts
-         the icon resource from the PE; the Id must end in '.exe' to hint the source type. -->
-    <Icon Id="AndroidTreeView.exe" SourceFile="$(var.PublishDir)AndroidTreeView.App.exe" />
-    <Property Id="ARPPRODUCTICON" Value="AndroidTreeView.exe" />
+    <Icon Id="ProductIcon.exe" SourceFile="$(var.PublishDir)$(var.ProductExecutable)" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon.exe" />
     <Property Id="ARPHELPLINK" Value="https://github.com/Birditch/AndroidTreeView" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/Birditch/AndroidTreeView" />
 
-    <!-- Optional desktop shortcut is opt-in: pass INSTALLDESKTOPSHORTCUT=1 on the command
-         line (msiexec /i AndroidTreeView-1.0.0-x64.msi INSTALLDESKTOPSHORTCUT=1). -->
+    <!-- Optional desktop shortcut: msiexec /i <product>-1.0.4-x64.msi INSTALLDESKTOPSHORTCUT=1 -->
     <Property Id="INSTALLDESKTOPSHORTCUT" Value="0" Secure="yes" />
 
-    <!-- .NET 10 Desktop Runtime check for framework-dependent builds only. Self-contained
-         builds bundle the runtime, so no check is emitted for them. -->
     <?if $(var.SelfContained) = "false" ?>
-      <!-- CHECKDOTNET=0 disables the check (escape hatch for false negatives). -->
       <Property Id="CHECKDOTNET" Value="1" Secure="yes" />
-      <!-- Presence of the .NET shared host for this architecture. The apphost gives the
-           precise "install .NET Desktop Runtime 10.0" dialog at first launch; this MSI
-           gate is a courtesy that blocks installs on machines with no .NET host at all. -->
       <Property Id="DOTNETDESKTOPHOST">
         <RegistrySearch
             Id="DotNetDesktopHost"
             Root="HKLM"
-            Bitness="always64"
-            Key="SOFTWARE\dotnet\Setup\InstalledVersions\$(var.Platform)\sharedhost"
+            Bitness="$(var.DotNetRegistryBitness)"
+            Key="SOFTWARE\dotnet\Setup\InstalledVersions\$(var.PackagePlatform)\sharedhost"
             Name="Version"
             Type="raw" />
       </Property>
       <Launch
           Condition="Installed OR (CHECKDOTNET &lt;&gt; &quot;1&quot;) OR DOTNETDESKTOPHOST"
-          Message="AndroidTreeView requires the Microsoft .NET Desktop Runtime 10 ($(var.Platform)). Install it from https://dotnet.microsoft.com/download/dotnet/10.0 and run this installer again. (To bypass this check, run msiexec with CHECKDOTNET=0.)" />
+          Message="$(var.ProductName) requires the Microsoft .NET Desktop Runtime 10 ($(var.PackagePlatform)). Install it from https://dotnet.microsoft.com/download/dotnet/10.0 and run this installer again. (To bypass this check, run msiexec with CHECKDOTNET=0.)" />
     <?endif?>
 
-    <!-- Install destination: <Program Files>\AndroidTreeView -->
     <StandardDirectory Id="$(var.ProgramFilesDir)">
-      <Directory Id="INSTALLFOLDER" Name="AndroidTreeView" />
+      <Directory Id="INSTALLFOLDER" Name="$(var.ProductInstallFolder)" />
     </StandardDirectory>
 
-    <!-- Start Menu folder: Programs\AndroidTreeView -->
     <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="AppShortcutFolder" Name="AndroidTreeView" />
+      <Directory Id="AppShortcutFolder" Name="$(var.ProductName)" />
     </StandardDirectory>
 
-    <!-- Desktop (target of the optional desktop shortcut component). -->
     <StandardDirectory Id="DesktopFolder" />
 
-    <!-- Main feature: app payload + Start Menu shortcut. Always installed. -->
-    <Feature Id="MainApplication" Title="AndroidTreeView" Level="1" AllowAbsent="no">
+    <Feature Id="MainApplication" Title="$(var.ProductName)" Level="1" AllowAbsent="no">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentGroupRef Id="AppShortcuts" />
     </Feature>
 
-    <!-- Optional feature: desktop shortcut. Level 0 (not installed) unless
-         INSTALLDESKTOPSHORTCUT=1 is supplied. -->
     <Feature Id="DesktopShortcutFeature" Title="Desktop Shortcut" Level="1" AllowAbsent="yes">
       <Level Value="0" Condition="INSTALLDESKTOPSHORTCUT &lt;&gt; &quot;1&quot;" />
       <ComponentRef Id="DesktopShortcut" />
     </Feature>
 
-    <!-- Harvest the entire publish output into INSTALLFOLDER, preserving subfolders.
-         *.pdb debug symbols are excluded to keep the MSI small. -->
     <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
-      <Files Include="$(var.PublishDir)**" Exclude="$(var.PublishDir)**\*.pdb" />
+      <Files Include="$(var.PublishDir)**" />
     </ComponentGroup>
 
-    <!-- Non-advertised Start Menu shortcut. A per-machine HKLM registry value is the
-         component KeyPath (ICE-clean); RemoveFolder cleans up the menu folder on uninstall. -->
     <ComponentGroup Id="AppShortcuts">
       <Component Id="StartMenuShortcut" Directory="AppShortcutFolder" Guid="*">
         <Shortcut Id="StartMenuAppShortcut"
-                  Name="AndroidTreeView"
-                  Description="Explore Android devices over ADB"
-                  Target="[INSTALLFOLDER]AndroidTreeView.App.exe"
+                  Name="$(var.ProductName)"
+                  Description="$(var.ProductDescription)"
+                  Target="[INSTALLFOLDER]$(var.ProductExecutable)"
                   WorkingDirectory="INSTALLFOLDER"
-                  Icon="AndroidTreeView.exe" />
+                  Icon="ProductIcon.exe" />
         <RemoveFolder Id="RemoveAppShortcutFolder" Directory="AppShortcutFolder" On="uninstall" />
-        <RegistryValue Root="HKLM"
-                       Key="Software\Birditch\AndroidTreeView"
+        <RegistryValue Root="HKCU"
+                       Key="Software\Birditch\$(var.ProductRegistryKey)"
                        Name="StartMenuShortcut"
                        Type="integer"
                        Value="1"
@@ -127,16 +106,15 @@
       </Component>
     </ComponentGroup>
 
-    <!-- Optional desktop shortcut component (installed only via DesktopShortcutFeature). -->
     <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="*">
       <Shortcut Id="DesktopAppShortcut"
-                Name="AndroidTreeView"
-                Description="Explore Android devices over ADB"
-                Target="[INSTALLFOLDER]AndroidTreeView.App.exe"
+                Name="$(var.ProductName)"
+                Description="$(var.ProductDescription)"
+                Target="[INSTALLFOLDER]$(var.ProductExecutable)"
                 WorkingDirectory="INSTALLFOLDER"
-                Icon="AndroidTreeView.exe" />
-      <RegistryValue Root="HKLM"
-                     Key="Software\Birditch\AndroidTreeView"
+                Icon="ProductIcon.exe" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\Birditch\$(var.ProductRegistryKey)"
                      Name="DesktopShortcut"
                      Type="integer"
                      Value="1"

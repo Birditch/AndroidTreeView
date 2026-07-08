@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AndroidTreeView.Mini</RootNamespace>
+    <!-- The user-facing companion executable name (AndroidTreeView.App.mini.exe). -->
+    <AssemblyName>AndroidTreeView.App.mini</AssemblyName>
+    <Version>1.0.4</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
+    <InformationalVersion>1.0.4</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- Windows Explorer / taskbar icon for the exe. -->
+    <ApplicationIcon>Assets\atv-icon.ico</ApplicationIcon>
+    <!-- Mini only watches ADB devices and launches scrcpy; Fastboot belongs to the full app. -->
+    <AndroidTreeViewBundleFastboot>false</AndroidTreeViewBundleFastboot>
+  </PropertyGroup>
+
+  <!-- Framework-DEPENDENT single-file publish (SelfContained=false, so the .NET runtime is NOT bundled).
+       `dotnet publish -c Release -r win-x64` then produces ONE small AndroidTreeView.App.mini.exe; the
+       user installs the .NET 10 Desktop Runtime themselves. Gated on a RuntimeIdentifier so a plain
+       `dotnet build` still emits to bin\<cfg>\net10.0\. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <!-- Multi-file publish: the scrcpy folder ships beside the exe anyway, so there's no benefit to a
+         single-file bundle. This keeps a small exe + its DLLs in the folder and starts faster (no
+         self-extract). Framework-dependent, so the .NET runtime is NOT bundled (user installs it). -->
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <!-- No embedded symbols in the shipped output (smaller). -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <!-- Drop stray .pdb / .xml doc files from the publish folder. -->
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
+  </ItemGroup>
+
+  <!-- Mini shares the ADB, scrcpy and update stack with the full app, but keeps its own tiny UI. -->
+  <ItemGroup>
+    <ProjectReference Include="..\AndroidTreeView.Models\AndroidTreeView.Models.csproj" />
+    <ProjectReference Include="..\AndroidTreeView.Core\AndroidTreeView.Core.csproj" />
+    <ProjectReference Include="..\AndroidTreeView.Adb\AndroidTreeView.Adb.csproj" />
+    <ProjectReference Include="..\AndroidTreeView.Infrastructure\AndroidTreeView.Infrastructure.csproj" />
+    <ProjectReference Include="..\AndroidTreeView.Shared\AndroidTreeView.Shared.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\build\AndroidTreeView.Scrcpy.targets" />
+
+</Project>

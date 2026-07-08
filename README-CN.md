@@ -11,6 +11,10 @@ AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Window
 
 当前版本：**v1.0.5**。
 
+## 产品样式展示
+
+![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.5.png)
+
 ## 功能
 
 - 设备卡片总览与详情页。

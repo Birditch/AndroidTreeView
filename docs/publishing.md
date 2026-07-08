@@ -8,9 +8,9 @@ Current product version: `1.0.5`.
 
 Official releases are produced only by GitHub Actions (`.github/workflows/publish.yml`). Do not publish artifacts from a local workstation. Local packaging commands are for validation and diagnostics only.
 
-Release uploads are ZIP packages for Windows x64 and macOS Apple Silicon. Do not ask users to download a ZIP and replace files manually for supported updater flows; the app updater downloads the ZIP, verifies SHA-256 metadata, extracts it, starts the local update script, replaces the app files, and restarts the product.
+Release uploads are ZIP packages for Windows x64 and macOS Apple Silicon. Windows ZIPs are portable updater packages. macOS Apple Silicon ZIPs are distribution packages whose top-level item is a `.app` bundle.
 
-Each ZIP must contain:
+Each Windows ZIP must contain:
 
 - published application files
 - platform-matched `scrcpy`/`adb`
@@ -18,6 +18,13 @@ Each ZIP must contain:
 - the product executable named by `release.json`
 
 ZIP packages without a supported `release.json` are rejected by `UpdateInstaller`.
+
+Each macOS ZIP must contain one top-level app bundle:
+
+- `AndroidTreeView.app` for the full app
+- `AndroidTreeView Mini.app` for Mini
+
+The macOS `.app` bundle contains `Contents/Info.plist`, the product executable under `Contents/MacOS/`, the platform-matched `scrcpy` bundle, and release metadata.
 
 ## Version Alignment
 
@@ -50,7 +57,7 @@ Official publication happens through the `Publish` GitHub Actions workflow:
 - push a tag named `v<major>.<minor>.<patch>`, for example `v1.0.5`
 - or run `workflow_dispatch` and provide the same version string
 
-The workflow validates on Windows, verifies the pinned scrcpy release against the latest upstream release, builds the four App/Mini `win-x64` and `osx-arm64` ZIPs, writes SHA-256 sidecars, uploads workflow artifacts, and creates the GitHub Release.
+The workflow validates on Windows, verifies the pinned scrcpy release against the latest upstream release, builds the two Windows portable ZIPs and two macOS `.app` bundle ZIPs, writes SHA-256 sidecars, uploads workflow artifacts, and creates the GitHub Release.
 
 For local validation only:
 
@@ -115,7 +122,7 @@ Use this flow for the intranet update server:
 6. Confirm the `sha256` value matches the uploaded ZIP.
 7. Use the app "Check for updates" action to test download, validation, replacement, cleanup, and restart.
 
-macOS Apple Silicon ZIPs are published to GitHub Releases for distribution, but the current automated in-app updater accepts the Windows `portable-x64` package kind.
+macOS Apple Silicon ZIPs are published to GitHub Releases as `.app` bundle ZIPs for distribution, but the current automated in-app updater accepts the Windows `portable-x64` package kind.
 
 ## Update Cleanup
 

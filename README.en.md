@@ -11,6 +11,10 @@ AndroidTreeView is a desktop tool for inspecting, testing, and managing Android 
 
 Current version: **v1.0.5**. Current verification target: solution build passes, all tests pass, and GitHub Actions creates Windows x64 and macOS Apple Silicon ZIP artifacts for both App and Mini.
 
+## Product Preview
+
+![AndroidTreeView device overview](docs/images/product-devices-v1.0.5.png)
+
 ## Features
 
 - Card-first device overview with serial, model, Android version, battery, charging, temperature, cycle count, connection state, root state, and last refresh time.

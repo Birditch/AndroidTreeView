@@ -5,9 +5,9 @@
 
 .DESCRIPTION
     This script does not build MSI files. It runs `dotnet publish` for the selected
-    product/RID, stages the matching scrcpy bundle, writes a release.json manifest
-    into the publish folder, compresses that folder into artifacts/<product>-<version>-<rid>.zip,
-    and writes a matching .sha256 sidecar for upload.
+    product/RID, stages the matching scrcpy bundle, writes a release.json manifest,
+    creates a Windows portable ZIP or macOS .app bundle ZIP, and writes a matching
+    .sha256 sidecar for upload.
 
 .EXAMPLE
     ./build-update-zip.ps1 -Product App -Rid win-x64
@@ -241,6 +241,110 @@ function Set-ExecutableBits {
     }
 }
 
+function ConvertTo-PlistString {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Value
+    )
+
+    return [System.Security.SecurityElement]::Escape($Value)
+}
+
+function New-MacOSAppBundle {
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject]$ProductConfig,
+
+        [Parameter(Mandatory = $true)]
+        [pscustomobject]$RidInfo,
+
+        [Parameter(Mandatory = $true)]
+        [string]$SourceDir,
+
+        [Parameter(Mandatory = $true)]
+        [string]$BundleStageDir,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Version
+    )
+
+    if (-not $RidInfo.IsMacOS) {
+        throw 'New-MacOSAppBundle can only be used for macOS RIDs.'
+    }
+
+    Assert-UnderDirectory -Path $BundleStageDir -Parent $artifacts
+    if (Test-Path -LiteralPath $BundleStageDir) {
+        Remove-Item -Recurse -Force -LiteralPath $BundleStageDir
+    }
+
+    $bundleName = if ($ProductConfig.ArtifactName -eq 'AndroidTreeView-Mini') {
+        'AndroidTreeView Mini.app'
+    } else {
+        'AndroidTreeView.app'
+    }
+
+    $bundleRoot = Join-Path $BundleStageDir $bundleName
+    $contentsDir = Join-Path $bundleRoot 'Contents'
+    $macOSDir = Join-Path $contentsDir 'MacOS'
+    $resourcesDir = Join-Path $contentsDir 'Resources'
+
+    New-Item -ItemType Directory -Force -Path $macOSDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $resourcesDir | Out-Null
+
+    Copy-DirectoryContents -Source $SourceDir -Destination $macOSDir
+
+    $bundleExecutable = Join-Path $macOSDir $ProductConfig.Executable
+    if (-not (Test-Path -LiteralPath $bundleExecutable)) {
+        throw "macOS app bundle did not contain executable '$bundleExecutable'."
+    }
+
+    $manifestPath = Join-Path $macOSDir 'release.json'
+    if (Test-Path -LiteralPath $manifestPath) {
+        Copy-Item -LiteralPath $manifestPath -Destination (Join-Path $resourcesDir 'release.json') -Force
+    }
+
+    $bundleIdentifier = "com.birditch.$($ProductConfig.AppKey.Replace('-', '.'))"
+    $displayName = $ProductConfig.ProductName
+    $executableName = $ProductConfig.Executable
+    $infoPlist = @"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleDisplayName</key>
+  <string>$(ConvertTo-PlistString $displayName)</string>
+  <key>CFBundleExecutable</key>
+  <string>$(ConvertTo-PlistString $executableName)</string>
+  <key>CFBundleIdentifier</key>
+  <string>$(ConvertTo-PlistString $bundleIdentifier)</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>$(ConvertTo-PlistString $displayName)</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$(ConvertTo-PlistString $Version)</string>
+  <key>CFBundleVersion</key>
+  <string>$(ConvertTo-PlistString $Version)</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>11.0</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+</dict>
+</plist>
+"@
+
+    Set-Content -Path (Join-Path $contentsDir 'Info.plist') -Value $infoPlist -Encoding utf8
+
+    Set-ExecutableBits -RidInfo $RidInfo -Directory $macOSDir -Names @($ProductConfig.Executable)
+    Set-ExecutableBits -RidInfo $RidInfo -Directory (Join-Path $macOSDir 'scrcpy') -Names @('scrcpy', 'adb', 'fastboot')
+
+    return $BundleStageDir
+}
+
 function Ensure-ScrcpyBundle {
     param(
         [Parameter(Mandatory = $true)]
@@ -382,6 +486,7 @@ $ridInfo = Get-RidInfo -RequestedRid $Rid -RequestedArch $Arch
 $productConfig = Get-ProductConfig -Name $Product -RidInfo $ridInfo
 $baseName = "$($productConfig.ArtifactName)-$Version-$($ridInfo.Rid)"
 $publishDir = Join-Path (Join-Path (Join-Path $artifacts 'publish') $Product) $ridInfo.Rid
+$packageStageDir = Join-Path (Join-Path (Join-Path $artifacts 'package') $Product) $ridInfo.Rid
 $zipPath = Join-Path $artifacts "$baseName.zip"
 $zipChecksumPath = "$zipPath.sha256"
 $packageKind = if ($ridInfo.IsWindows) { 'portable-x64' } else { "portable-$($ridInfo.Rid)" }
@@ -391,6 +496,10 @@ New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
 Assert-UnderDirectory -Path $publishDir -Parent $artifacts
 if (Test-Path -LiteralPath $publishDir) {
     Remove-Item -Recurse -Force -LiteralPath $publishDir
+}
+Assert-UnderDirectory -Path $packageStageDir -Parent $artifacts
+if (Test-Path -LiteralPath $packageStageDir) {
+    Remove-Item -Recurse -Force -LiteralPath $packageStageDir
 }
 
 $scrcpyDir = Ensure-ScrcpyBundle -RidInfo $ridInfo
@@ -455,14 +564,35 @@ $manifest = [ordered]@{
 $manifestJson = $manifest | ConvertTo-Json -Depth 3
 Set-Content -Path (Join-Path $publishDir 'release.json') -Value $manifestJson -Encoding utf8
 
+$archiveSourceDir = $publishDir
+if ($ridInfo.IsMacOS) {
+    Write-Host "==> Creating macOS .app bundle..." -ForegroundColor Cyan
+    $archiveSourceDir = New-MacOSAppBundle `
+        -ProductConfig $productConfig `
+        -RidInfo $ridInfo `
+        -SourceDir $publishDir `
+        -BundleStageDir $packageStageDir `
+        -Version $Version
+}
+
 Write-Host "==> Creating upload ZIP $baseName.zip..." -ForegroundColor Cyan
-New-PackageArchive -RidInfo $ridInfo -SourceDir $publishDir -ZipPath $zipPath
+New-PackageArchive -RidInfo $ridInfo -SourceDir $archiveSourceDir -ZipPath $zipPath
 
 $zipSha256 = (Get-FileHash -Algorithm SHA256 -Path $zipPath).Hash.ToLowerInvariant()
 Set-Content -Path $zipChecksumPath -Value "$zipSha256 *$baseName.zip" -NoNewline -Encoding ascii
 
 Assert-UnderDirectory -Path $publishDir -Parent $artifacts
 Remove-Item -Recurse -Force -LiteralPath $publishDir
+
+if ($ridInfo.IsMacOS -and (Test-Path -LiteralPath $packageStageDir)) {
+    Assert-UnderDirectory -Path $packageStageDir -Parent $artifacts
+    Remove-Item -Recurse -Force -LiteralPath $packageStageDir
+}
+
+$packageProductDir = Split-Path -Parent $packageStageDir
+if ((Test-Path -LiteralPath $packageProductDir) -and -not (Get-ChildItem -LiteralPath $packageProductDir -Force)) {
+    Remove-Item -Force -LiteralPath $packageProductDir
+}
 
 $publishProductDir = Split-Path -Parent $publishDir
 if ((Test-Path -LiteralPath $publishProductDir) -and -not (Get-ChildItem -LiteralPath $publishProductDir -Force)) {
@@ -472,6 +602,11 @@ if ((Test-Path -LiteralPath $publishProductDir) -and -not (Get-ChildItem -Litera
 $publishRoot = Join-Path $artifacts 'publish'
 if ((Test-Path -LiteralPath $publishRoot) -and -not (Get-ChildItem -LiteralPath $publishRoot -Force)) {
     Remove-Item -Force -LiteralPath $publishRoot
+}
+
+$packageRoot = Join-Path $artifacts 'package'
+if ((Test-Path -LiteralPath $packageRoot) -and -not (Get-ChildItem -LiteralPath $packageRoot -Force)) {
+    Remove-Item -Force -LiteralPath $packageRoot
 }
 
 Write-Host ''

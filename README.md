@@ -11,6 +11,10 @@ AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Window
 
 当前版本：**v1.0.5**。当前验证目标：App 构建通过、Mini 构建通过、全量测试通过，打包链路能为 App 和 Mini 分别生成 x64 上传 ZIP。
 
+## 产品样式展示
+
+![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.5.png)
+
 ## 核心能力
 
 - 设备卡片总览：展示设备名称、序列号、型号、Android 版本、电量、充电状态、温度、循环次数、连接状态、Root 状态和最后刷新时间。

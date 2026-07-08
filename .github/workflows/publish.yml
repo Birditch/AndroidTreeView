@@ -128,6 +128,45 @@ jobs:
           -Configuration $env:CONFIGURATION
           -Version ${{ needs.resolve.outputs.version }}
 
+      - name: Verify macOS app bundle ZIP
+        if: matrix.rid == 'osx-arm64'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Get-ChildItem -Path artifacts -Filter '*.zip' | Select-Object -First 1
+          if ($null -eq $zip) {
+            throw 'No ZIP artifact was produced.'
+          }
+
+          $product = '${{ matrix.product }}'
+          $appName = if ($product -eq 'Mini') { 'AndroidTreeView Mini.app' } else { 'AndroidTreeView.app' }
+          $executable = if ($product -eq 'Mini') { 'AndroidTreeView.App.mini' } else { 'AndroidTreeView.App' }
+          $entries = & unzip -Z1 $zip.FullName
+          if ($LASTEXITCODE -ne 0) {
+            throw "Could not inspect '$($zip.FullName)' with unzip."
+          }
+
+          $requiredEntries = @(
+            "$appName/Contents/Info.plist",
+            "$appName/Contents/MacOS/$executable",
+            "$appName/Contents/MacOS/release.json",
+            "$appName/Contents/MacOS/scrcpy/scrcpy",
+            "$appName/Contents/MacOS/scrcpy/adb"
+          )
+
+          foreach ($entry in $requiredEntries) {
+            if ($entries -notcontains $entry) {
+              throw "macOS ZIP '$($zip.Name)' is missing required entry '$entry'."
+            }
+          }
+
+          $looseRootEntries = @('release.json', $executable) | Where-Object { $entries -contains $_ }
+          if ($looseRootEntries) {
+            throw "macOS ZIP '$($zip.Name)' contains loose root entries instead of only an .app bundle: $($looseRootEntries -join ', ')."
+          }
+
+          Write-Host "Verified macOS ZIP contains $appName."
+
       - name: Upload package artifact
         uses: actions/upload-artifact@v7
         with:
@@ -179,7 +218,7 @@ jobs:
           $lines = @(
             "## AndroidTreeView $version"
             ''
-            'Release packages are GitHub Actions-built ZIP packages for Windows x64 and macOS Apple Silicon.'
+            'Release packages are GitHub Actions-built ZIP packages for Windows x64 and macOS Apple Silicon. macOS ZIPs contain top-level .app bundles.'
             ''
             '### Artifacts'
             ''

@@ -21,7 +21,7 @@ artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip
 artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip.sha256
 ```
 
-Each ZIP contains the published application files, the platform-matched `scrcpy` bundle, and `release.json`.
+Windows ZIPs contain the published application files, the platform-matched `scrcpy` bundle, and `release.json` at the ZIP root. macOS ZIPs contain a top-level `.app` bundle (`AndroidTreeView.app` or `AndroidTreeView Mini.app`); the published files, `scrcpy`, and `release.json` live inside the bundle.
 
 The Windows updater treats the ZIP as the source of truth for application files. During an update, files that exist in the installed directory but are missing from the new ZIP are removed unless they are config-like files such as `.env`, `settings.json`, `appsettings.*.json`, `*.local.json`, `*.user`, `.config`, `.ini`, `.json`, `.yaml`, `.yml`, or `.toml`.
 
@@ -29,7 +29,7 @@ The Windows updater treats the ZIP as the source of truth for application files.
 
 | File | Purpose |
 | --- | --- |
-| `build-update-zip.ps1` | GitHub Actions packaging helper. Publishes App/Mini for `win-x64` or `osx-arm64`, writes `release.json`, creates upload ZIP, and writes SHA-256 sidecar. |
+| `build-update-zip.ps1` | GitHub Actions packaging helper. Publishes App/Mini for `win-x64` or `osx-arm64`, writes `release.json`, creates Windows portable ZIPs or macOS `.app` bundle ZIPs, and writes SHA-256 sidecar. |
 | `AndroidTreeView.Package.wixproj` | Optional x64 WiX MSI project kept for diagnostics or fallback Windows packaging. |
 | `Product.wxs` | Product-parameterized WiX authoring. |
 | `build-msi.ps1` | Optional x64 MSI build script. Not used for the current upload flow. |
@@ -58,10 +58,11 @@ The script:
 2. folds `fastboot` into the full App package
 3. runs `dotnet publish`
 4. writes `release.json`
-5. compresses the publish folder to `artifacts/`
-6. writes `<zip>.sha256`
+5. stages a macOS `.app` bundle for `osx-arm64`
+6. compresses the package folder to `artifacts/`
+7. writes `<zip>.sha256`
 
-macOS ZIPs are created with the system `zip` command so executable bits are preserved.
+macOS ZIPs are created with the system `zip` command so executable bits and `.app` bundle layout are preserved.
 
 ## release.json
 
@@ -81,7 +82,7 @@ The updater uses `release.json` to distinguish an automated release ZIP from a r
 }
 ```
 
-macOS packages use `packageKind` values such as `portable-osx-arm64` and executable names without `.exe`. The current automated updater accepts the Windows `portable-x64` package kind; macOS ZIPs are GitHub Release artifacts.
+macOS packages use `packageKind` values such as `portable-osx-arm64` and executable names without `.exe`; this metadata is stored inside the `.app` bundle for release auditing. The current automated updater accepts the Windows `portable-x64` package kind; macOS ZIPs are GitHub Release `.app` artifacts.
 
 For Windows update packages, `release.json` and the executable named by `executable` must be present in the ZIP. The updater rejects packages with the wrong `appKey`, wrong expected version, non-x64 architecture, missing executable, or unsupported package kind.
 

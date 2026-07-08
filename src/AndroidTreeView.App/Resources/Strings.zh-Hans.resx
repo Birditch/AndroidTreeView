@@ -123,6 +123,12 @@
   <data name="status.rooted" xml:space="preserve">
     <value>已 Root</value>
   </data>
+  <data name="status.notrooted" xml:space="preserve">
+    <value>未 Root</value>
+  </data>
+  <data name="status.magisk" xml:space="preserve">
+    <value>Magisk</value>
+  </data>
   <data name="status.charging" xml:space="preserve">
     <value>充电中</value>
   </data>
@@ -150,20 +156,8 @@
   <data name="confirm.poweroff.msg" xml:space="preserve">
     <value>设备将立即关机，需要手动开机。继续？</value>
   </data>
-  <data name="confirm.network.msg" xml:space="preserve">
-    <value>将开启设备的 Wi-Fi 和移动数据。继续？</value>
-  </data>
   <data name="confirm.frp.msg" xml:space="preserve">
     <value>将把设备标记为已完成初始化以清除 FRP（非破坏性；已设置过的设备无实际影响）。继续？</value>
-  </data>
-  <data name="confirm.captive.msg" xml:space="preserve">
-    <value>将关闭联网检测（去除 Wi-Fi "!"/"x" 标记）。需要登录页的公共 Wi-Fi 可能不再弹出登录提示。继续？</value>
-  </data>
-  <data name="confirm.ntp.msg" xml:space="preserve">
-    <value>将把系统 NTP 时间服务器设置为国内服务器（ntp.aliyun.com）。继续？</value>
-  </data>
-  <data name="confirm.batchnetwork.msg" xml:space="preserve">
-    <value>将对选中的 {0} 台设备开启 Wi-Fi 和移动数据。继续？</value>
   </data>
   <data name="status.lowbattery" xml:space="preserve">
     <value>电量低</value>
@@ -315,6 +309,9 @@
   <data name="overview.api" xml:space="preserve">
     <value>API 级别</value>
   </data>
+  <data name="overview.magisk" xml:space="preserve">
+    <value>已安装 Magisk</value>
+  </data>
   <data name="overview.build" xml:space="preserve">
     <value>版本号</value>
   </data>
@@ -323,6 +320,42 @@
   </data>
   <data name="overview.patch" xml:space="preserve">
     <value>安全补丁</value>
+  </data>
+  <data name="overview.security" xml:space="preserve">
+    <value>设备安全状态</value>
+  </data>
+  <data name="overview.oem.supported" xml:space="preserve">
+    <value>支持 OEM 解锁</value>
+  </data>
+  <data name="overview.oem.allowed" xml:space="preserve">
+    <value>OEM 解锁</value>
+  </data>
+  <data name="overview.bootloaderlock" xml:space="preserve">
+    <value>Bootloader 锁</value>
+  </data>
+  <data name="overview.devicestate" xml:space="preserve">
+    <value>设备状态</value>
+  </data>
+  <data name="overview.verifiedboot" xml:space="preserve">
+    <value>Verified Boot</value>
+  </data>
+  <data name="state.locked" xml:space="preserve">
+    <value>已锁定</value>
+  </data>
+  <data name="state.unlocked" xml:space="preserve">
+    <value>已解锁</value>
+  </data>
+  <data name="state.green" xml:space="preserve">
+    <value>绿色</value>
+  </data>
+  <data name="state.yellow" xml:space="preserve">
+    <value>黄色</value>
+  </data>
+  <data name="state.orange" xml:space="preserve">
+    <value>橙色</value>
+  </data>
+  <data name="state.red" xml:space="preserve">
+    <value>红色</value>
   </data>
   <data name="hardware.cpu" xml:space="preserve">
     <value>处理器</value>
@@ -339,20 +372,11 @@
   <data name="hardware.board" xml:space="preserve">
     <value>主板</value>
   </data>
-  <data name="menu.network" xml:space="preserve">
-    <value>一键联网</value>
-  </data>
   <data name="menu.adbtools" xml:space="preserve">
     <value>ADB 工具</value>
   </data>
   <data name="menu.frp" xml:space="preserve">
     <value>移除 FRP</value>
-  </data>
-  <data name="menu.captive" xml:space="preserve">
-    <value>修复 Wi-Fi ! / x 标记</value>
-  </data>
-  <data name="menu.ntp" xml:space="preserve">
-    <value>设置国内 NTP</value>
   </data>
   <data name="menu.power" xml:space="preserve">
     <value>电源</value>
@@ -372,8 +396,8 @@
   <data name="batch.selected" xml:space="preserve">
     <value>已选 {0} 台</value>
   </data>
-  <data name="batch.network" xml:space="preserve">
-    <value>一键联网</value>
+  <data name="batch.transferfiles" xml:space="preserve">
+    <value>一键传输</value>
   </data>
   <data name="batch.selectall" xml:space="preserve">
     <value>全选</value>
@@ -396,8 +420,17 @@
   <data name="screen.installfailed" xml:space="preserve">
     <value>安装失败</value>
   </data>
+  <data name="screen.transferring" xml:space="preserve">
+    <value>传输中...</value>
+  </data>
+  <data name="screen.transferred" xml:space="preserve">
+    <value>已传输</value>
+  </data>
+  <data name="screen.transferfailed" xml:space="preserve">
+    <value>传输失败</value>
+  </data>
   <data name="screen.drophint" xml:space="preserve">
-    <value>将 APK 拖到此处即可安装到该设备。</value>
+    <value>拖入 APK 自动安装；拖入普通文件会传输到 Download。</value>
   </data>
   <data name="screen.back" xml:space="preserve">
     <value>返回</value>
@@ -413,6 +446,24 @@
   </data>
   <data name="action.failed" xml:space="preserve">
     <value>失败：{0}</value>
+  </data>
+  <data name="software.installed" xml:space="preserve">
+    <value>检测到 {0} 软件安装</value>
+  </data>
+  <data name="software.uninstalled" xml:space="preserve">
+    <value>检测到 {0} 软件卸载</value>
+  </data>
+  <data name="batch.files.nodevices" xml:space="preserve">
+    <value>请至少选择一台在线设备</value>
+  </data>
+  <data name="batch.files.none" xml:space="preserve">
+    <value>没有可用文件</value>
+  </data>
+  <data name="batch.drop.result" xml:space="preserve">
+    <value>拖拽完成。APK：成功 {0} 个，失败 {1} 个。文件：成功 {2} 个，失败 {3} 个。</value>
+  </data>
+  <data name="batch.files.result" xml:space="preserve">
+    <value>一键传输完成。APK：成功 {0} 个，失败 {1} 个。文件：成功 {2} 个，失败 {3} 个。</value>
   </data>
   <data name="hardware.abi" xml:space="preserve">
     <value>ABI 列表</value>

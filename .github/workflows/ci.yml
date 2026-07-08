@@ -1,14 +1,10 @@
 name: CI
 
-# 持续集成 (Continuous Integration).
-# 在每次 push 与 pull_request 时运行：还原、代码格式检查（非阻塞）、依赖漏洞扫描、
-# 编译与测试。发布 (Release) 相关的打 tag 流程见 publish.yml，本工作流不处理 tag。
 on:
   push:
     branches: [main]
   pull_request:
 
-# 同一分支的旧运行会被新提交取消，避免浪费额度。
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -24,7 +20,6 @@ env:
   SOLUTION: AndroidTreeView.sln
 
 jobs:
-  # 编译 + 测试：Linux 与 Windows 双平台矩阵。任一还原 / 编译 / 测试失败即整体失败。
   build-test:
     name: Build & Test (${{ matrix.os }})
     strategy:
@@ -34,50 +29,50 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }}
+        run: dotnet restore ${{ env.SOLUTION }} -p:EnableWindowsTargeting=true
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION }} -c ${{ env.CONFIGURATION }} --no-restore
+        run: dotnet build ${{ env.SOLUTION }} -c ${{ env.CONFIGURATION }} --no-restore -p:EnableWindowsTargeting=true
 
       - name: Test
         run: >-
           dotnet test ${{ env.SOLUTION }}
           -c ${{ env.CONFIGURATION }}
           --no-build
+          -p:EnableWindowsTargeting=true
           --logger trx
           --results-directory test-results
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.os }}
           path: test-results/**/*.trx
           if-no-files-found: warn
 
-  # 依赖漏洞扫描：检测到任何存在漏洞的 NuGet 包即失败。
   vulnerabilities:
     name: Vulnerability scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }}
+        run: dotnet restore ${{ env.SOLUTION }} -p:EnableWindowsTargeting=true
 
       - name: Check for vulnerable packages
         shell: bash
@@ -90,23 +85,21 @@ jobs:
           fi
           echo "No vulnerable packages detected."
 
-  # 代码格式检查：非阻塞 (non-blocking)。使用 continue-on-error，格式问题不会让整个 CI 变红，
-  # 但会在此 job 中清晰地显示出来供修复。
   format:
     name: Format check (non-blocking)
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }}
+        run: dotnet restore ${{ env.SOLUTION }} -p:EnableWindowsTargeting=true
 
       - name: dotnet format --verify-no-changes
         run: dotnet format ${{ env.SOLUTION }} --verify-no-changes --verbosity diagnostic

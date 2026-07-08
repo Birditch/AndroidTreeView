@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AndroidTreeView.Core.Interfaces;
+using AndroidTreeView.Core.Services;
 using AndroidTreeView.Mini.Models;
 using AndroidTreeView.Mini.Services;
 using AndroidTreeView.Models;
@@ -36,12 +37,14 @@ public sealed partial class MiniViewModel : ObservableObject
     private readonly IAdbEnvironment _environment;
     private readonly IDeviceMonitor _monitor;
     private readonly IScrcpyLauncher _scrcpy;
+    private readonly DeviceFileTransferService _fileTransfer;
     private readonly IUpdateService _updateService;
     private readonly IUpdateInstaller _updateInstaller;
     private readonly ILogger<MiniViewModel> _logger;
 
     // Diff state (only ever touched on the UI thread inside the handler).
     private readonly HashSet<string> _present = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _online = new(StringComparer.Ordinal);
     private readonly HashSet<string> _mirrored = new(StringComparer.Ordinal);
     private readonly HashSet<string> _warnedAuth = new(StringComparer.Ordinal);
     // Android phones seen on USB with debugging off that we've already guided (de-dupe, keyed by serial/VID:PID).
@@ -62,6 +65,7 @@ public sealed partial class MiniViewModel : ObservableObject
         IAdbEnvironment environment,
         IDeviceMonitor monitor,
         IScrcpyLauncher scrcpy,
+        DeviceFileTransferService fileTransfer,
         IUpdateService updateService,
         IUpdateInstaller updateInstaller,
         ILogger<MiniViewModel> logger)
@@ -70,6 +74,7 @@ public sealed partial class MiniViewModel : ObservableObject
         _environment = environment;
         _monitor = monitor;
         _scrcpy = scrcpy;
+        _fileTransfer = fileTransfer;
         _updateService = updateService;
         _updateInstaller = updateInstaller;
         _logger = logger;
@@ -244,6 +249,31 @@ public sealed partial class MiniViewModel : ObservableObject
     [RelayCommand]
     private void Clear() => Log.Clear();
 
+    public async Task HandleDroppedFilesAsync(IReadOnlyList<string> paths, CancellationToken ct = default)
+    {
+        var targets = _online.ToArray();
+        if (targets.Length == 0)
+        {
+            AppendLog(MiniLogLevel.Warn, "Drop ignored: no online ADB device.");
+            return;
+        }
+
+        var result = await _fileTransfer.ProcessAsync(targets, paths, ct: ct).ConfigureAwait(false);
+        if (result.ValidFileCount == 0)
+        {
+            AppendLog(MiniLogLevel.Warn, "Drop ignored: no valid local files.");
+            return;
+        }
+
+        var level = result.TotalFailed == 0
+            ? MiniLogLevel.Success
+            : result.TotalSucceeded == 0 ? MiniLogLevel.Error : MiniLogLevel.Warn;
+
+        AppendLog(
+            level,
+            $"One-click transfer: APK ok {result.InstallSucceeded}, APK failed {result.InstallFailed}, file ok {result.TransferSucceeded}, file failed {result.TransferFailed}.");
+    }
+
     private void OnDevicesChanged(object? sender, DeviceListChangedEventArgs args)
     {
         // Marshal to the UI thread; the monitor raises this from a background loop.
@@ -270,9 +300,15 @@ public sealed partial class MiniViewModel : ObservableObject
             }
 
             _present.Clear();
+            _online.Clear();
             foreach (var serial in current)
             {
                 _present.Add(serial);
+            }
+
+            foreach (var serial in args.Devices.Where(device => device.IsOnline).Select(device => device.Serial))
+            {
+                _online.Add(serial);
             }
 
             DeviceCount = args.Devices.Count;

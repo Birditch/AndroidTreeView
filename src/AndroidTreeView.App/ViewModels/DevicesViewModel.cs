@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AndroidTreeView.App.Services;
 using AndroidTreeView.Core.Interfaces;
+using AndroidTreeView.Core.Services;
 using AndroidTreeView.Models.Devices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,6 +22,8 @@ public sealed partial class DevicesViewModel : ViewModelBase
 {
     private readonly ILocalizationService _localization;
     private readonly IDeviceActionsService _actions;
+    private readonly DeviceFileTransferService _fileTransfer;
+    private readonly IFilePickerService _filePicker;
     private readonly IFastbootService _fastboot;
     private readonly IDialogService _dialog;
 
@@ -67,11 +70,15 @@ public sealed partial class DevicesViewModel : ViewModelBase
     public DevicesViewModel(
         ILocalizationService localization,
         IDeviceActionsService actions,
+        DeviceFileTransferService fileTransfer,
+        IFilePickerService filePicker,
         IFastbootService fastboot,
         IDialogService dialog)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _actions = actions ?? throw new ArgumentNullException(nameof(actions));
+        _fileTransfer = fileTransfer ?? throw new ArgumentNullException(nameof(fileTransfer));
+        _filePicker = filePicker ?? throw new ArgumentNullException(nameof(filePicker));
         _fastboot = fastboot ?? throw new ArgumentNullException(nameof(fastboot));
         _dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
     }
@@ -207,40 +214,53 @@ public sealed partial class DevicesViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Enables Wi-Fi + mobile data on every checked, online device (batch one-click network).</summary>
     [RelayCommand]
-    private async Task BatchEnableNetworkAsync()
+    private async Task BatchPickTransferFilesAsync()
     {
-        var serials = _all.Where(c => c.IsSelected && c.IsOnline).Select(c => c.Serial).ToList();
-        if (serials.Count == 0)
-        {
-            return;
-        }
-
-        var confirmed = await _dialog.ConfirmAsync(
-            _localization.Get("confirm.title"),
-            _localization.Format("confirm.batchnetwork.msg", serials.Count),
-            _localization.Get("common.confirm"),
-            _localization.Get("common.cancel")).ConfigureAwait(true);
-        if (!confirmed)
-        {
-            return;
-        }
-
-        await Task.WhenAll(serials.Select(BatchEnableOneAsync)).ConfigureAwait(true);
-        Notifier.Notify(_localization.Format("action.done", _localization.Get("menu.network")), NotifierLevel.Success);
+        var paths = await _filePicker.PickTransferFilesAsync().ConfigureAwait(true);
+        await ProcessPickedFilesAsync(paths, "batch.files.result").ConfigureAwait(true);
     }
 
-    private async Task BatchEnableOneAsync(string serial)
+    public Task HandleDroppedFilesAsync(IReadOnlyList<string> paths) =>
+        ProcessPickedFilesAsync(paths, "batch.drop.result");
+
+    private Task ProcessPickedFilesAsync(IReadOnlyList<string> paths, string resultKey)
     {
-        try
+        var targetSerials = SelectedOnlineCards().Select(card => card.Serial).ToArray();
+        if (targetSerials.Length == 0)
         {
-            await _actions.EnableNetworkAsync(serial).ConfigureAwait(true);
+            Notifier.Notify(_localization.Get("batch.files.nodevices"), NotifierLevel.Warning);
+            return Task.CompletedTask;
         }
-        catch (Exception)
+
+        return ProcessFilesOnSelectedAsync(targetSerials, paths, resultKey);
+    }
+
+    private async Task ProcessFilesOnSelectedAsync(
+        IReadOnlyList<string> targetSerials,
+        IReadOnlyList<string> paths,
+        string resultKey)
+    {
+        var result = await _fileTransfer.ProcessAsync(targetSerials, paths)
+            .ConfigureAwait(true);
+        if (result.ValidFileCount == 0)
         {
-            // A single device failing must not abort the batch.
+            Notifier.Notify(_localization.Get("batch.files.none"), NotifierLevel.Warning);
+            return;
         }
+
+        var level = result.TotalFailed == 0
+            ? NotifierLevel.Success
+            : result.TotalSucceeded == 0 ? NotifierLevel.Error : NotifierLevel.Warning;
+
+        Notifier.Notify(
+            _localization.Format(
+                resultKey,
+                result.InstallSucceeded,
+                result.InstallFailed,
+                result.TransferSucceeded,
+                result.TransferFailed),
+            level);
     }
 
     private void OnCardPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -317,4 +337,8 @@ public sealed partial class DevicesViewModel : ViewModelBase
 
     private static bool MatchesQuery(string? value, string query) =>
         !string.IsNullOrEmpty(value) && value.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+    private IReadOnlyList<DeviceCardViewModel> SelectedOnlineCards() =>
+        _all.Where(card => card.IsSelected && card.IsOnline).ToArray();
+
 }

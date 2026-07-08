@@ -24,6 +24,10 @@
     <!-- Root — purple -->
     <SolidColorBrush x:Key="Badge.Root" Color="#7C3AED" />
     <SolidColorBrush x:Key="Badge.Root.Foreground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Badge.Magisk" Color="#059669" />
+    <SolidColorBrush x:Key="Badge.Magisk.Foreground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Badge.NotRooted" Color="#DC2626" />
+    <SolidColorBrush x:Key="Badge.NotRooted.Foreground" Color="#FFFFFF" />
 
     <!-- Charging — accent -->
     <SolidColorBrush x:Key="Badge.Charging" Color="#3B82F6" />

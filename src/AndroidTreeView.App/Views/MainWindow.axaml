@@ -9,7 +9,8 @@
         Width="1440" Height="880"
         MinWidth="360" MinHeight="480"
         Icon="/Assets/atv-icon.ico"
-        Background="{DynamicResource BackgroundBaseBrush}">
+        Background="{DynamicResource BackgroundBaseBrush}"
+        DragDrop.AllowDrop="True">
 
     <Window.Resources>
         <conv:BoolToBlurConverter x:Key="BoolToBlur" />

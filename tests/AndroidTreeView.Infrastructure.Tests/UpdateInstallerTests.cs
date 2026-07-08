@@ -79,7 +79,14 @@ public sealed class UpdateInstallerTests
         Assert.True(File.Exists(result.InstallerPath));
         var scriptPath = Path.Combine(Path.GetDirectoryName(result.InstallerPath)!, "apply-update.ps1");
         Assert.True(File.Exists(scriptPath));
-        Assert.Contains("-Verb RunAs", File.ReadAllText(scriptPath));
+        var script = File.ReadAllText(scriptPath);
+        Assert.Contains("-Verb RunAs", script);
+        Assert.Contains("Remove-ExtraneousNonConfigFiles", script);
+        Assert.Contains("Test-PreservedConfigPath", script);
+        Assert.Contains("Remove-Item -LiteralPath $file.FullName -Force", script);
+        Assert.Contains("appsettings.*.json", script);
+        Assert.Contains("robocopy.exe $sourceDir $installDir /E", script);
+        Assert.DoesNotContain("/MIR", script);
 
         Directory.Delete(stageRoot, recursive: true);
     }

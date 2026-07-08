@@ -123,6 +123,12 @@
   <data name="status.rooted" xml:space="preserve">
     <value>Rooted</value>
   </data>
+  <data name="status.notrooted" xml:space="preserve">
+    <value>Not Rooted</value>
+  </data>
+  <data name="status.magisk" xml:space="preserve">
+    <value>Magisk</value>
+  </data>
   <data name="status.charging" xml:space="preserve">
     <value>Charging</value>
   </data>
@@ -150,20 +156,8 @@
   <data name="confirm.poweroff.msg" xml:space="preserve">
     <value>The device will power off immediately and must be turned on by hand. Continue?</value>
   </data>
-  <data name="confirm.network.msg" xml:space="preserve">
-    <value>This will turn on the device's Wi-Fi and mobile data. Continue?</value>
-  </data>
   <data name="confirm.frp.msg" xml:space="preserve">
     <value>This marks setup as complete to clear FRP (non-destructive; no effect on an already set-up device). Continue?</value>
-  </data>
-  <data name="confirm.captive.msg" xml:space="preserve">
-    <value>This disables captive-portal detection (removes the Wi-Fi "!"/"x"). Networks that need a sign-in page may not prompt. Continue?</value>
-  </data>
-  <data name="confirm.ntp.msg" xml:space="preserve">
-    <value>This sets the system NTP time server to a domestic server (ntp.aliyun.com). Continue?</value>
-  </data>
-  <data name="confirm.batchnetwork.msg" xml:space="preserve">
-    <value>This will turn on Wi-Fi and mobile data on {0} selected device(s). Continue?</value>
   </data>
   <data name="status.lowbattery" xml:space="preserve">
     <value>Low Battery</value>
@@ -315,6 +309,9 @@
   <data name="overview.api" xml:space="preserve">
     <value>API Level</value>
   </data>
+  <data name="overview.magisk" xml:space="preserve">
+    <value>Magisk Installed</value>
+  </data>
   <data name="overview.build" xml:space="preserve">
     <value>Build Number</value>
   </data>
@@ -323,6 +320,42 @@
   </data>
   <data name="overview.patch" xml:space="preserve">
     <value>Security Patch</value>
+  </data>
+  <data name="overview.security" xml:space="preserve">
+    <value>Device Security</value>
+  </data>
+  <data name="overview.oem.supported" xml:space="preserve">
+    <value>OEM Unlock Supported</value>
+  </data>
+  <data name="overview.oem.allowed" xml:space="preserve">
+    <value>OEM Unlock</value>
+  </data>
+  <data name="overview.bootloaderlock" xml:space="preserve">
+    <value>Bootloader Lock</value>
+  </data>
+  <data name="overview.devicestate" xml:space="preserve">
+    <value>Device State</value>
+  </data>
+  <data name="overview.verifiedboot" xml:space="preserve">
+    <value>Verified Boot</value>
+  </data>
+  <data name="state.locked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="state.unlocked" xml:space="preserve">
+    <value>Unlocked</value>
+  </data>
+  <data name="state.green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="state.yellow" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
+  <data name="state.orange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="state.red" xml:space="preserve">
+    <value>Red</value>
   </data>
   <data name="hardware.cpu" xml:space="preserve">
     <value>CPU</value>
@@ -339,20 +372,11 @@
   <data name="hardware.board" xml:space="preserve">
     <value>Board</value>
   </data>
-  <data name="menu.network" xml:space="preserve">
-    <value>One-click Network</value>
-  </data>
   <data name="menu.adbtools" xml:space="preserve">
     <value>ADB Tools</value>
   </data>
   <data name="menu.frp" xml:space="preserve">
     <value>Remove FRP</value>
-  </data>
-  <data name="menu.captive" xml:space="preserve">
-    <value>Fix Wi-Fi ! / x mark</value>
-  </data>
-  <data name="menu.ntp" xml:space="preserve">
-    <value>Set China NTP</value>
   </data>
   <data name="menu.power" xml:space="preserve">
     <value>Power</value>
@@ -372,8 +396,8 @@
   <data name="batch.selected" xml:space="preserve">
     <value>{0} selected</value>
   </data>
-  <data name="batch.network" xml:space="preserve">
-    <value>One-click Network</value>
+  <data name="batch.transferfiles" xml:space="preserve">
+    <value>One-click Transfer</value>
   </data>
   <data name="batch.selectall" xml:space="preserve">
     <value>Select All</value>
@@ -396,8 +420,17 @@
   <data name="screen.installfailed" xml:space="preserve">
     <value>Install failed</value>
   </data>
+  <data name="screen.transferring" xml:space="preserve">
+    <value>Transferring...</value>
+  </data>
+  <data name="screen.transferred" xml:space="preserve">
+    <value>Transferred</value>
+  </data>
+  <data name="screen.transferfailed" xml:space="preserve">
+    <value>Transfer failed</value>
+  </data>
   <data name="screen.drophint" xml:space="preserve">
-    <value>Drag an APK here to install it on this device.</value>
+    <value>Drag APKs here to install, or drag files here to transfer to Download.</value>
   </data>
   <data name="screen.back" xml:space="preserve">
     <value>Back</value>
@@ -413,6 +446,24 @@
   </data>
   <data name="action.failed" xml:space="preserve">
     <value>Failed: {0}</value>
+  </data>
+  <data name="software.installed" xml:space="preserve">
+    <value>Detected {0} installed</value>
+  </data>
+  <data name="software.uninstalled" xml:space="preserve">
+    <value>Detected {0} uninstalled</value>
+  </data>
+  <data name="batch.files.nodevices" xml:space="preserve">
+    <value>Select at least one online device</value>
+  </data>
+  <data name="batch.files.none" xml:space="preserve">
+    <value>No valid files were provided</value>
+  </data>
+  <data name="batch.drop.result" xml:space="preserve">
+    <value>Drop complete. APKs: {0} installed, {1} failed. Files: {2} transferred, {3} failed.</value>
+  </data>
+  <data name="batch.files.result" xml:space="preserve">
+    <value>One-click transfer complete. APKs: {0} installed, {1} failed. Files: {2} transferred, {3} failed.</value>
   </data>
   <data name="hardware.abi" xml:space="preserve">
     <value>ABI List</value>

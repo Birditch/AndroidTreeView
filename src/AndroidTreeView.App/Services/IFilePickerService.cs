@@ -8,6 +8,9 @@ public interface IFilePickerService
     /// <summary>Prompts the user to pick the adb executable; returns its full path or null if cancelled.</summary>
     Task<string?> PickAdbExecutableAsync();
 
+    /// <summary>Prompts the user to pick one or more files for device transfer or APK install.</summary>
+    Task<IReadOnlyList<string>> PickTransferFilesAsync();
+
     /// <summary>Opens <paramref name="url"/> in the default browser.</summary>
     Task OpenUrlAsync(string url);
 }

@@ -20,13 +20,18 @@ public class OverviewBuilderTests
         [PropKeys.Fingerprint] = "google/redfin/redfin:13/TQ3A.230805.001/keys",
         [PropKeys.SecurityPatch] = "2023-08-05",
         [PropKeys.BuildTags] = "release-keys",
-        [PropKeys.BuildType] = "user"
+        [PropKeys.BuildType] = "user",
+        [PropKeys.OemUnlockSupported] = "1",
+        [PropKeys.OemUnlockAllowed] = "0",
+        [PropKeys.BootFlashLocked] = "0",
+        [PropKeys.VbmetaDeviceState] = "unlocked",
+        [PropKeys.VerifiedBootState] = "orange"
     };
 
     [Fact]
     public void Build_MapsAllFields()
     {
-        var overview = OverviewBuilder.Build(Props());
+        var overview = OverviewBuilder.Build(Props(), "package:com.topjohnwu.magisk\n");
 
         Assert.Equal("Google", overview.Manufacturer);
         Assert.Equal("google", overview.Brand);
@@ -40,6 +45,35 @@ public class OverviewBuilderTests
         Assert.Equal("2023-08-05", overview.SecurityPatch);
         Assert.Equal("release-keys", overview.BuildTags);
         Assert.Equal("user", overview.BuildType);
+        Assert.True(overview.OemUnlockSupported);
+        Assert.False(overview.OemUnlockAllowed);
+        Assert.Equal("unlocked", overview.BootloaderLockState);
+        Assert.Equal("unlocked", overview.DeviceState);
+        Assert.Equal("orange", overview.VerifiedBootState);
+        Assert.True(overview.MagiskInstalled);
+    }
+
+    [Fact]
+    public void Build_MagiskInstalled_IsTrueWhenPackageListContainsMagisk()
+    {
+        var overview = OverviewBuilder.Build(
+            new Dictionary<string, string>(),
+            "package:com.android.settings\npackage:com.topjohnwu.magisk\n");
+
+        Assert.True(overview.MagiskInstalled);
+    }
+
+    [Fact]
+    public void Build_BootloaderLockState_UsesBootUnlockedFallback()
+    {
+        var props = new Dictionary<string, string>
+        {
+            [PropKeys.BootUnlocked] = "0"
+        };
+
+        var overview = OverviewBuilder.Build(props);
+
+        Assert.Equal("locked", overview.BootloaderLockState);
     }
 
     [Fact]

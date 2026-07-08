@@ -9,7 +9,7 @@
 
 AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Windows 桌面工具。主程序负责设备总览、详情、投屏、基础工具、设置和更新；Mini 版本保持独立运行，常驻监听设备，并在授权后自动启动投屏。
 
-当前版本：**v1.0.4**。当前验证目标：App 构建通过、Mini 构建通过、全量测试通过，打包链路能为 App 和 Mini 分别生成 x64 上传 ZIP。
+当前版本：**v1.0.5**。当前验证目标：App 构建通过、Mini 构建通过、全量测试通过，打包链路能为 App 和 Mini 分别生成 x64 上传 ZIP。
 
 ## 核心能力
 
@@ -37,7 +37,7 @@ src/
 tests/
   AndroidTreeView.*.Tests
 packaging/
-  x64 ZIP packaging and optional WiX MSI packaging
+  win-x64 / osx-arm64 ZIP packaging and optional WiX MSI packaging
 build/
   Shared MSBuild targets
 ```
@@ -72,22 +72,24 @@ ADB 安装和排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 3. 使用设备卡片查看状态、投屏、打开 CLI 或执行非破坏性工具。
 4. 通过设置或关于页检查并安装更新。
 
-## x64 ZIP 打包
+## Release ZIP 打包
 
-当前版本号统一为 `1.0.4`，运行时版本、App/Mini 程序集版本、manifest 和 `build-update-zip.ps1` 默认版本保持一致。发布只接受 x64。
+当前版本号统一为 `1.0.5`，运行时版本、App/Mini 程序集版本、manifest 和 `build-update-zip.ps1` 默认版本保持一致。正式发布只通过 GitHub Actions 的 `Publish` 工作流完成，发布只接受 x64。
+
+本地命令仅用于验证打包链路：
 
 ```powershell
-./packaging/build-update-zip.ps1 -Product App -Arch x64
-./packaging/build-update-zip.ps1 -Product Mini -Arch x64
+./packaging/build-update-zip.ps1 -Product App -Rid win-x64
+./packaging/build-update-zip.ps1 -Product Mini -Rid win-x64
 ```
 
 示例输出：
 
 ```text
-artifacts/AndroidTreeView-1.0.4-x64.zip
-artifacts/AndroidTreeView-1.0.4-x64.zip.sha256
-artifacts/AndroidTreeView-Mini-1.0.4-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.4-x64.zip.sha256
+artifacts/AndroidTreeView-1.0.5-win-x64.zip
+artifacts/AndroidTreeView-1.0.5-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-1.0.5-win-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip
 ```
 
 ## 自动更新
@@ -96,7 +98,7 @@ artifacts/AndroidTreeView-Mini-1.0.4-x64.zip.sha256
 - Mini 更新通道：`android-tree-view-mini`。
 - `NekoIndexUpdateService` 检查内部更新通道并比较语义版本。
 - `UpdateInstaller` 下载、校验、解包并启动本地更新脚本。
-- 支持的发布包是带 `release.json` 的 x64 ZIP。
+- Windows 自动更新支持带 `release.json` 的 x64 ZIP；GitHub Release 同时包含 macOS Apple Silicon ZIP。
 - 没有受支持发布清单的散文件 ZIP 会被拒绝。
 
 ## 验证
@@ -104,6 +106,7 @@ artifacts/AndroidTreeView-Mini-1.0.4-x64.zip.sha256
 ```bash
 dotnet build src/AndroidTreeView.App/AndroidTreeView.App.csproj --no-restore
 dotnet build src/AndroidTreeView.Mini/AndroidTreeView.Mini.csproj --no-restore
+dotnet build src/AndroidTreeView.Mini.Mac/AndroidTreeView.Mini.Mac.csproj --no-restore
 dotnet test AndroidTreeView.sln --no-restore
 ```
 

@@ -398,6 +398,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void DismissUpdate() => ShowUpdateBanner = false;
 
+    public Task HandleDroppedFilesAsync(IReadOnlyList<string> paths) =>
+        Devices.HandleDroppedFilesAsync(paths);
+
     private void SubscribeMonitor()
     {
         if (_monitorSubscribed)

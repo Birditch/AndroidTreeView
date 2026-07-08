@@ -55,45 +55,10 @@ public sealed class AdbDeviceActionsService : IDeviceActionsService
         => RunShellMutatingAsync(serial, AdbArgs.PowerOff, ct);
 
     /// <inheritdoc/>
-    public async Task EnableNetworkAsync(string serial, CancellationToken ct = default)
-    {
-        // Run both independently; ignore individual failures so one succeeding is sufficient.
-        await RunShellMutatingAsync(serial, AdbArgs.SvcWifiEnable, ct).ConfigureAwait(false);
-        await RunShellMutatingAsync(serial, AdbArgs.SvcDataEnable, ct).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
     public async Task RemoveFrpAsync(string serial, CancellationToken ct = default)
     {
         await RunShellMutatingAsync(serial, AdbArgs.SettingsPutSecureUserSetupComplete, ct).ConfigureAwait(false);
         await RunShellMutatingAsync(serial, AdbArgs.SettingsPutGlobalDeviceProvisioned, ct).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
-    public async Task DisableCaptivePortalAsync(string serial, CancellationToken ct = default)
-    {
-        await RunShellMutatingAsync(serial, AdbArgs.SettingsPutGlobalCaptivePortalMode, ct).ConfigureAwait(false);
-        await RunShellMutatingAsync(serial, AdbArgs.SettingsPutGlobalCaptivePortalDetectionEnabled, ct).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
-    public Task SetChinaNtpAsync(string serial, CancellationToken ct = default)
-        => RunShellMutatingAsync(serial, AdbArgs.SettingsPutGlobalNtpServer, ct);
-
-    /// <inheritdoc/>
-    public async Task<bool> IsCaptivePortalDisabledAsync(string serial, CancellationToken ct = default)
-    {
-        var output = await TryShellQueryAsync(serial, AdbArgs.SettingsGetGlobalCaptivePortalMode, ct)
-            .ConfigureAwait(false);
-        return output?.Trim() == "0";
-    }
-
-    /// <inheritdoc/>
-    public async Task<bool> IsChinaNtpSetAsync(string serial, CancellationToken ct = default)
-    {
-        var output = await TryShellQueryAsync(serial, AdbArgs.SettingsGetGlobalNtpServer, ct)
-            .ConfigureAwait(false);
-        return output?.Trim().Contains(AdbArgs.NtpAliyunServer, StringComparison.Ordinal) == true;
     }
 
     /// <inheritdoc/>

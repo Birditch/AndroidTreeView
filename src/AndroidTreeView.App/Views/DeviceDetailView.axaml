@@ -40,6 +40,36 @@
                         <controls:StatusBadge Text="{Binding StatusText}"
                                               Kind="{Binding StatusKind}"
                                               Margin="0,0,8,4" />
+                        <Border IsVisible="{Binding IsRooted, TargetNullValue=false}"
+                                Background="{DynamicResource Badge.Root}"
+                                CornerRadius="8"
+                                Padding="8,3"
+                                Margin="0,0,8,4">
+                            <TextBlock Text="{loc:Localize Key=status.rooted}"
+                                       Foreground="White"
+                                       FontSize="11"
+                                       FontWeight="SemiBold" />
+                        </Border>
+                        <Border IsVisible="{Binding MagiskInstalled}"
+                                Background="{DynamicResource Badge.Magisk}"
+                                CornerRadius="8"
+                                Padding="8,3"
+                                Margin="0,0,8,4">
+                            <TextBlock Text="{loc:Localize Key=status.magisk}"
+                                       Foreground="White"
+                                       FontSize="11"
+                                       FontWeight="SemiBold" />
+                        </Border>
+                        <Border IsVisible="{Binding IsNotRooted}"
+                                Background="{DynamicResource Badge.NotRooted}"
+                                CornerRadius="8"
+                                Padding="8,3"
+                                Margin="0,0,8,4">
+                            <TextBlock Text="{loc:Localize Key=status.notrooted}"
+                                       Foreground="White"
+                                       FontSize="11"
+                                       FontWeight="SemiBold" />
+                        </Border>
                     </WrapPanel>
 
                     <StackPanel Spacing="2">

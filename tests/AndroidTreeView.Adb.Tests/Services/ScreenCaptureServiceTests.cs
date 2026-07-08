@@ -112,6 +112,36 @@ public class ScreenCaptureServiceTests
         Assert.False(await Build(fake).InstallApkAsync(Serial, "app.apk"));
     }
 
+    [Fact]
+    public async Task InstallApkAsync_WhenReplaceFails_TriesDowngradeFallback()
+    {
+        var fake = new FakeAdbCommandExecutor();
+        fake.Enqueue(FailResult());
+        fake.Enqueue(SuccessResult("Success\n"));
+
+        Assert.True(await Build(fake).InstallApkAsync(Serial, "app.apk"));
+
+        Assert.Equal(2, fake.Captured.Count);
+        Assert.Equal(new[] { "install", "-r", "app.apk" }, fake.Captured[0].Arguments);
+        Assert.Equal(new[] { "install", "-r", "-d", "app.apk" }, fake.Captured[1].Arguments);
+    }
+
+    [Fact]
+    public async Task InstallApkAsync_WhenStreamingFallbackNeeded_TriesNoStreaming()
+    {
+        var fake = new FakeAdbCommandExecutor();
+        fake.Enqueue(FailResult());
+        fake.Enqueue(FailResult());
+        fake.Enqueue(SuccessResult("Success\n"));
+
+        Assert.True(await Build(fake).InstallApkAsync(Serial, "app.apk"));
+
+        Assert.Equal(3, fake.Captured.Count);
+        Assert.Equal(new[] { "install", "-r", "app.apk" }, fake.Captured[0].Arguments);
+        Assert.Equal(new[] { "install", "-r", "-d", "app.apk" }, fake.Captured[1].Arguments);
+        Assert.Equal(new[] { "install", "-r", "--no-streaming", "app.apk" }, fake.Captured[2].Arguments);
+    }
+
     // ── CaptureFrameAsync ─────────────────────────────────────────────────────
 
     [Fact]
@@ -126,6 +156,83 @@ public class ScreenCaptureServiceTests
             NullLogger<ScreenCaptureService>.Instance);
 
         await Assert.ThrowsAsync<AdbNotFoundException>(() => svc.CaptureFrameAsync(Serial));
+    }
+
+    [Fact]
+    public async Task PushFileAsync_CreatesRemoteDirectoryAndPushesFile()
+    {
+        var fake = new FakeAdbCommandExecutor();
+        var path = Path.Combine(Path.GetTempPath(), $"AndroidTreeView-{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(path, "payload");
+
+        try
+        {
+            Assert.True(await Build(fake).PushFileAsync(Serial, path));
+
+            Assert.Equal(2, fake.Captured.Count);
+            Assert.Equal(Serial, fake.Captured[0].Serial);
+            Assert.True(fake.Captured[0].RunInShell);
+            Assert.Equal(new[] { "mkdir", "-p", "/sdcard/Download/" }, fake.Captured[0].Arguments);
+
+            Assert.Equal(Serial, fake.Captured[1].Serial);
+            Assert.False(fake.Captured[1].RunInShell);
+            Assert.Equal(
+                new[] { "push", path, "/sdcard/Download/" + Path.GetFileName(path) },
+                fake.Captured[1].Arguments);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task PushFileAsync_MissingLocalFile_ReturnsFalseWithoutAdb()
+    {
+        var fake = new FakeAdbCommandExecutor();
+
+        Assert.False(await Build(fake).PushFileAsync(Serial, "missing-file.bin"));
+        Assert.Empty(fake.Captured);
+    }
+
+    [Fact]
+    public async Task PushFileAsync_WhenPreferredTargetFails_FallsBackToDownload()
+    {
+        var fake = new FakeAdbCommandExecutor();
+        fake.Enqueue(SuccessResult(""));
+        fake.Enqueue(FailResult());
+        fake.Enqueue(SuccessResult(""));
+        fake.Enqueue(SuccessResult(""));
+        var path = Path.Combine(Path.GetTempPath(), $"AndroidTreeView-{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(path, "payload");
+
+        try
+        {
+            Assert.True(await Build(fake).PushFileAsync(Serial, path));
+
+            Assert.Equal(4, fake.Captured.Count);
+            Assert.Equal(new[] { "mkdir", "-p", "/sdcard/Download/" }, fake.Captured[0].Arguments);
+            Assert.Equal(new[] { "push", path, "/sdcard/Download/" + Path.GetFileName(path) }, fake.Captured[1].Arguments);
+            Assert.Equal(new[] { "mkdir", "-p", "/sdcard/" }, fake.Captured[2].Arguments);
+            Assert.Equal(new[] { "push", path, "/sdcard/" + Path.GetFileName(path) }, fake.Captured[3].Arguments);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task PrepareFileTransferAsync_CreatesDefaultTarget()
+    {
+        var fake = new FakeAdbCommandExecutor();
+
+        Assert.True(await Build(fake).PrepareFileTransferAsync(Serial));
+
+        var req = Assert.Single(fake.Captured);
+        Assert.Equal(Serial, req.Serial);
+        Assert.True(req.RunInShell);
+        Assert.Equal(new[] { "mkdir", "-p", "/sdcard/Download/" }, req.Arguments);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

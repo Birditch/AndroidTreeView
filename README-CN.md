@@ -9,7 +9,7 @@
 
 AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Windows 桌面工具。主程序负责设备总览、详情、投屏、基础工具和设置；Mini 版本保持独立运行，常驻监听设备并自动投屏。
 
-当前版本：**v1.0.4**。
+当前版本：**v1.0.5**。
 
 ## 功能
 
@@ -19,7 +19,7 @@ AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Window
 - Mini 自动监听设备，设备授权后自动启动投屏。
 - Mini 使用轻量 WinForms 窗口，不再随 Mini 包携带 Avalonia/Skia 运行时。
 - App 和 Mini 共用 ADB、scrcpy、设置、更新检查和更新安装服务。
-- 自动更新会下载、校验并应用 x64 ZIP 更新包，不要求用户手动解压替换文件。
+- Windows 自动更新会下载、校验并应用 x64 ZIP 更新包；GitHub Release 同时包含 macOS Apple Silicon ZIP。
 - 中英文 UI，浅色/深色/跟随系统主题。
 
 ## 开发运行
@@ -45,21 +45,25 @@ ADB 安装与排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 
 - 主程序更新通道：`android-tree-view-app`。
 - Mini 更新通道：`android-tree-view-mini`。
-- 更新包使用带 `release.json` 的 x64 ZIP。
+- Windows 更新包使用带 `release.json` 的 x64 ZIP；GitHub Release 同时包含 macOS Apple Silicon ZIP。
 - ZIP 中没有受支持的发布清单时会拒绝安装，避免用户手动替换文件。
 
 ## 打包
 
+正式发布只通过 GitHub Actions 的 `Publish` 工作流完成。本地命令仅用于验证打包链路：
+
 ```powershell
-./packaging/build-update-zip.ps1 -Product App -Arch x64
-./packaging/build-update-zip.ps1 -Product Mini -Arch x64
+./packaging/build-update-zip.ps1 -Product App -Rid win-x64
+./packaging/build-update-zip.ps1 -Product Mini -Rid win-x64
 ```
 
-默认产物版本是 `1.0.4`。只发布 x64 架构。输出包含主程序和 Mini 的上传 ZIP，例如：
+默认产物版本是 `1.0.5`。只发布 x64 架构。验证输出包含主程序和 Mini 的上传 ZIP，例如：
 
 ```text
-artifacts/AndroidTreeView-1.0.4-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.4-x64.zip
+artifacts/AndroidTreeView-1.0.5-win-x64.zip
+artifacts/AndroidTreeView-1.0.5-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-1.0.5-win-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip
 ```
 
 更多细节见 [docs/packaging.md](docs/packaging.md)。
@@ -69,6 +73,7 @@ artifacts/AndroidTreeView-Mini-1.0.4-x64.zip
 ```bash
 dotnet build src/AndroidTreeView.App/AndroidTreeView.App.csproj --no-restore
 dotnet build src/AndroidTreeView.Mini/AndroidTreeView.Mini.csproj --no-restore
+dotnet build src/AndroidTreeView.Mini.Mac/AndroidTreeView.Mini.Mac.csproj --no-restore
 dotnet test AndroidTreeView.sln --no-restore
 ```
 

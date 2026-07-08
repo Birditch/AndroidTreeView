@@ -42,7 +42,7 @@
                 BorderThickness="1">
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                 <TextBlock Text="{Binding SelectionText}" VerticalAlignment="Center" FontWeight="SemiBold" />
-                <Button Content="{loc:Localize Key=batch.network}" Command="{Binding BatchEnableNetworkCommand}" />
+                <Button Content="{loc:Localize Key=batch.transferfiles}" Command="{Binding BatchPickTransferFilesCommand}" />
                 <Button Content="{loc:Localize Key=batch.selectall}" Command="{Binding SelectAllCommand}" />
                 <Button Content="{loc:Localize Key=batch.clear}" Command="{Binding ClearSelectionCommand}" />
             </StackPanel>

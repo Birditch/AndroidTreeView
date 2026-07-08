@@ -101,13 +101,16 @@ public partial class ScreenMirrorWindow : Window
             return;
         }
 
-        foreach (var item in files.OfType<IStorageFile>())
+        var paths = files
+            .OfType<IStorageFile>()
+            .Select(item => item.TryGetLocalPath())
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .ToList();
+
+        if (paths.Count > 0)
         {
-            var path = item.TryGetLocalPath();
-            if (!string.IsNullOrEmpty(path) && path.EndsWith(".apk", StringComparison.OrdinalIgnoreCase))
-            {
-                await vm.InstallApkAsync(path);
-            }
+            await vm.HandleDroppedFilesAsync(paths);
         }
     }
 

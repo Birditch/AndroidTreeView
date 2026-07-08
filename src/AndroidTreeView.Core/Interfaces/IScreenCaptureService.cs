@@ -16,6 +16,12 @@ public interface IScreenCaptureService
     /// <summary>Installs / reinstalls an APK (<c>install -r</c>); returns true on success.</summary>
     Task<bool> InstallApkAsync(string serial, string apkPath, CancellationToken ct = default);
 
+    /// <summary>Pushes a local file to the device; returns true on success.</summary>
+    Task<bool> PushFileAsync(string serial, string filePath, string? remoteDirectory = null, CancellationToken ct = default);
+
+    /// <summary>Prepares the remote directory used for drag-drop file transfer; best-effort.</summary>
+    Task<bool> PrepareFileTransferAsync(string serial, string? remoteDirectory = null, CancellationToken ct = default);
+
     /// <summary>Injects a swipe / drag gesture in device pixels (<c>input swipe</c>).</summary>
     Task SwipeAsync(string serial, int x1, int y1, int x2, int y2, int durationMs, CancellationToken ct = default);
 

@@ -30,6 +30,7 @@ public static class AdbArgs
     public static readonly string[] IpAddr = { "ip", "addr" };
     public static readonly string[] Ifconfig = { "ifconfig" };
     public static readonly string[] MagiskClientVersion = { "magisk", "-c" };
+    public static readonly string[] PmListPackages = { "pm", "list", "packages" };
 
     // Device (adb-level, not shell) commands
     public static readonly string[] LogcatClear = { "logcat", "-c" };
@@ -47,9 +48,6 @@ public static class AdbArgs
 
     // ── Device-action commands (AdbDeviceActionsService) ─────────────────────
 
-    /// <summary>NTP server used by <c>SetChinaNtpAsync</c>.</summary>
-    public const string NtpAliyunServer = "ntp.aliyun.com";
-
     // Reboot / power (global adb commands, RunInShell = false)
     public static readonly string[] Reboot           = { "reboot" };
     public static readonly string[] RebootRecovery   = { "reboot", "recovery" };
@@ -57,10 +55,6 @@ public static class AdbArgs
 
     // Power-off (shell)
     public static readonly string[] PowerOff = { "reboot", "-p" };
-
-    // Network enable (shell)
-    public static readonly string[] SvcWifiEnable = { "svc", "wifi", "enable" };
-    public static readonly string[] SvcDataEnable = { "svc", "data", "enable" };
 
     // FRP removal (shell)
     public static readonly string[] SettingsPutSecureUserSetupComplete =
@@ -71,20 +65,6 @@ public static class AdbArgs
         { "settings", "get", "secure", "user_setup_complete" };
     public static readonly string[] SettingsGetGlobalDeviceProvisioned =
         { "settings", "get", "global", "device_provisioned" };
-
-    // Captive-portal (shell)
-    public static readonly string[] SettingsPutGlobalCaptivePortalMode =
-        { "settings", "put", "global", "captive_portal_mode", "0" };
-    public static readonly string[] SettingsPutGlobalCaptivePortalDetectionEnabled =
-        { "settings", "put", "global", "captive_portal_detection_enabled", "0" };
-    public static readonly string[] SettingsGetGlobalCaptivePortalMode =
-        { "settings", "get", "global", "captive_portal_mode" };
-
-    // NTP (shell)
-    public static readonly string[] SettingsPutGlobalNtpServer =
-        { "settings", "put", "global", "ntp_server", NtpAliyunServer };
-    public static readonly string[] SettingsGetGlobalNtpServer =
-        { "settings", "get", "global", "ntp_server" };
 
     /// <summary>Builds a <c>cat &lt;path&gt;</c> shell argument array.</summary>
     public static string[] Cat(string path) => new[] { "cat", path };
@@ -148,4 +128,19 @@ public static class AdbArgs
 
     /// <summary>Builds an <c>install -r &lt;apkPath&gt;</c> global argument array.</summary>
     public static string[] InstallReplace(string apkPath) => new[] { "install", "-r", apkPath };
+
+    /// <summary>Builds an <c>install -r -d &lt;apkPath&gt;</c> fallback argument array.</summary>
+    public static string[] InstallReplaceAllowDowngrade(string apkPath) => new[] { "install", "-r", "-d", apkPath };
+
+    /// <summary>Builds an <c>install -r --no-streaming &lt;apkPath&gt;</c> fallback argument array.</summary>
+    public static string[] InstallReplaceNoStreaming(string apkPath) => new[] { "install", "-r", "--no-streaming", apkPath };
+
+    /// <summary>Builds an <c>install -r -d --no-streaming &lt;apkPath&gt;</c> fallback argument array.</summary>
+    public static string[] InstallReplaceAllowDowngradeNoStreaming(string apkPath) => new[] { "install", "-r", "-d", "--no-streaming", apkPath };
+
+    /// <summary>Builds an <c>adb push &lt;localPath&gt; &lt;remotePath&gt;</c> global argument array.</summary>
+    public static string[] Push(string localPath, string remotePath) => new[] { "push", localPath, remotePath };
+
+    /// <summary>Builds a <c>mkdir -p &lt;path&gt;</c> shell argument array.</summary>
+    public static string[] MkdirP(string path) => new[] { "mkdir", "-p", path };
 }

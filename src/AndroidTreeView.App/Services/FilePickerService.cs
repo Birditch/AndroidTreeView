@@ -48,6 +48,15 @@ public sealed class FilePickerService : IFilePickerService
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<string>> PickTransferFilesAsync() =>
+        PickFilesAsync(
+            "Select APKs or files",
+            [
+                new FilePickerFileType("APK") { Patterns = ["*.apk"] },
+                FilePickerFileTypes.All
+            ]);
+
+    /// <inheritdoc />
     public Task OpenUrlAsync(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -88,4 +97,30 @@ public sealed class FilePickerService : IFilePickerService
 
     private static Window? GetMainWindow() =>
         (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+
+    private async Task<IReadOnlyList<string>> PickFilesAsync(
+        string title,
+        IReadOnlyList<FilePickerFileType> filters)
+    {
+        var window = GetMainWindow();
+        if (window?.StorageProvider is not { CanOpen: true } provider)
+        {
+            _logger.LogWarning("No storage provider is available for the file picker.");
+            return Array.Empty<string>();
+        }
+
+        var options = new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = true,
+            FileTypeFilter = filters
+        };
+
+        var files = await provider.OpenFilePickerAsync(options).ConfigureAwait(true);
+        return files
+            .Select(file => file.TryGetLocalPath())
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .ToArray();
+    }
 }

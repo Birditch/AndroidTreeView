@@ -11,15 +11,15 @@ This roadmap captures the current App + Mini direction after the shared service 
 - Update checks are product-aware:
   - App uses `android-tree-view-app`.
   - Mini uses `android-tree-view-mini`.
-- Updates are ZIP-driven. The updater downloads, verifies SHA-256 metadata when present, extracts x64 release ZIPs, and starts the automated apply flow. Unsupported loose-file ZIPs are rejected.
-- Packaging is product-aware and can produce first-class App and Mini x64 upload ZIPs.
+- Updates are ZIP-driven. The updater downloads, verifies SHA-256 metadata when present, extracts Windows x64 release ZIPs, and starts the automated apply flow. Unsupported loose-file ZIPs are rejected.
+- Packaging is product-aware and can produce first-class App and Mini ZIPs for Windows x64 and macOS Apple Silicon.
 
 ## Remaining Backlog
 
 ### Device Actions
 
 - Keep right-click/card actions universal, non-destructive by default, and no-root-required unless a root-only action is explicitly marked.
-- Continue improving state-aware enable/disable logic for reboot, recovery, bootloader, network repair, APK install, FRP/setup-complete helper, captive portal helper, and NTP helper.
+- Continue improving state-aware enable/disable logic for reboot, recovery, bootloader, Magisk install, APK install, FRP/setup-complete helper, captive portal helper, and NTP helper.
 - Add clear confirmations for disruptive actions such as reboot, shutdown, recovery, and bootloader mode.
 
 ### Batch Operations
@@ -41,9 +41,11 @@ This roadmap captures the current App + Mini direction after the shared service 
 
 ### Release Hardening
 
-- Build and smoke-test the x64 upload artifacts before publishing:
-  - `AndroidTreeView-<version>-x64.zip`
-  - `AndroidTreeView-Mini-<version>-x64.zip`
+- Build and smoke-test the release artifacts before publishing:
+  - `AndroidTreeView-<version>-win-x64.zip`
+  - `AndroidTreeView-<version>-osx-arm64.zip`
+  - `AndroidTreeView-Mini-<version>-win-x64.zip`
+  - `AndroidTreeView-Mini-<version>-osx-arm64.zip`
 - Verify update metadata points each product key at the correct ZIP artifact.
 - Test App and Mini update flows on a clean Windows machine or VM.
 

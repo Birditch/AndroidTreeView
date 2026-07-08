@@ -1,9 +1,12 @@
 using System;
+using System.Linq;
 using AndroidTreeView.App.Services;
 using AndroidTreeView.App.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 namespace AndroidTreeView.App.Views;
@@ -17,6 +20,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DropEvent, OnDrop);
         Loaded += OnLoaded;
     }
 
@@ -46,5 +51,38 @@ public partial class MainWindow : Window
     {
         Notifier.Show = null;
         base.OnClosed(e);
+    }
+
+    private static void OnDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+    }
+
+    private static async void OnDrop(object? sender, DragEventArgs e)
+    {
+        if (sender is not MainWindow { DataContext: MainWindowViewModel vm })
+        {
+            return;
+        }
+
+        var files = e.DataTransfer.TryGetFiles();
+        if (files is null)
+        {
+            return;
+        }
+
+        var paths = files
+            .OfType<IStorageFile>()
+            .Select(file => file.TryGetLocalPath())
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .ToList();
+
+        if (paths.Count > 0)
+        {
+            await vm.HandleDroppedFilesAsync(paths).ConfigureAwait(true);
+        }
     }
 }

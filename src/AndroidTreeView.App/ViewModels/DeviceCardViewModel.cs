@@ -29,6 +29,7 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
     // True once getprop enrichment (ApplyOverview) has supplied the manufacturer/model/name, after which
     // a plain `adb devices -l` refresh must not overwrite them.
     private bool _identityEnriched;
+    private bool _magiskStateKnown;
 
     [ObservableProperty]
     private string _serial = string.Empty;
@@ -52,10 +53,7 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsFastboot))]
     [NotifyPropertyChangedFor(nameof(CanOpenDetail))]
     [NotifyCanExecuteChangedFor(nameof(OpenCommand))]
-    [NotifyCanExecuteChangedFor(nameof(EnableNetworkCommand))]
     [NotifyCanExecuteChangedFor(nameof(RemoveFrpCommand))]
-    [NotifyCanExecuteChangedFor(nameof(DisableCaptivePortalCommand))]
-    [NotifyCanExecuteChangedFor(nameof(SetChinaNtpCommand))]
     [NotifyCanExecuteChangedFor(nameof(OpenScreenCommand))]
     private DeviceConnectionState _state;
 
@@ -93,10 +91,28 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
     private string _cycleCountText = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotRooted))]
     private bool? _isRooted;
 
     [ObservableProperty]
     private string _rootText = string.Empty;
+
+    public bool IsNotRooted => IsRooted == false;
+
+    [ObservableProperty]
+    private string _oemUnlockSupportedText = string.Empty;
+
+    [ObservableProperty]
+    private string _oemUnlockAllowedText = string.Empty;
+
+    [ObservableProperty]
+    private string _bootloaderLockText = string.Empty;
+
+    [ObservableProperty]
+    private string _deviceStateText = string.Empty;
+
+    [ObservableProperty]
+    private string _verifiedBootText = string.Empty;
 
     [ObservableProperty]
     private DateTimeOffset? _lastRefresh;
@@ -112,6 +128,9 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isOnline;
+
+    [ObservableProperty]
+    private bool _magiskInstalled;
 
     /// <summary>True when the device is in fastboot / bootloader mode (no OS: no mirror, CLI + power only).</summary>
     public bool IsFastboot => State == DeviceConnectionState.Bootloader;
@@ -132,14 +151,6 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(OpenScreenCommand))]
     private bool _isMirroring;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(DisableCaptivePortalCommand))]
-    private bool _captivePortalDisabled;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SetChinaNtpCommand))]
-    private bool _chinaNtpSet;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RemoveFrpCommand))]
@@ -206,12 +217,6 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
     private Task PowerOff() => RunConfirmedAsync("menu.poweroff", "confirm.poweroff.msg",
         ct => IsFastboot ? _fastboot.PowerOffAsync(Serial, ct) : _actions.PowerOffAsync(Serial, ct));
 
-    // adb-only actions: disabled in fastboot mode (no OS to talk to).
-    [RelayCommand(CanExecute = nameof(CanEnableNetwork))]
-    private Task EnableNetwork() => RunConfirmedAsync("menu.network", "confirm.network.msg", ct => _actions.EnableNetworkAsync(Serial, ct));
-
-    private bool CanEnableNetwork => !IsFastboot;
-
     [RelayCommand(CanExecute = nameof(CanRemoveFrp))]
     private async Task RemoveFrp()
     {
@@ -221,31 +226,11 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
 
     private bool CanRemoveFrp => !FrpRemoved && !IsFastboot;
 
-    [RelayCommand(CanExecute = nameof(CanDisableCaptivePortal))]
-    private async Task DisableCaptivePortal()
-    {
-        await RunConfirmedAsync("menu.captive", "confirm.captive.msg", ct => _actions.DisableCaptivePortalAsync(Serial, ct)).ConfigureAwait(true);
-        await RefreshActionStateAsync().ConfigureAwait(true);
-    }
-
-    [RelayCommand(CanExecute = nameof(CanSetChinaNtp))]
-    private async Task SetChinaNtp()
-    {
-        await RunConfirmedAsync("menu.ntp", "confirm.ntp.msg", ct => _actions.SetChinaNtpAsync(Serial, ct)).ConfigureAwait(true);
-        await RefreshActionStateAsync().ConfigureAwait(true);
-    }
-
-    private bool CanDisableCaptivePortal => !CaptivePortalDisabled && !IsFastboot;
-
-    private bool CanSetChinaNtp => !ChinaNtpSet && !IsFastboot;
-
     /// <summary>Refreshes the toggle-state flags used to grey out already-applied ADB actions.</summary>
     public async Task RefreshActionStateAsync(CancellationToken ct = default)
     {
         try
         {
-            CaptivePortalDisabled = await _actions.IsCaptivePortalDisabledAsync(Serial, ct).ConfigureAwait(true);
-            ChinaNtpSet = await _actions.IsChinaNtpSetAsync(Serial, ct).ConfigureAwait(true);
             FrpRemoved = await _actions.IsFrpRemovedAsync(Serial, ct).ConfigureAwait(true);
         }
         catch (Exception)
@@ -362,6 +347,15 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
         {
             AndroidVersion = overview.AndroidVersion!;
         }
+
+        OemUnlockSupportedText = FormatNullableBool(overview.OemUnlockSupported);
+        OemUnlockAllowedText = FormatNullableBool(overview.OemUnlockAllowed);
+        BootloaderLockText = FormatState(overview.BootloaderLockState);
+        DeviceStateText = FormatState(overview.DeviceState);
+        VerifiedBootText = FormatState(overview.VerifiedBootState);
+        NotifyMagiskStateChange(overview.MagiskInstalled);
+        MagiskInstalled = overview.MagiskInstalled;
+        _magiskStateKnown = true;
 
         var name = !string.IsNullOrWhiteSpace(overview.DisplayName) ? overview.DisplayName : overview.Model;
         if (!string.IsNullOrWhiteSpace(name))
@@ -496,6 +490,44 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
         return vars.TryGetValue("securestate", out var secureState) && !string.IsNullOrWhiteSpace(secureState)
             ? secureState
             : "—";
+    }
+
+    private string FormatNullableBool(bool? value) => value switch
+    {
+        true => _localization.Get("common.yes"),
+        false => _localization.Get("common.no"),
+        _ => _localization.Get("common.unavailable")
+    };
+
+    private string FormatState(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return _localization.Get("common.unavailable");
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "locked" => _localization.Get("state.locked"),
+            "unlocked" => _localization.Get("state.unlocked"),
+            "green" => _localization.Get("state.green"),
+            "yellow" => _localization.Get("state.yellow"),
+            "orange" => _localization.Get("state.orange"),
+            "red" => _localization.Get("state.red"),
+            var state => state
+        };
+    }
+
+    private void NotifyMagiskStateChange(bool installed)
+    {
+        if (!_magiskStateKnown || MagiskInstalled == installed)
+        {
+            return;
+        }
+
+        var key = installed ? "software.installed" : "software.uninstalled";
+        var level = installed ? NotifierLevel.Success : NotifierLevel.Warning;
+        Notifier.Notify(_localization.Format(key, "Magisk"), level);
     }
 
     private void TouchRefresh()

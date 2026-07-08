@@ -1,18 +1,21 @@
 name: Publish
 
-# 发布工作流 (Release publishing).
-#
-# 仅在推送形如 "v*" 的 tag 时运行（例如 v1.0.0）。普通提交、PR、对分支的 push 都不会触发本工作流。
-# 注意：截至当前尚未推送任何 tag（No tag has been pushed yet）。首个正式发布请在准备就绪后执行：
-#     git tag v1.0.0 && git push origin v1.0.0
-# 届时本工作流会自动构建 win-x64 / win-x86 自包含发布、打包 MSI、生成校验和并创建 GitHub Release。
+# Release publishing is intentionally GitHub Actions only.
+# Maintainers create a v* tag or run workflow_dispatch; local machines may build
+# test packages, but they are not the release authority.
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example 1.0.5"
+        required: true
+        type: string
 
 permissions:
-  contents: write # 创建 Release 并上传资产需要写权限。
+  contents: write
 
 env:
   DOTNET_NOLOGO: "true"
@@ -20,31 +23,48 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
   CONFIGURATION: Release
   SOLUTION: AndroidTreeView.sln
-  APP_PROJECT: src/AndroidTreeView.App/AndroidTreeView.App.csproj
 
 jobs:
-  publish:
-    name: Publish Windows MSIs
+  resolve:
+    name: Resolve release version
     runs-on: windows-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      # 从 tag 名派生版本号：v1.0.0 -> 1.0.0。
-      - name: Derive version from tag
+      - name: Resolve release version
         id: version
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          $version = $tag -replace '^v', ''
-          "tag=$tag"         | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          $ErrorActionPreference = 'Stop'
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $version = '${{ inputs.version }}'.Trim().TrimStart('v')
+            $tag = "v$version"
+          } else {
+            $tag = '${{ github.ref_name }}'
+            $version = $tag.Trim().TrimStart('v')
+          }
+
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Release version '$version' must be major.minor.patch."
+          }
+
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          Write-Host "Publishing tag '$tag' as version '$version'."
+          Write-Host "Publishing $tag as version $version."
+
+  validate:
+    name: Validate on Windows
+    runs-on: windows-latest
+    needs: resolve
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
 
       - name: Restore
         run: dotnet restore $env:SOLUTION
@@ -52,7 +72,6 @@ jobs:
       - name: Build
         run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
 
-      # 发布前再跑一次测试，确保发布产物来自通过测试的提交。
       - name: Test
         run: >-
           dotnet test $env:SOLUTION
@@ -61,110 +80,134 @@ jobs:
           --logger trx
           --results-directory test-results
 
-      - name: Publish win-x64 (self-contained)
-        run: >-
-          dotnet publish $env:APP_PROJECT
-          -c $env:CONFIGURATION
-          -r win-x64
-          --self-contained true
-          -p:Version=${{ steps.version.outputs.version }}
-          -p:InformationalVersion=${{ steps.version.outputs.version }}
-          -o publish/win-x64
+      - name: Verify scrcpy release pin
+        shell: pwsh
+        run: ./tools/verify-scrcpy-latest.ps1
 
-      - name: Publish win-x86 (self-contained)
-        run: >-
-          dotnet publish $env:APP_PROJECT
-          -c $env:CONFIGURATION
-          -r win-x86
-          --self-contained true
-          -p:Version=${{ steps.version.outputs.version }}
-          -p:InformationalVersion=${{ steps.version.outputs.version }}
-          -o publish/win-x86
+  package:
+    name: Package ${{ matrix.product }} ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    needs:
+      - resolve
+      - validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - product: App
+            rid: win-x64
+            os: windows-latest
+            artifact: android-tree-view-app-win-x64
+          - product: App
+            rid: osx-arm64
+            os: macos-latest
+            artifact: android-tree-view-app-osx-arm64
+          - product: Mini
+            rid: win-x64
+            os: windows-latest
+            artifact: android-tree-view-mini-win-x64
+          - product: Mini
+            rid: osx-arm64
+            os: macos-latest
+            artifact: android-tree-view-mini-osx-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
 
-      # MSI 打包由 packaging/ 下的 WiX 脚本完成（由 MSI 打包 agent 创建）。
-      # 约定的脚本接口 (contract): packaging/build-msi.ps1
-      #   -Arch       x64 | x86
-      #   -Version    语义版本号，例如 1.0.0
-      #   -PublishDir 对应架构的 dotnet publish 输出目录
-      #   -OutputDir  存放生成的 .msi 的目录
-      - name: Build MSI (x64)
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build ZIP
         shell: pwsh
         run: >-
-          ./packaging/build-msi.ps1
-          -Arch x64
-          -Version ${{ steps.version.outputs.version }}
-          -PublishDir publish/win-x64
-          -OutputDir artifacts
+          ./packaging/build-update-zip.ps1
+          -Product ${{ matrix.product }}
+          -Rid ${{ matrix.rid }}
+          -Configuration $env:CONFIGURATION
+          -Version ${{ needs.resolve.outputs.version }}
 
-      - name: Build MSI (x86)
-        shell: pwsh
-        run: >-
-          ./packaging/build-msi.ps1
-          -Arch x86
-          -Version ${{ steps.version.outputs.version }}
-          -PublishDir publish/win-x86
-          -OutputDir artifacts
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            artifacts/*.zip
+            artifacts/*.zip.sha256
+          if-no-files-found: error
 
-      # 为每个 MSI 生成独立的 .sha256 文件，并汇总一份 SHA256SUMS.txt。
-      - name: Generate SHA-256 checksums
+  release:
+    name: Create GitHub Release
+    runs-on: windows-latest
+    needs:
+      - resolve
+      - package
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download package artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate checksum summary
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $artifactsDir = 'artifacts'
-          $msis = Get-ChildItem -Path $artifactsDir -Filter *.msi -ErrorAction Stop
-          if (-not $msis) {
-            throw "No .msi files were produced in '$artifactsDir'. Check the MSI build steps."
+          $sidecars = Get-ChildItem -Path $artifactsDir -Filter '*.zip.sha256' -ErrorAction Stop | Sort-Object Name
+          if ($sidecars.Count -ne 4) {
+            throw "Expected 4 .zip.sha256 files in '$artifactsDir', found $($sidecars.Count)."
           }
-          $summary = New-Object System.Collections.Generic.List[string]
-          foreach ($msi in $msis) {
-            $hash = (Get-FileHash -Path $msi.FullName -Algorithm SHA256).Hash.ToLower()
-            $line = "$hash  $($msi.Name)"
-            Set-Content -Path "$($msi.FullName).sha256" -Value $line -Encoding ascii
-            $summary.Add($line)
-            Write-Host $line
-          }
-          Set-Content -Path (Join-Path $artifactsDir 'SHA256SUMS.txt') -Value $summary -Encoding ascii
 
-      # 生成发布说明正文（安装说明 + 校验和），softprops 会再追加自动生成的提交记录。
-      # 用 PowerShell 字符串数组逐行构建，避免 here-string 内容顶格破坏 YAML 块标量缩进。
+          $lines = foreach ($sidecar in $sidecars) {
+            (Get-Content -LiteralPath $sidecar.FullName -Raw).Trim()
+          }
+
+          Set-Content -Path (Join-Path $artifactsDir 'SHA256SUMS.txt') -Value $lines -Encoding ascii
+          $lines | ForEach-Object { Write-Host $_ }
+
       - name: Compose release notes
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $version = '${{ steps.version.outputs.version }}'
+          $version = '${{ needs.resolve.outputs.version }}'
           $checksums = (Get-Content -Path 'artifacts/SHA256SUMS.txt' -Raw).TrimEnd()
           $lines = @(
             "## AndroidTreeView $version"
             ''
-            '跨平台 Android 设备信息查看器（基于 Avalonia / .NET 10）。本次发布提供 Windows 安装包 (MSI)。'
+            'Release packages are GitHub Actions-built ZIP packages for Windows x64 and macOS Apple Silicon.'
             ''
-            '### 安装 (Installation)'
+            '### Artifacts'
             ''
-            "- 64 位系统 (x64)：下载并运行 AndroidTreeView-$version-x64.msi"
-            "- 32 位系统 (x86)：下载并运行 AndroidTreeView-$version-x86.msi"
+            "- AndroidTreeView-$version-win-x64.zip"
+            "- AndroidTreeView-$version-osx-arm64.zip"
+            "- AndroidTreeView-Mini-$version-win-x64.zip"
+            "- AndroidTreeView-Mini-$version-osx-arm64.zip"
             ''
-            '安装包为自包含 (self-contained) 构建，无需单独安装 .NET 运行时。使用前请确保已安装 Android platform-tools (adb) 并加入 PATH，或在应用内手动指定 adb 路径。'
-            ''
-            '### 校验和 (SHA-256)'
+            '### SHA-256'
             ''
             '```'
             $checksums
             '```'
           )
           Set-Content -Path 'RELEASE_NOTES.md' -Value $lines -Encoding utf8
-          Write-Host (Get-Content -Path 'RELEASE_NOTES.md' -Raw)
+          Get-Content -Path 'RELEASE_NOTES.md' -Raw
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: AndroidTreeView ${{ steps.version.outputs.version }}
+          tag_name: ${{ needs.resolve.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: AndroidTreeView ${{ needs.resolve.outputs.version }}
           body_path: RELEASE_NOTES.md
-          generate_release_notes: true
           draft: false
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            artifacts/*.msi
-            artifacts/*.msi.sha256
+            artifacts/*.zip
+            artifacts/*.zip.sha256
             artifacts/SHA256SUMS.txt

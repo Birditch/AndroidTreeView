@@ -50,6 +50,15 @@ public sealed partial class DeviceDetailViewModel : ViewModelBase
     private string _rootText = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotRooted))]
+    private bool? _isRooted;
+
+    public bool IsNotRooted => IsRooted == false;
+
+    [ObservableProperty]
+    private bool _magiskInstalled;
+
+    [ObservableProperty]
     private DeviceBadgeKind _statusKind;
 
     [ObservableProperty]
@@ -107,6 +116,8 @@ public sealed partial class DeviceDetailViewModel : ViewModelBase
         StatusKind = card.StatusKind;
         BatteryPercent = card.BatteryPercent;
         RootText = card.RootText;
+        IsRooted = card.IsRooted;
+        MagiskInstalled = card.MagiskInstalled;
 
         BuildTabs();
         SelectedTab = Tabs.Count > 0 ? Tabs[0] : null;
@@ -205,8 +216,22 @@ public sealed partial class DeviceDetailViewModel : ViewModelBase
 
         try
         {
+            var overview = await _deviceService.GetOverviewAsync(Serial, ct).ConfigureAwait(false);
+            MagiskInstalled = overview.MagiskInstalled;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Header overview refresh failed for {Serial}", Serial);
+        }
+
+        try
+        {
             var root = await _deviceService.GetRootStatusAsync(Serial, ct).ConfigureAwait(false);
             RootText = root.IsRooted ? _localization.Get("status.rooted") : _localization.Get("root.notdetected");
+            IsRooted = root.IsRooted;
         }
         catch (OperationCanceledException)
         {

@@ -177,19 +177,58 @@ internal sealed class FakeDeviceActionsService : IDeviceActionsService
 
     public Task PowerOffAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
 
-    public Task EnableNetworkAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
-
     public Task RemoveFrpAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
 
-    public Task DisableCaptivePortalAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
-
-    public Task SetChinaNtpAsync(string serial, CancellationToken ct = default) => Task.CompletedTask;
-
-    public Task<bool> IsCaptivePortalDisabledAsync(string serial, CancellationToken ct = default) => Task.FromResult(false);
-
-    public Task<bool> IsChinaNtpSetAsync(string serial, CancellationToken ct = default) => Task.FromResult(false);
-
     public Task<bool> IsFrpRemovedAsync(string serial, CancellationToken ct = default) => Task.FromResult(false);
+}
+
+/// <summary>No-op APK/input service double for device-grid batch action tests.</summary>
+internal sealed class FakeScreenCaptureService : IScreenCaptureService
+{
+    public List<string> InstalledSerials { get; } = [];
+
+    public List<(string Serial, string Path, string? RemoteDirectory)> PushedFiles { get; } = [];
+
+    public bool InstallResult { get; set; } = true;
+
+    public bool PushResult { get; set; } = true;
+
+    public Task<byte[]?> CaptureFrameAsync(string serial, CancellationToken ct = default) =>
+        Task.FromResult<byte[]?>(null);
+
+    public Task TapAsync(string serial, int x, int y, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task<bool> InstallApkAsync(string serial, string apkPath, CancellationToken ct = default)
+    {
+        InstalledSerials.Add(serial);
+        return Task.FromResult(InstallResult);
+    }
+
+    public Task<bool> PushFileAsync(string serial, string filePath, string? remoteDirectory = null, CancellationToken ct = default)
+    {
+        PushedFiles.Add((serial, filePath, remoteDirectory));
+        return Task.FromResult(PushResult);
+    }
+
+    public Task<bool> PrepareFileTransferAsync(string serial, string? remoteDirectory = null, CancellationToken ct = default) =>
+        Task.FromResult(true);
+
+    public Task SwipeAsync(string serial, int x1, int y1, int x2, int y2, int durationMs, CancellationToken ct = default) =>
+        Task.CompletedTask;
+
+    public Task KeyEventAsync(string serial, int keyCode, CancellationToken ct = default) => Task.CompletedTask;
+}
+
+/// <summary>Deterministic file-picker double for batch install / transfer commands.</summary>
+internal sealed class FakeFilePickerService : IFilePickerService
+{
+    public IReadOnlyList<string> TransferFiles { get; set; } = [];
+
+    public Task<string?> PickAdbExecutableAsync() => Task.FromResult<string?>(null);
+
+    public Task<IReadOnlyList<string>> PickTransferFilesAsync() => Task.FromResult(TransferFiles);
+
+    public Task OpenUrlAsync(string url) => Task.CompletedTask;
 }
 
 /// <summary>Auto-confirming <see cref="IDialogService"/> double so action commands proceed in tests.</summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -90,6 +91,42 @@ public sealed partial class ScreenMirrorViewModel : ViewModelBase, IDisposable
         {
             _logger.LogDebug(ex, "APK install failed for {Serial}.", Serial);
             StatusMessage = _localization.Get("screen.installfailed");
+        }
+    }
+
+    /// <summary>Installs APKs and transfers ordinary files dropped onto the window.</summary>
+    public async Task HandleDroppedFilesAsync(IReadOnlyList<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                continue;
+            }
+
+            if (path.EndsWith(".apk", StringComparison.OrdinalIgnoreCase))
+            {
+                await InstallApkAsync(path).ConfigureAwait(true);
+            }
+            else
+            {
+                await PushFileAsync(path).ConfigureAwait(true);
+            }
+        }
+    }
+
+    private async Task PushFileAsync(string path)
+    {
+        StatusMessage = _localization.Get("screen.transferring");
+        try
+        {
+            var ok = await _capture.PushFileAsync(Serial, path, "/sdcard/Download/").ConfigureAwait(true);
+            StatusMessage = _localization.Get(ok ? "screen.transferred" : "screen.transferfailed");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "File transfer failed for {Serial}.", Serial);
+            StatusMessage = _localization.Get("screen.transferfailed");
         }
     }
 

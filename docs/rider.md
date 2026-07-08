@@ -37,7 +37,7 @@ Use Rider's test explorer or the CLI:
 dotnet test AndroidTreeView.sln --no-restore
 ```
 
-The current expected baseline is 265 passing tests.
+The current expected baseline is 281 passing tests.
 
 ## CLI Equivalents
 
@@ -46,6 +46,7 @@ dotnet restore AndroidTreeView.sln
 dotnet build AndroidTreeView.sln
 dotnet build src/AndroidTreeView.App/AndroidTreeView.App.csproj --no-restore
 dotnet build src/AndroidTreeView.Mini/AndroidTreeView.Mini.csproj --no-restore
+dotnet build src/AndroidTreeView.Mini.Mac/AndroidTreeView.Mini.Mac.csproj --no-restore
 dotnet test AndroidTreeView.sln --no-restore
 dotnet run --project src/AndroidTreeView.App
 dotnet run --project src/AndroidTreeView.Mini
@@ -60,6 +61,8 @@ Use the terminal inside Rider:
 ```powershell
 ./packaging/build-update-zip.ps1 -Product App -Arch x64
 ./packaging/build-update-zip.ps1 -Product Mini -Arch x64
+./packaging/build-update-zip.ps1 -Product App -Rid win-x64
+./packaging/build-update-zip.ps1 -Product Mini -Rid win-x64
 ```
 
-For release packaging, build the x64 App and Mini artifacts. See [packaging.md](./packaging.md).
+For release packaging, GitHub Actions builds Windows x64 and macOS Apple Silicon App/Mini artifacts. See [packaging.md](./packaging.md).

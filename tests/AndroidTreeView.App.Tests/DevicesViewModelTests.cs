@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using AndroidTreeView.App.ViewModels;
+using AndroidTreeView.Core.Services;
 using AndroidTreeView.Models.Devices;
 using Xunit;
 
@@ -16,8 +18,16 @@ public sealed class DevicesViewModelTests
         DeviceConnectionState state = DeviceConnectionState.Online) =>
         new() { Serial = serial, Model = model, State = state };
 
-    private static DevicesViewModel CreateViewModel() =>
-        new(new FakeLocalizationService(), new FakeDeviceActionsService(), new FakeFastbootService(), new FakeDialogService());
+    private static DevicesViewModel CreateViewModel(
+        FakeScreenCaptureService? screenCapture = null,
+        FakeFilePickerService? filePicker = null) =>
+        new(
+            new FakeLocalizationService(),
+            new FakeDeviceActionsService(),
+            new DeviceFileTransferService(screenCapture ?? new FakeScreenCaptureService()),
+            filePicker ?? new FakeFilePickerService(),
+            new FakeFastbootService(),
+            new FakeDialogService());
 
     [Fact]
     public void Reconcile_adds_cards_and_assigns_one_based_index()
@@ -165,5 +175,78 @@ public sealed class DevicesViewModelTests
 
         Assert.Null(activated);
         Assert.Null(vm.SelectedDevice);
+    }
+
+    [Fact]
+    public async Task HandleDroppedFiles_installs_apks_and_transfers_other_files_to_download()
+    {
+        var installer = new FakeScreenCaptureService();
+        var vm = CreateViewModel(installer);
+        vm.Reconcile(new[] { Device("A"), Device("B") }, adbAvailable: true);
+        foreach (var device in vm.Devices)
+        {
+            device.IsSelected = true;
+        }
+
+        var apk = TempFile(".apk");
+        var text = TempFile(".txt");
+        try
+        {
+            await vm.HandleDroppedFilesAsync([apk, text]);
+
+            Assert.Equal(new[] { "A", "B" }, installer.InstalledSerials.OrderBy(s => s));
+            Assert.Equal(2, installer.PushedFiles.Count);
+            Assert.All(installer.PushedFiles, push =>
+            {
+                Assert.Equal(text, push.Path);
+                Assert.Equal("/sdcard/Download/", push.RemoteDirectory);
+            });
+        }
+        finally
+        {
+            File.Delete(apk);
+            File.Delete(text);
+        }
+    }
+
+    [Fact]
+    public async Task BatchPickTransferFiles_installs_apks_and_transfers_files_to_download()
+    {
+        var installer = new FakeScreenCaptureService();
+        var picker = new FakeFilePickerService();
+        var vm = CreateViewModel(installer, picker);
+        vm.Reconcile(new[] { Device("A"), Device("B", state: DeviceConnectionState.Offline) }, adbAvailable: true);
+        foreach (var device in vm.Devices)
+        {
+            device.IsSelected = true;
+        }
+
+        var apk1 = TempFile(".apk");
+        var apk2 = TempFile(".apk");
+        var file1 = TempFile(".txt");
+        var file2 = TempFile(".bin");
+        picker.TransferFiles = [apk1, file1, apk2, file2];
+        try
+        {
+            await vm.BatchPickTransferFilesCommand.ExecuteAsync(null);
+
+            Assert.Equal(new[] { "A", "A" }, installer.InstalledSerials);
+            Assert.Equal(new[] { file1, file2 }, installer.PushedFiles.Select(push => push.Path));
+            Assert.All(installer.PushedFiles, push => Assert.Equal("/sdcard/Download/", push.RemoteDirectory));
+        }
+        finally
+        {
+            File.Delete(apk1);
+            File.Delete(apk2);
+            File.Delete(file1);
+            File.Delete(file2);
+        }
+    }
+
+    private static string TempFile(string extension)
+    {
+        var path = Path.Combine(Path.GetTempPath(), "AndroidTreeView-" + Path.GetRandomFileName() + extension);
+        File.WriteAllText(path, "payload");
+        return path;
     }
 }

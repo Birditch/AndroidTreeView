@@ -1,16 +1,21 @@
 <Project>
 
-  <!-- Shared bundled tools flow for both AndroidTreeView.App and AndroidTreeView.Mini.
-       scrcpy ships adb and USB DLLs; fastboot.exe is folded into the same folder when available. -->
+  <!-- Shared bundled tools flow for AndroidTreeView.App and Mini variants.
+       scrcpy ships adb; fastboot is folded into the same folder when available. -->
   <PropertyGroup>
-    <ScrcpyDir Condition="'$(ScrcpyDir)' == ''">$(MSBuildThisFileDirectory)..\tools\scrcpy</ScrcpyDir>
-    <ScrcpyUrl Condition="'$(ScrcpyUrl)' == ''">https://github.com/Genymobile/scrcpy/releases/download/v4.0/scrcpy-win64-v4.0.zip</ScrcpyUrl>
+    <ScrcpyVersion Condition="'$(ScrcpyVersion)' == ''">4.0</ScrcpyVersion>
+    <ScrcpyDir Condition="'$(ScrcpyDir)' == ''">$(MSBuildThisFileDirectory)../tools/scrcpy</ScrcpyDir>
+    <ScrcpyExecutableName Condition="'$(ScrcpyExecutableName)' == '' and '$(OS)' == 'Windows_NT'">scrcpy.exe</ScrcpyExecutableName>
+    <ScrcpyExecutableName Condition="'$(ScrcpyExecutableName)' == ''">scrcpy</ScrcpyExecutableName>
+    <FastbootExecutableName Condition="'$(FastbootExecutableName)' == '' and '$(OS)' == 'Windows_NT'">fastboot.exe</FastbootExecutableName>
+    <FastbootExecutableName Condition="'$(FastbootExecutableName)' == ''">fastboot</FastbootExecutableName>
+    <ScrcpyUrl Condition="'$(ScrcpyUrl)' == ''">https://github.com/Genymobile/scrcpy/releases/download/v$(ScrcpyVersion)/scrcpy-win64-v$(ScrcpyVersion).zip</ScrcpyUrl>
     <PlatformToolsUrl Condition="'$(PlatformToolsUrl)' == ''">https://dl.google.com/android/repository/platform-tools-latest-windows.zip</PlatformToolsUrl>
     <AndroidTreeViewBundleFastboot Condition="'$(AndroidTreeViewBundleFastboot)' == ''">true</AndroidTreeViewBundleFastboot>
   </PropertyGroup>
 
   <Target Name="AtvEnsureScrcpy" BeforeTargets="Build;Publish"
-          Condition="'$(OS)' == 'Windows_NT' and !Exists('$(ScrcpyDir)\scrcpy.exe')">
+          Condition="'$(OS)' == 'Windows_NT' and !Exists('$(ScrcpyDir)/$(ScrcpyExecutableName)')">
     <Message Importance="high" Text="AndroidTreeView: fetching bundled scrcpy (screen mirror + adb)..." />
     <MakeDir Directories="$(IntermediateOutputPath)scrcpy" />
     <DownloadFile SourceUrl="$(ScrcpyUrl)" DestinationFolder="$(IntermediateOutputPath)scrcpy"
@@ -19,8 +24,8 @@
     </DownloadFile>
     <Unzip Condition="'$(_ScrcpyZip)' != '' and Exists('$(_ScrcpyZip)')"
            SourceFiles="$(_ScrcpyZip)" DestinationFolder="$(IntermediateOutputPath)scrcpy\x" ContinueOnError="true" />
-    <ItemGroup Condition="Exists('$(IntermediateOutputPath)scrcpy\x\scrcpy-win64-v4.0\scrcpy.exe')">
-      <_ScrcpyDl Include="$(IntermediateOutputPath)scrcpy\x\scrcpy-win64-v4.0\**\*" />
+    <ItemGroup Condition="Exists('$(IntermediateOutputPath)scrcpy\x\scrcpy-win64-v$(ScrcpyVersion)\scrcpy.exe')">
+      <_ScrcpyDl Include="$(IntermediateOutputPath)scrcpy\x\scrcpy-win64-v$(ScrcpyVersion)\**\*" />
     </ItemGroup>
     <Copy Condition="'@(_ScrcpyDl)' != ''" SourceFiles="@(_ScrcpyDl)"
           DestinationFiles="@(_ScrcpyDl->'$(ScrcpyDir)\%(RecursiveDir)%(Filename)%(Extension)')"
@@ -28,7 +33,7 @@
   </Target>
 
   <Target Name="AtvEnsureFastboot" BeforeTargets="Build;Publish" AfterTargets="AtvEnsureScrcpy"
-          Condition="'$(OS)' == 'Windows_NT' and '$(AndroidTreeViewBundleFastboot)' == 'true' and Exists('$(ScrcpyDir)\scrcpy.exe') and !Exists('$(ScrcpyDir)\fastboot.exe')">
+          Condition="'$(OS)' == 'Windows_NT' and '$(AndroidTreeViewBundleFastboot)' == 'true' and Exists('$(ScrcpyDir)/$(ScrcpyExecutableName)') and !Exists('$(ScrcpyDir)/$(FastbootExecutableName)')">
     <Message Importance="high" Text="AndroidTreeView: fetching fastboot into the scrcpy folder..." />
     <MakeDir Directories="$(IntermediateOutputPath)fb" />
     <DownloadFile SourceUrl="$(PlatformToolsUrl)" DestinationFolder="$(IntermediateOutputPath)fb"
@@ -46,24 +51,25 @@
           DestinationFolder="$(ScrcpyDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
   </Target>
 
-  <Target Name="AtvCopyScrcpyToOutput" AfterTargets="Build" Condition="Exists('$(ScrcpyDir)\scrcpy.exe')">
+  <Target Name="AtvCopyScrcpyToOutput" AfterTargets="Build" Condition="Exists('$(ScrcpyDir)/$(ScrcpyExecutableName)')">
     <ItemGroup>
-      <_ScrcpyOut Include="$(ScrcpyDir)\**\*" Exclude="$(ScrcpyDir)\.omc\**\*" />
-      <_ScrcpyOut Remove="$(ScrcpyDir)\fastboot.exe" Condition="'$(AndroidTreeViewBundleFastboot)' != 'true'" />
+      <_ScrcpyOut Include="$(ScrcpyDir)/**/*" Exclude="$(ScrcpyDir)/.omc/**/*" />
+      <_ScrcpyOut Remove="$(ScrcpyDir)/$(FastbootExecutableName)" Condition="'$(AndroidTreeViewBundleFastboot)' != 'true'" />
     </ItemGroup>
     <Copy SourceFiles="@(_ScrcpyOut)"
-          DestinationFiles="@(_ScrcpyOut->'$(OutDir)scrcpy\%(RecursiveDir)%(Filename)%(Extension)')"
+          DestinationFiles="@(_ScrcpyOut->'$(OutDir)scrcpy/%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="AtvCopyScrcpyToPublish" AfterTargets="Publish" Condition="Exists('$(ScrcpyDir)\scrcpy.exe')">
+  <Target Name="AtvCopyScrcpyToPublish" BeforeTargets="ComputeFilesToPublish" Condition="Exists('$(ScrcpyDir)/$(ScrcpyExecutableName)')">
     <ItemGroup>
-      <_ScrcpyPub Include="$(ScrcpyDir)\**\*" Exclude="$(ScrcpyDir)\.omc\**\*" />
-      <_ScrcpyPub Remove="$(ScrcpyDir)\fastboot.exe" Condition="'$(AndroidTreeViewBundleFastboot)' != 'true'" />
+      <_ScrcpyPub Include="$(ScrcpyDir)/**/*" Exclude="$(ScrcpyDir)/.omc/**/*" />
+      <_ScrcpyPub Remove="$(ScrcpyDir)/$(FastbootExecutableName)" Condition="'$(AndroidTreeViewBundleFastboot)' != 'true'" />
+      <ResolvedFileToPublish Include="@(_ScrcpyPub)">
+        <RelativePath>scrcpy/%(_ScrcpyPub.RecursiveDir)%(_ScrcpyPub.Filename)%(_ScrcpyPub.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
     </ItemGroup>
-    <Copy SourceFiles="@(_ScrcpyPub)"
-          DestinationFiles="@(_ScrcpyPub->'$(PublishDir)scrcpy\%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

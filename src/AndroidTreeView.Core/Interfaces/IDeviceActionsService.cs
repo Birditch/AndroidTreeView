@@ -22,23 +22,8 @@ public interface IDeviceActionsService
     /// <summary>Powers the device off (<c>reboot -p</c>).</summary>
     Task PowerOffAsync(string serial, CancellationToken ct = default);
 
-    /// <summary>Enables Wi-Fi and mobile data (<c>svc wifi enable</c> / <c>svc data enable</c>).</summary>
-    Task EnableNetworkAsync(string serial, CancellationToken ct = default);
-
     /// <summary>Clears Google Factory Reset Protection by marking setup complete (no root, non-destructive).</summary>
     Task RemoveFrpAsync(string serial, CancellationToken ct = default);
-
-    /// <summary>Disables captive-portal detection (removes the Wi-Fi "!"/"x" mark on Android 5.0+).</summary>
-    Task DisableCaptivePortalAsync(string serial, CancellationToken ct = default);
-
-    /// <summary>Sets a domestic (China) NTP server (<c>ntp.aliyun.com</c>).</summary>
-    Task SetChinaNtpAsync(string serial, CancellationToken ct = default);
-
-    /// <summary>True when captive-portal detection is already disabled (<c>captive_portal_mode == 0</c>).</summary>
-    Task<bool> IsCaptivePortalDisabledAsync(string serial, CancellationToken ct = default);
-
-    /// <summary>True when the domestic NTP server is already configured.</summary>
-    Task<bool> IsChinaNtpSetAsync(string serial, CancellationToken ct = default);
 
     /// <summary>True when FRP is already cleared (setup complete + device provisioned), so the action is a no-op.</summary>
     Task<bool> IsFrpRemovedAsync(string serial, CancellationToken ct = default);

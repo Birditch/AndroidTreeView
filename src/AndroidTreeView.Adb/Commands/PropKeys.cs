@@ -41,6 +41,12 @@ public static class PropKeys
     // Boot / verified boot
     public const string Bootloader = "ro.bootloader";
     public const string VerifiedBootState = "ro.boot.verifiedbootstate";
+    public const string OemUnlockSupported = "ro.oem_unlock_supported";
+    public const string OemUnlockAllowed = "sys.oem_unlock_allowed";
+    public const string BootFlashLocked = "ro.boot.flash.locked";
+    public const string BootUnlocked = "ro.boot.unlocked";
+    public const string VbmetaDeviceState = "ro.boot.vbmeta.device_state";
+    public const string VendorVbmetaDeviceState = "vendor.boot.vbmeta.device_state";
 
     // Root / Magisk hints (best-effort; not always present)
     public const string MagiskVersionProp = "ro.magisk.version";
@@ -51,4 +57,7 @@ public static class PropKeys
 
     /// <summary>Ordered serial keys to consult.</summary>
     public static readonly string[] SerialKeys = { SerialNo, BootSerialNo };
+
+    /// <summary>Ordered AVB device-state keys to consult.</summary>
+    public static readonly string[] DeviceStateKeys = { VbmetaDeviceState, VendorVbmetaDeviceState };
 }

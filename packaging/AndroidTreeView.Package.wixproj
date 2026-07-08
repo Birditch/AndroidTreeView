@@ -9,7 +9,7 @@
   app and then invokes this project with the right properties, e.g.:
 
       dotnet build packaging/AndroidTreeView.Package.wixproj -c Release ^
-          -p:Platform=x64 -p:ProductVersion=1.0.4 -p:SelfContained=false ^
+          -p:Platform=x64 -p:ProductVersion=1.0.5 -p:SelfContained=false ^
           -p:PublishDir=<abs path to publish folder, trailing '\'>
 
   Requires the WiX v5 SDK, restored automatically from nuget.org via the Sdk attribute.
@@ -23,7 +23,7 @@
 
     <!-- Product version. Keep in sync with AndroidTreeView.Core.AppInfo.Version and the
          App project's <Version>. MSI ProductVersion range is 0-255.0-255.0-65535. -->
-    <ProductVersion Condition="'$(ProductVersion)' == ''">1.0.4</ProductVersion>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">1.0.5</ProductVersion>
     <ProductName Condition="'$(ProductName)' == ''">AndroidTreeView</ProductName>
     <ProductExecutable Condition="'$(ProductExecutable)' == ''">AndroidTreeView.App.exe</ProductExecutable>
     <ProductUpgradeCode Condition="'$(ProductUpgradeCode)' == ''">{6C0B8E2A-4F1D-4B7C-9A3E-2D5F8B1C0E4A}</ProductUpgradeCode>
@@ -41,7 +41,7 @@
          harvest. build-msi.ps1 sets this; the default is only for manual runs. -->
     <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\artifacts\publish\$(Platform)\</PublishDir>
 
-    <!-- Produces AndroidTreeView-1.0.4-x64.msi or AndroidTreeView-Mini-1.0.4-x64.msi. -->
+    <!-- Produces AndroidTreeView-1.0.5-x64.msi or AndroidTreeView-Mini-1.0.5-x64.msi. -->
     <OutputName>$(ProductArtifactName)-$(ProductVersion)-$(Platform)</OutputName>
     <OutputType>Package</OutputType>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>

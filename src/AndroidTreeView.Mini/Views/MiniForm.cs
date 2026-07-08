@@ -36,6 +36,7 @@ public sealed class MiniForm : Form
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
         BuildLayout();
+        WireDropTarget(this);
         WireViewModel();
     }
 
@@ -205,6 +206,42 @@ public sealed class MiniForm : Form
         _log.SelectionColor = ColorFor(entry.Level);
         _log.SelectionLength = 0;
         _log.ScrollToCaret();
+    }
+
+    private void WireDropTarget(Control control)
+    {
+        control.AllowDrop = true;
+        control.DragEnter += OnDragEnter;
+        control.DragDrop += OnDragDrop;
+
+        foreach (Control child in control.Controls)
+        {
+            WireDropTarget(child);
+        }
+    }
+
+    private static void OnDragEnter(object? sender, DragEventArgs e)
+    {
+        e.Effect = e.Data?.GetDataPresent(DataFormats.FileDrop) == true
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+    }
+
+    private async void OnDragDrop(object? sender, DragEventArgs e)
+    {
+        if (e.Data?.GetData(DataFormats.FileDrop) is not string[] paths || paths.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await _viewModel.HandleDroppedFilesAsync(paths).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Mini drop handling failed.");
+        }
     }
 
     private static Color ColorFor(MiniLogLevel level) => level switch

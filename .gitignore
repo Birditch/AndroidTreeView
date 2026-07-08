@@ -4,6 +4,8 @@
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
+!src/AndroidTreeView.Models/Logs/
+!src/AndroidTreeView.Models/Logs/*.cs
 artifacts/
 
 # ---- Build / restore state ----
@@ -50,7 +52,8 @@ coverage*.info
 .agents/
 
 # ---- Bundled tooling (Android platform-tools, fetched at build time) ----
-tools/
+tools/*
+!tools/verify-scrcpy-latest.ps1
 
 # ---- OS cruft ----
 .DS_Store

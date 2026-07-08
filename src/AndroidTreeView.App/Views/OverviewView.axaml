@@ -37,6 +37,7 @@
                         <controls:InfoRow Label="{loc:Localize Key=overview.model}" Value="{Binding Overview.Model}" />
                         <controls:InfoRow Label="{loc:Localize Key=overview.android}" Value="{Binding Overview.AndroidVersion}" />
                         <controls:InfoRow Label="{loc:Localize Key=overview.api}" Value="{Binding Overview.ApiLevel}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.magisk}" Value="{Binding MagiskInstalledText}" />
                     </StackPanel>
                 </controls:SectionCard>
 
@@ -46,6 +47,16 @@
                         <controls:InfoRow Label="{loc:Localize Key=overview.fingerprint}" Value="{Binding Overview.BuildFingerprint}" />
                         <controls:InfoRow Label="{loc:Localize Key=overview.patch}" Value="{Binding Overview.SecurityPatch}" />
                         <controls:InfoRow Label="{loc:Localize Key=card.serial}" Value="{Binding Overview.SerialNumber}" />
+                    </StackPanel>
+                </controls:SectionCard>
+
+                <controls:SectionCard Header="{loc:Localize Key=overview.security}">
+                    <StackPanel Spacing="2">
+                        <controls:InfoRow Label="{loc:Localize Key=overview.oem.supported}" Value="{Binding OemUnlockSupportedText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.oem.allowed}" Value="{Binding OemUnlockAllowedText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.bootloaderlock}" Value="{Binding BootloaderLockText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.devicestate}" Value="{Binding DeviceStateText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=overview.verifiedboot}" Value="{Binding VerifiedBootText}" />
                     </StackPanel>
                 </controls:SectionCard>
 

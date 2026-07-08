@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndroidTreeView.Mini", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndroidTreeView.Shared", "src\AndroidTreeView.Shared\AndroidTreeView.Shared.csproj", "{448B7178-AE0A-481E-A9F1-5C04502EB2E6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndroidTreeView.Mini.Mac", "src\AndroidTreeView.Mini.Mac\AndroidTreeView.Mini.Mac.csproj", "{280DCF34-E760-472C-9681-7C15C8F544C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -171,6 +173,18 @@ Global
 		{448B7178-AE0A-481E-A9F1-5C04502EB2E6}.Release|x64.Build.0 = Release|Any CPU
 		{448B7178-AE0A-481E-A9F1-5C04502EB2E6}.Release|x86.ActiveCfg = Release|Any CPU
 		{448B7178-AE0A-481E-A9F1-5C04502EB2E6}.Release|x86.Build.0 = Release|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Debug|x64.Build.0 = Debug|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Debug|x86.Build.0 = Debug|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Release|x64.ActiveCfg = Release|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Release|x64.Build.0 = Release|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Release|x86.ActiveCfg = Release|Any CPU
+		{280DCF34-E760-472C-9681-7C15C8F544C5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -187,5 +201,6 @@ Global
 		{6D6FA03F-5AF2-4801-A14E-14817C04F6D9} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{94373852-6FAE-442B-BB1E-F5A1C91B3677} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{448B7178-AE0A-481E-A9F1-5C04502EB2E6} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{280DCF34-E760-472C-9681-7C15C8F544C5} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

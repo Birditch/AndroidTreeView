@@ -110,8 +110,14 @@ public sealed class AdbDeviceService : IDeviceService
 
     public async Task<DeviceOverview> GetOverviewAsync(string serial, CancellationToken ct = default)
     {
-        var props = await FetchPropsAsync(serial, ct).ConfigureAwait(false);
-        return OverviewBuilder.Build(props);
+        var propsTask = FetchPropsAsync(serial, ct);
+        var packagesTask = TryShellAsync(serial, AdbArgs.PmListPackages, ct);
+
+        await Task.WhenAll(propsTask, packagesTask).ConfigureAwait(false);
+
+        return OverviewBuilder.Build(
+            await propsTask.ConfigureAwait(false),
+            await packagesTask.ConfigureAwait(false));
     }
 
     public async Task<HardwareInfo> GetHardwareAsync(string serial, CancellationToken ct = default)

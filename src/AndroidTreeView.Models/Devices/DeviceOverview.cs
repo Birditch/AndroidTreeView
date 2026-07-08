@@ -29,4 +29,22 @@ public sealed class DeviceOverview
     public string? SecurityPatch { get; init; }
     public string? BuildTags { get; init; }
     public string? BuildType { get; init; }
+
+    /// <summary>Whether the device advertises OEM unlock support (<c>ro.oem_unlock_supported</c>).</summary>
+    public bool? OemUnlockSupported { get; init; }
+
+    /// <summary>Whether OEM unlocking is currently allowed in Android settings (<c>sys.oem_unlock_allowed</c>).</summary>
+    public bool? OemUnlockAllowed { get; init; }
+
+    /// <summary>Bootloader lock state derived from boot properties such as <c>ro.boot.flash.locked</c>.</summary>
+    public string? BootloaderLockState { get; init; }
+
+    /// <summary>AVB / vbmeta device state, commonly <c>locked</c> or <c>unlocked</c>.</summary>
+    public string? DeviceState { get; init; }
+
+    /// <summary>Verified Boot color/state from <c>ro.boot.verifiedbootstate</c>.</summary>
+    public string? VerifiedBootState { get; init; }
+
+    /// <summary>True when the installed package list contains Magisk.</summary>
+    public bool MagiskInstalled { get; init; }
 }

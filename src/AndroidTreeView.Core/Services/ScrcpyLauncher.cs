@@ -8,10 +8,11 @@ namespace AndroidTreeView.Core.Services;
 public sealed class ScrcpyLauncher : IScrcpyLauncher
 {
     private const string ScrcpyFolder = "scrcpy";
-    private const string ScrcpyExe = "scrcpy.exe";
     private const int KeycodeWakeup = 224; // KEYCODE_WAKEUP.
+    private const string PushTargetDirectory = "/sdcard/Download/";
 
     private static readonly TimeSpan FirstFramePrimeDelay = TimeSpan.FromMilliseconds(300);
+    private static string ScrcpyExecutableName => OperatingSystem.IsWindows() ? "scrcpy.exe" : "scrcpy";
 
     private readonly IAdbEnvironment _adb;
     private readonly IScreenCaptureService _capture;
@@ -29,8 +30,8 @@ public sealed class ScrcpyLauncher : IScrcpyLauncher
 
     public ScrcpyLaunchResult Launch(string serial, string title)
     {
-        var bundled = Path.Combine(AppContext.BaseDirectory, ScrcpyFolder, ScrcpyExe);
-        var exe = File.Exists(bundled) ? bundled : ScrcpyExe;
+        var bundled = Path.Combine(AppContext.BaseDirectory, ScrcpyFolder, ScrcpyExecutableName);
+        var exe = File.Exists(bundled) ? bundled : ScrcpyExecutableName;
 
         try
         {
@@ -49,6 +50,10 @@ public sealed class ScrcpyLauncher : IScrcpyLauncher
             psi.ArgumentList.Add("--no-audio");
             psi.ArgumentList.Add("--stay-awake");
             psi.ArgumentList.Add("--keep-active");
+            psi.ArgumentList.Add("--keyboard=uhid");
+            psi.ArgumentList.Add("--mouse=uhid");
+            psi.ArgumentList.Add("--legacy-paste");
+            psi.ArgumentList.Add($"--push-target={PushTargetDirectory}");
             psi.ArgumentList.Add("--window-title");
             psi.ArgumentList.Add(title);
 
@@ -59,6 +64,15 @@ public sealed class ScrcpyLauncher : IScrcpyLauncher
             catch (Exception ex)
             {
                 _logger.LogDebug(ex, "Shared adb path is unavailable; scrcpy will resolve adb itself.");
+            }
+
+            try
+            {
+                _capture.PrepareFileTransferAsync(serial, PushTargetDirectory).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Preparing scrcpy drag-drop target failed for {Serial}.", serial);
             }
 
             var process = Process.Start(psi);

@@ -22,6 +22,8 @@ public sealed class ScreenCaptureService : IScreenCaptureService
     private static readonly TimeSpan CaptureTimeout = TimeSpan.FromSeconds(8);
     private static readonly TimeSpan TapTimeout     = TimeSpan.FromSeconds(8);
     private static readonly TimeSpan InstallTimeout = TimeSpan.FromSeconds(120);
+    private static readonly TimeSpan PushTimeout    = TimeSpan.FromSeconds(120);
+    private const string DefaultPushTargetDirectory = "/sdcard/Download/";
 
     private readonly IAdbEnvironment _environment;
     private readonly IAdbCommandExecutor _executor;
@@ -160,29 +162,38 @@ public sealed class ScreenCaptureService : IScreenCaptureService
     /// <inheritdoc/>
     public async Task<bool> InstallApkAsync(string serial, string apkPath, CancellationToken ct = default)
     {
-        var request = new AdbCommandRequest
-        {
-            Serial     = serial,
-            Arguments  = AdbArgs.InstallReplace(apkPath),
-            RunInShell = false,
-            Timeout    = InstallTimeout
-        };
-
         try
         {
-            var result = await _executor.ExecuteAsync(request, ct).ConfigureAwait(false);
-
-            if (!result.IsSuccess)
+            var attempts = new[]
             {
+                AdbArgs.InstallReplace(apkPath),
+                AdbArgs.InstallReplaceAllowDowngrade(apkPath),
+                AdbArgs.InstallReplaceNoStreaming(apkPath),
+                AdbArgs.InstallReplaceAllowDowngradeNoStreaming(apkPath)
+            };
+
+            foreach (var arguments in attempts)
+            {
+                var request = new AdbCommandRequest
+                {
+                    Serial = serial,
+                    Arguments = arguments,
+                    RunInShell = false,
+                    Timeout = InstallTimeout
+                };
+
+                var result = await _executor.ExecuteAsync(request, ct).ConfigureAwait(false);
+                if (IsInstallSuccess(result))
+                {
+                    return true;
+                }
+
                 _logger.LogDebug(
-                    "install on {Serial} exited {Code}. stderr: {Stderr}",
-                    serial, result.ExitCode, result.StandardError);
-                return false;
+                    "install '{Args}' on {Serial} exited {Code}. stderr: {Stderr}",
+                    string.Join(' ', arguments), serial, result.ExitCode, result.StandardError);
             }
 
-            // adb prints "Success" on stdout when the install succeeds.
-            var combined = result.StandardOutput + result.StandardError;
-            return combined.Contains("Success", StringComparison.OrdinalIgnoreCase);
+            return false;
         }
         catch (AdbNotFoundException)
         {
@@ -200,6 +211,105 @@ public sealed class ScreenCaptureService : IScreenCaptureService
         }
     }
 
+    private static bool IsInstallSuccess(AdbCommandResult result)
+    {
+        if (!result.IsSuccess)
+        {
+            return false;
+        }
+
+        // adb prints "Success" on stdout on most builds, and stderr on a few older builds.
+        var combined = result.StandardOutput + result.StandardError;
+        return combined.Contains("Success", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> PushFileAsync(
+        string serial,
+        string filePath,
+        string? remoteDirectory = null,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            return false;
+        }
+
+        var preferredDirectory = NormalizeRemoteDirectory(remoteDirectory);
+        var fileName = Path.GetFileName(filePath);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return false;
+        }
+
+        try
+        {
+            foreach (var directory in CandidateRemoteDirectories(preferredDirectory))
+            {
+                await PrepareFileTransferAsync(serial, directory, ct).ConfigureAwait(false);
+
+                var request = new AdbCommandRequest
+                {
+                    Serial = serial,
+                    Arguments = AdbArgs.Push(filePath, directory + fileName),
+                    RunInShell = false,
+                    Timeout = PushTimeout
+                };
+
+                var result = await _executor.ExecuteAsync(request, ct).ConfigureAwait(false);
+                if (result.IsSuccess)
+                {
+                    return true;
+                }
+
+                _logger.LogDebug(
+                    "push to {Directory} on {Serial} exited {Code}. stderr: {Stderr}",
+                    directory, serial, result.ExitCode, result.StandardError);
+            }
+
+            return false;
+        }
+        catch (AdbNotFoundException)
+        {
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "PushFileAsync on {Serial} for '{File}' failed.", serial, filePath);
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> PrepareFileTransferAsync(
+        string serial,
+        string? remoteDirectory = null,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var directory = NormalizeRemoteDirectory(remoteDirectory);
+            return await EnsureRemoteDirectoryAsync(serial, directory, ct).ConfigureAwait(false);
+        }
+        catch (AdbNotFoundException)
+        {
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Preparing file-transfer target on {Serial} failed.", serial);
+            return false;
+        }
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private static IReadOnlyList<string> BuildScreencapArgv(string serial)
@@ -207,5 +317,50 @@ public sealed class ScreenCaptureService : IScreenCaptureService
         var argv = new List<string>(2 + AdbArgs.ExecOutScreencap.Length) { "-s", serial };
         argv.AddRange(AdbArgs.ExecOutScreencap);
         return argv;
+    }
+
+    private async Task<bool> EnsureRemoteDirectoryAsync(string serial, string directory, CancellationToken ct)
+    {
+        var request = new AdbCommandRequest
+        {
+            Serial = serial,
+            Arguments = AdbArgs.MkdirP(directory),
+            RunInShell = true,
+            Timeout = TapTimeout
+        };
+
+        var result = await _executor.ExecuteAsync(request, ct).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            _logger.LogDebug(
+                "mkdir for push target on {Serial} exited {Code}. stderr: {Stderr}",
+                serial, result.ExitCode, result.StandardError);
+        }
+
+        return result.IsSuccess;
+    }
+
+    private static string NormalizeRemoteDirectory(string? remoteDirectory)
+    {
+        var value = string.IsNullOrWhiteSpace(remoteDirectory)
+            ? DefaultPushTargetDirectory
+            : remoteDirectory.Trim().Replace('\\', '/');
+
+        return value.EndsWith("/", StringComparison.Ordinal) ? value : value + "/";
+    }
+
+    private static IReadOnlyList<string> CandidateRemoteDirectories(string preferredDirectory)
+    {
+        var candidates = new List<string> { preferredDirectory };
+
+        foreach (var fallback in new[] { "/sdcard/Download/", "/sdcard/" })
+        {
+            if (!candidates.Contains(fallback, StringComparer.OrdinalIgnoreCase))
+            {
+                candidates.Add(fallback);
+            }
+        }
+
+        return candidates;
     }
 }

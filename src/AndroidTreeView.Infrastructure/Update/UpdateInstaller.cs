@@ -305,6 +305,78 @@ function Test-DirectoryWritable {
     }
 }
 
+function Get-RelativePath {
+    param(
+        [Parameter(Mandatory = $true)][string]$Root,
+        [Parameter(Mandatory = $true)][string]$Path
+    )
+
+    $rootFull = [System.IO.Path]::GetFullPath($Root).TrimEnd(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+    $pathFull = [System.IO.Path]::GetFullPath($Path)
+
+    if (-not $pathFull.StartsWith($rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $null
+    }
+
+    return $pathFull.Substring($rootFull.Length).Replace('\', '/')
+}
+
+function Test-PreservedConfigPath {
+    param([Parameter(Mandatory = $true)][string]$RelativePath)
+
+    $fileName = [System.IO.Path]::GetFileName($RelativePath)
+    $extension = [System.IO.Path]::GetExtension($fileName).ToLowerInvariant()
+
+    if ($fileName -in @('.env', 'settings.json', 'appsettings.json')) {
+        return $true
+    }
+
+    if ($fileName -like 'appsettings.*.json' -or
+        $fileName -like '*.local.json' -or
+        $fileName -like '*.user') {
+        return $true
+    }
+
+    return $extension -in @('.config', '.ini', '.json', '.yaml', '.yml', '.toml')
+}
+
+function Remove-ExtraneousNonConfigFiles {
+    param(
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$Destination
+    )
+
+    $files = Get-ChildItem -LiteralPath $Destination -Recurse -File -Force
+    foreach ($file in $files) {
+        $relative = Get-RelativePath -Root $Destination -Path $file.FullName
+        if ($null -eq $relative) {
+            continue
+        }
+
+        $relativeNative = $relative.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+        $sourceFile = Join-Path $Source $relativeNative
+        if (Test-Path -LiteralPath $sourceFile -PathType Leaf) {
+            continue
+        }
+
+        if (Test-PreservedConfigPath $relative) {
+            continue
+        }
+
+        Remove-Item -LiteralPath $file.FullName -Force
+    }
+
+    $directories = Get-ChildItem -LiteralPath $Destination -Recurse -Directory -Force |
+        Sort-Object FullName -Descending
+    foreach ($directory in $directories) {
+        if (-not (Get-ChildItem -LiteralPath $directory.FullName -Force)) {
+            Remove-Item -LiteralPath $directory.FullName -Force
+        }
+    }
+}
+
 if (-not (Test-DirectoryWritable $installDir)) {
     $quotedScript = '"' + $PSCommandPath.Replace('"', '\"') + '"'
     Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $quotedScript"
@@ -325,11 +397,13 @@ try {
 
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
-& robocopy.exe $sourceDir $installDir /MIR /NFL /NDL /NJH /NJS /NC /NS /NP
+& robocopy.exe $sourceDir $installDir /E /NFL /NDL /NJH /NJS /NC /NS /NP
 $robocopyExit = $LASTEXITCODE
 if ($robocopyExit -ge 8) {
     exit $robocopyExit
 }
+
+Remove-ExtraneousNonConfigFiles -Source $sourceDir -Destination $installDir
 
 Start-Process -FilePath (Join-Path $installDir $executable)
 """;

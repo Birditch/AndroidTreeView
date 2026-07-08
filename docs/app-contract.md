@@ -2,7 +2,7 @@
 
 This document records the App-layer contract for the full app and the Mini companion.
 
-Current product version: `1.0.4`.
+Current product version: `1.0.5`.
 
 ## Shared Services
 
@@ -61,7 +61,9 @@ Mini must not copy ADB, scrcpy, or update implementation details from the full A
 
 Main App views live in `src/AndroidTreeView.App/Views`.
 
-Mini views live in `src/AndroidTreeView.Mini/Views`.
+Windows Mini views live in `src/AndroidTreeView.Mini/Views`.
+
+macOS Apple Silicon Mini views live in `src/AndroidTreeView.Mini.Mac`.
 
 User-facing App strings use `Strings.resx` / `Strings.zh-Hans.resx`. Mini visible strings must remain readable bilingual Chinese/English text.
 
@@ -81,14 +83,17 @@ Version fields must stay aligned:
 - `AppInfo.Version`
 - App csproj version fields
 - Mini csproj version fields
+- macOS Mini csproj version fields
 - App manifest assembly identity
 - WiX `ProductVersion`
 - ZIP build script default version
 
-The release pipeline must build x64 upload ZIP artifacts for both products:
+The GitHub Actions `Publish` workflow is the official release pipeline and must build these ZIP artifacts:
 
-- `AndroidTreeView-<version>-x64.zip`
-- `AndroidTreeView-Mini-<version>-x64.zip`
+- `AndroidTreeView-<version>-win-x64.zip`
+- `AndroidTreeView-<version>-osx-arm64.zip`
+- `AndroidTreeView-Mini-<version>-win-x64.zip`
+- `AndroidTreeView-Mini-<version>-osx-arm64.zip`
 
 ## Verification
 

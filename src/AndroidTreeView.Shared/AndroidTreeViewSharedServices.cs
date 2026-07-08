@@ -37,6 +37,7 @@ public static class AndroidTreeViewSharedServices
         services.TryAddSingleton<IDeviceActionsService, AdbDeviceActionsService>();
         services.TryAddSingleton<IFastbootService, FastbootService>();
         services.TryAddSingleton<IScreenCaptureService, ScreenCaptureService>();
+        services.TryAddSingleton<DeviceFileTransferService>();
         services.TryAddSingleton<IScrcpyLauncher, ScrcpyLauncher>();
         services.TryAddSingleton<ISettingsService, SettingsService>();
         services.TryAddSingleton<IUpdateService, NekoIndexUpdateService>();

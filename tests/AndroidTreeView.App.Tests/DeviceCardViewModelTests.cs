@@ -146,7 +146,52 @@ public sealed class DeviceCardViewModelTests
         card.UpdateFrom(Device(), battery: null, root: root);
 
         Assert.Equal(true, card.IsRooted);
+        Assert.False(card.IsNotRooted);
         Assert.Equal("status.rooted", card.RootText);
+    }
+
+    [Fact]
+    public void UpdateFrom_not_rooted_device_sets_red_badge_flag()
+    {
+        var card = CreateCard();
+        var root = new RootStatus { Level = RootDetectionLevel.NotRooted };
+
+        card.UpdateFrom(Device(), battery: null, root: root);
+
+        Assert.Equal(false, card.IsRooted);
+        Assert.True(card.IsNotRooted);
+        Assert.Equal("root.notdetected", card.RootText);
+    }
+
+    [Fact]
+    public void ApplyOverview_sets_unlock_state_text()
+    {
+        var card = CreateCard();
+
+        card.ApplyOverview(new DeviceOverview
+        {
+            OemUnlockSupported = true,
+            OemUnlockAllowed = false,
+            BootloaderLockState = "locked",
+            DeviceState = "unlocked",
+            VerifiedBootState = "orange"
+        });
+
+        Assert.Equal("common.yes", card.OemUnlockSupportedText);
+        Assert.Equal("common.no", card.OemUnlockAllowedText);
+        Assert.Equal("state.locked", card.BootloaderLockText);
+        Assert.Equal("state.unlocked", card.DeviceStateText);
+        Assert.Equal("state.orange", card.VerifiedBootText);
+    }
+
+    [Fact]
+    public void ApplyOverview_sets_magisk_badge_flag()
+    {
+        var card = CreateCard();
+
+        card.ApplyOverview(new DeviceOverview { MagiskInstalled = true });
+
+        Assert.True(card.MagiskInstalled);
     }
 
     [Fact]

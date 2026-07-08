@@ -8,7 +8,7 @@ namespace AndroidTreeView.Core.Interfaces;
 /// </summary>
 public interface IUpdateService
 {
-    /// <summary>The running application version (e.g. <c>1.0.4</c>).</summary>
+    /// <summary>The running application version (e.g. <c>1.0.5</c>).</summary>
     string CurrentVersion { get; }
 
     /// <summary>

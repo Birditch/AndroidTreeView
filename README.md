@@ -3,11 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-0E7A5F.svg)](LICENSE)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Avalonia 11.3](https://img.shields.io/badge/Avalonia-11.3-663399.svg)](https://avaloniaui.net/)
-[![Platform: Windows](https://img.shields.io/badge/Platform-Windows-0078D6.svg)](#windows-使用说明)
+[![Platform: Windows + macOS](https://img.shields.io/badge/Platform-Windows%20%2B%20macOS-0078D6.svg)](#使用说明)
 
 **简体中文** | [English](README.en.md) | [中文副本](README-CN.md)
 
-AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Windows 桌面工具。主程序负责设备总览、详情、投屏、基础工具、设置和更新；Mini 版本保持独立运行，常驻监听设备，并在授权后自动启动投屏。
+AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的桌面工具，支持 Windows 与 macOS（Apple Silicon）。主程序负责设备总览、详情、投屏、基础工具、设置和更新；Mini 版本保持独立运行，常驻监听设备，并在授权后自动启动投屏。
 
 当前版本：**v1.0.6**。当前验证目标：App 构建通过、Mini 构建通过、全量测试通过，打包链路能为 App 和 Mini 分别生成 x64 上传 ZIP。
 
@@ -38,6 +38,7 @@ src/
   AndroidTreeView.Shared
   AndroidTreeView.App
   AndroidTreeView.Mini
+  AndroidTreeView.Mini.Mac
 tests/
   AndroidTreeView.*.Tests
 packaging/
@@ -69,12 +70,18 @@ dotnet run --project src/AndroidTreeView.Mini
 
 ADB 安装和排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 
-## Windows 使用说明
+## 使用说明
 
 1. 启动 AndroidTreeView。
 2. 连接已开启并授权 USB 调试的 Android 设备。
 3. 使用设备卡片查看状态、投屏、打开 CLI 或执行非破坏性工具。
 4. 通过设置或关于页检查并安装更新。
+
+### macOS 说明
+
+- 从 Release 下载 `AndroidTreeView-<版本>-osx-arm64.zip`，解压后将 `AndroidTreeView.app` 拖入 `/Applications`。
+- 首次打开若被 Gatekeeper 拦截（未签名），右键选择「打开」，或执行 `xattr -dr com.apple.quarantine AndroidTreeView.app` 放行。
+- 设备卡片的「CLI 终端」在 macOS 上通过 Terminal.app 打开，提供与 Windows 一致的编号菜单（设备信息 / adb shell / logcat / 重启 / 关机 等）。
 
 ## Release ZIP 打包
 

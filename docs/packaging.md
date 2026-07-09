@@ -2,7 +2,7 @@
 
 Packaging files live under `packaging/`.
 
-Current default product version: `1.0.5`.
+Current default product version: `1.0.6`.
 
 Official release artifacts are created by GitHub Actions (`.github/workflows/publish.yml`) only. Local packaging commands are validation helpers and must not be used as the authority for publishing a release.
 
@@ -11,14 +11,14 @@ Official release artifacts are created by GitHub Actions (`.github/workflows/pub
 Every GitHub Release must contain exactly these four ZIP packages plus matching `.sha256` sidecars:
 
 ```text
-artifacts/AndroidTreeView-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-1.0.5-win-x64.zip.sha256
-artifacts/AndroidTreeView-1.0.5-osx-arm64.zip
-artifacts/AndroidTreeView-1.0.5-osx-arm64.zip.sha256
-artifacts/AndroidTreeView-Mini-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-win-x64.zip.sha256
-artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip.sha256
+artifacts/AndroidTreeView-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-1.0.6-win-x64.zip.sha256
+artifacts/AndroidTreeView-1.0.6-osx-arm64.zip
+artifacts/AndroidTreeView-1.0.6-osx-arm64.zip.sha256
+artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip.sha256
+artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip.sha256
 ```
 
 Windows ZIPs contain the published application files, the platform-matched `scrcpy` bundle, and `release.json` at the ZIP root. macOS ZIPs contain a top-level `.app` bundle (`AndroidTreeView.app` or `AndroidTreeView Mini.app`); the published files, `scrcpy`, and `release.json` live inside the bundle.
@@ -74,7 +74,7 @@ The updater uses `release.json` to distinguish an automated release ZIP from a r
   "product": "App",
   "productName": "AndroidTreeView",
   "appKey": "android-tree-view-app",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "platform": "win",
   "arch": "x64",
   "rid": "win-x64",
@@ -102,8 +102,8 @@ The WiX project rejects non-x64 platforms.
 `build-update-zip.ps1` writes checksums automatically. Manual verification:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-1.0.5-win-x64.zip
-Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-Mini-1.0.5-win-x64.zip
+Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-1.0.6-win-x64.zip
+Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-Mini-1.0.6-win-x64.zip
 ```
 
 The sidecar uses `<hash> *<filename>` format for compatibility with `sha256sum -c`.

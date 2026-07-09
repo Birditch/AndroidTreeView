@@ -171,6 +171,12 @@
   <data name="menu.cli" xml:space="preserve">
     <value>CLI Terminal</value>
   </data>
+  <data name="cli.unsupported" xml:space="preserve">
+    <value>The CLI terminal is not supported on this operating system.</value>
+  </data>
+  <data name="cli.launchFailed" xml:space="preserve">
+    <value>Failed to open the CLI terminal.</value>
+  </data>
   <data name="menu.detail" xml:space="preserve">
     <value>Details</value>
   </data>

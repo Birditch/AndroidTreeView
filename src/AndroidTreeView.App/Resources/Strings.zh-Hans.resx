@@ -171,6 +171,12 @@
   <data name="menu.cli" xml:space="preserve">
     <value>CLI 终端</value>
   </data>
+  <data name="cli.unsupported" xml:space="preserve">
+    <value>当前操作系统不支持 CLI 终端。</value>
+  </data>
+  <data name="cli.launchFailed" xml:space="preserve">
+    <value>打开 CLI 终端失败。</value>
+  </data>
   <data name="menu.detail" xml:space="preserve">
     <value>详情</value>
   </data>

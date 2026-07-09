@@ -8,7 +8,7 @@ public static class AppInfo
     public const string Name = "AndroidTreeView";
 
     /// <summary>Release version. Keep this aligned with the App and Mini project <c>Version</c> values.</summary>
-    public const string Version = "1.0.5";
+    public const string Version = "1.0.6";
 
     public const string GitHubOwner = "Birditch";
     public const string GitHubRepo = "AndroidTreeView";

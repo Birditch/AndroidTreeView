@@ -8,13 +8,13 @@
   Build after the MSI has been produced:
 
       wix build packaging/Bundle.wxs -arch x64 ^
-          -d ProductVersion=1.0.5 ^
+          -d ProductVersion=1.0.6 ^
           -d Platform=x64 ^
-          -d MsiPath=artifacts\AndroidTreeView-1.0.5-x64.msi ^
+          -d MsiPath=artifacts\AndroidTreeView-1.0.6-x64.msi ^
           -d DotNetRuntimeExe=C:\path\windowsdesktop-runtime-10.0.x-win-x64.exe ^
           -ext WixToolset.BootstrapperApplications.wixext ^
           -ext WixToolset.Netfx.wixext ^
-          -o artifacts\AndroidTreeView-1.0.5-x64-setup.exe
+          -o artifacts\AndroidTreeView-1.0.6-x64-setup.exe
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"

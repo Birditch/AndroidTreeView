@@ -2,7 +2,7 @@
 
 Repository: `Birditch/AndroidTreeView`.
 
-Current product version: `1.0.5`.
+Current product version: `1.0.6`.
 
 ## Release Policy
 
@@ -37,24 +37,24 @@ Keep these values identical for every release:
 - `src/AndroidTreeView.App/app.manifest` -> `assemblyIdentity version`
 - `packaging/build-update-zip.ps1` -> default `Version`
 
-For `1.0.5`, release artifacts are named:
+For `1.0.6`, release artifacts are named:
 
 ```text
-AndroidTreeView-1.0.5-win-x64.zip
-AndroidTreeView-1.0.5-win-x64.zip.sha256
-AndroidTreeView-1.0.5-osx-arm64.zip
-AndroidTreeView-1.0.5-osx-arm64.zip.sha256
-AndroidTreeView-Mini-1.0.5-win-x64.zip
-AndroidTreeView-Mini-1.0.5-win-x64.zip.sha256
-AndroidTreeView-Mini-1.0.5-osx-arm64.zip
-AndroidTreeView-Mini-1.0.5-osx-arm64.zip.sha256
+AndroidTreeView-1.0.6-win-x64.zip
+AndroidTreeView-1.0.6-win-x64.zip.sha256
+AndroidTreeView-1.0.6-osx-arm64.zip
+AndroidTreeView-1.0.6-osx-arm64.zip.sha256
+AndroidTreeView-Mini-1.0.6-win-x64.zip
+AndroidTreeView-Mini-1.0.6-win-x64.zip.sha256
+AndroidTreeView-Mini-1.0.6-osx-arm64.zip
+AndroidTreeView-Mini-1.0.6-osx-arm64.zip.sha256
 ```
 
 ## Build Upload ZIP Packages
 
 Official publication happens through the `Publish` GitHub Actions workflow:
 
-- push a tag named `v<major>.<minor>.<patch>`, for example `v1.0.5`
+- push a tag named `v<major>.<minor>.<patch>`, for example `v1.0.6`
 - or run `workflow_dispatch` and provide the same version string
 
 The workflow validates on Windows, verifies the pinned scrcpy release against the latest upstream release, builds the two Windows portable ZIPs and two macOS `.app` bundle ZIPs, writes SHA-256 sidecars, uploads workflow artifacts, and creates the GitHub Release.
@@ -77,8 +77,8 @@ The full app and Mini share the same update implementation but use different app
 
 The Windows update channel must point each product key at its own Windows ZIP:
 
-- `android-tree-view-app` -> `AndroidTreeView-1.0.5-win-x64.zip`
-- `android-tree-view-mini` -> `AndroidTreeView-Mini-1.0.5-win-x64.zip`
+- `android-tree-view-app` -> `AndroidTreeView-1.0.6-win-x64.zip`
+- `android-tree-view-mini` -> `AndroidTreeView-Mini-1.0.6-win-x64.zip`
 
 `NekoIndexUpdateService` queries the configured internal update API and compares the returned version with `AppInfo.Version`. `UpdateInstaller` downloads the package, verifies SHA-256 metadata when present, extracts the ZIP, verifies the portable Windows x64 manifest, and starts the automated update script.
 
@@ -97,7 +97,7 @@ Minimum response contract:
   "data": {
     "appKey": "android-tree-view-app",
     "title": "AndroidTreeView",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "zip": {
       "sha256": "<64-character sha256>",
       "downloadUrl": "/api/resources/android-tree-view-app/versions/latest/archive"
@@ -114,11 +114,11 @@ Minimum response contract:
 
 Use this flow for the intranet update server:
 
-1. Push a `v1.0.5` tag or run the `Publish` GitHub Actions workflow manually.
+1. Push a `v1.0.6` tag or run the `Publish` GitHub Actions workflow manually.
 2. Download the GitHub Actions-built Windows ZIP and `.sha256` sidecar for each Windows update channel.
 3. Upload the ZIPs to the internal server storage.
-4. Configure `/api/update/android-tree-view-app/latest` to return `AndroidTreeView-1.0.5-win-x64.zip` metadata.
-5. Configure `/api/update/android-tree-view-mini/latest` to return `AndroidTreeView-Mini-1.0.5-win-x64.zip` metadata.
+4. Configure `/api/update/android-tree-view-app/latest` to return `AndroidTreeView-1.0.6-win-x64.zip` metadata.
+5. Configure `/api/update/android-tree-view-mini/latest` to return `AndroidTreeView-Mini-1.0.6-win-x64.zip` metadata.
 6. Confirm the `sha256` value matches the uploaded ZIP.
 7. Use the app "Check for updates" action to test download, validation, replacement, cleanup, and restart.
 

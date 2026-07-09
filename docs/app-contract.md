@@ -2,7 +2,7 @@
 
 This document records the App-layer contract for the full app and the Mini companion.
 
-Current product version: `1.0.5`.
+Current product version: `1.0.6`.
 
 ## Shared Services
 

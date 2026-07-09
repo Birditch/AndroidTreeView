@@ -9,11 +9,11 @@
 
 AndroidTreeView is a desktop tool for inspecting, testing, and managing Android devices through ADB. The full app shows device cards, detail pages, mirroring, tools, settings, and updates. The Mini app stays resident, watches for devices, and starts mirroring automatically after authorization.
 
-Current version: **v1.0.5**. Current verification target: solution build passes, all tests pass, and GitHub Actions creates Windows x64 and macOS Apple Silicon ZIP artifacts for both App and Mini.
+Current version: **v1.0.6**. Current verification target: solution build passes, all tests pass, and GitHub Actions creates Windows x64 and macOS Apple Silicon ZIP artifacts for both App and Mini.
 
 ## Product Preview
 
-![AndroidTreeView device overview](docs/images/product-devices-v1.0.5.png)
+![AndroidTreeView device overview](docs/images/product-devices-v1.0.6.png)
 
 ## Features
 
@@ -78,7 +78,7 @@ See [docs/adb-requirements.md](docs/adb-requirements.md) for platform-tools setu
 
 ## Release ZIP Packaging
 
-The product version is currently `1.0.5` and is kept in sync across runtime version, App/Mini assembly metadata, manifest, and the ZIP build script. Official releases are produced only by the GitHub Actions `Publish` workflow.
+The product version is currently `1.0.6` and is kept in sync across runtime version, App/Mini assembly metadata, manifest, and the ZIP build script. Official releases are produced only by the GitHub Actions `Publish` workflow.
 
 Local commands are for packaging validation only:
 
@@ -90,10 +90,10 @@ Local commands are for packaging validation only:
 Example output:
 
 ```text
-artifacts/AndroidTreeView-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-1.0.5-osx-arm64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip
+artifacts/AndroidTreeView-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-1.0.6-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip
 ```
 
 ## Auto Update

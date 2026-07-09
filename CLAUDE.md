@@ -152,7 +152,7 @@ Fixtures are **inline `const` strings** inside the test classes, not external `.
 ## Versioning & updates
 
 Version is unified across runtime version, App/Mini assembly versions, manifests, and
-`packaging/build-update-zip.ps1` — keep them in sync when bumping (currently `1.0.5`). Update channels:
+`packaging/build-update-zip.ps1` — keep them in sync when bumping (currently `1.0.6`). Update channels:
 `android-tree-view-app` (App) and `android-tree-view-mini` (Mini). `NekoIndexUpdateService` checks the
 channel and compares semver; `UpdateInstaller` downloads, verifies SHA-256, unpacks the x64 ZIP, and runs
 a local update script. Loose ZIPs without a supported `release.json` manifest are rejected.

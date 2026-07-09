@@ -1,6 +1,6 @@
 ﻿# AndroidTreeView Requirements Addendum
 
-Current product version: `1.0.5`.
+Current product version: `1.0.6`.
 
 This addendum extends `docs/architecture.md` and reflects the current App + Mini direction.
 

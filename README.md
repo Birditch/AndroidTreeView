@@ -9,11 +9,11 @@
 
 AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Windows 桌面工具。主程序负责设备总览、详情、投屏、基础工具、设置和更新；Mini 版本保持独立运行，常驻监听设备，并在授权后自动启动投屏。
 
-当前版本：**v1.0.5**。当前验证目标：App 构建通过、Mini 构建通过、全量测试通过，打包链路能为 App 和 Mini 分别生成 x64 上传 ZIP。
+当前版本：**v1.0.6**。当前验证目标：App 构建通过、Mini 构建通过、全量测试通过，打包链路能为 App 和 Mini 分别生成 x64 上传 ZIP。
 
 ## 产品样式展示
 
-![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.5.png)
+![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.6.png)
 
 ## 核心能力
 
@@ -78,7 +78,7 @@ ADB 安装和排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 
 ## Release ZIP 打包
 
-当前版本号统一为 `1.0.5`，运行时版本、App/Mini 程序集版本、manifest 和 `build-update-zip.ps1` 默认版本保持一致。正式发布只通过 GitHub Actions 的 `Publish` 工作流完成，发布只接受 x64。
+当前版本号统一为 `1.0.6`，运行时版本、App/Mini 程序集版本、manifest 和 `build-update-zip.ps1` 默认版本保持一致。正式发布只通过 GitHub Actions 的 `Publish` 工作流完成，发布只接受 x64。
 
 本地命令仅用于验证打包链路：
 
@@ -90,10 +90,10 @@ ADB 安装和排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 示例输出：
 
 ```text
-artifacts/AndroidTreeView-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-1.0.5-osx-arm64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip
+artifacts/AndroidTreeView-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-1.0.6-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip
 ```
 
 ## 自动更新

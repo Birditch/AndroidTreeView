@@ -31,7 +31,7 @@ public enum UpdateCheckStatus
 /// </summary>
 public sealed class UpdateCheckResult
 {
-    /// <summary>The version currently running (e.g. <c>1.0.5</c>).</summary>
+    /// <summary>The version currently running (e.g. <c>1.0.6</c>).</summary>
     public required string CurrentVersion { get; init; }
 
     /// <summary>The latest published version, when known.</summary>

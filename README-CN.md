@@ -9,11 +9,11 @@
 
 AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的 Windows 桌面工具。主程序负责设备总览、详情、投屏、基础工具和设置；Mini 版本保持独立运行，常驻监听设备并自动投屏。
 
-当前版本：**v1.0.5**。
+当前版本：**v1.0.6**。
 
 ## 产品样式展示
 
-![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.5.png)
+![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.6.png)
 
 ## 功能
 
@@ -61,13 +61,13 @@ ADB 安装与排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 ./packaging/build-update-zip.ps1 -Product Mini -Rid win-x64
 ```
 
-默认产物版本是 `1.0.5`。只发布 x64 架构。验证输出包含主程序和 Mini 的上传 ZIP，例如：
+默认产物版本是 `1.0.6`。只发布 x64 架构。验证输出包含主程序和 Mini 的上传 ZIP，例如：
 
 ```text
-artifacts/AndroidTreeView-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-1.0.5-osx-arm64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-win-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.5-osx-arm64.zip
+artifacts/AndroidTreeView-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-1.0.6-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip
 ```
 
 更多细节见 [docs/packaging.md](docs/packaging.md)。

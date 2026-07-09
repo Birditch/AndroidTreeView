@@ -3,7 +3,7 @@
   AndroidTreeView MSI - WiX v5 authoring.
 
   Preprocessor variables supplied by AndroidTreeView.Package.wixproj:
-    $(var.ProductVersion)     e.g. 1.0.5
+    $(var.ProductVersion)     e.g. 1.0.6
     $(var.ProductName)        display name
     $(var.ProductExecutable)  main executable file in PublishDir
     $(var.ProductUpgradeCode) stable MSI UpgradeCode
@@ -45,7 +45,7 @@
     <Property Id="ARPHELPLINK" Value="https://github.com/Birditch/AndroidTreeView" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/Birditch/AndroidTreeView" />
 
-    <!-- Optional desktop shortcut: msiexec /i <product>-1.0.5-x64.msi INSTALLDESKTOPSHORTCUT=1 -->
+    <!-- Optional desktop shortcut: msiexec /i <product>-1.0.6-x64.msi INSTALLDESKTOPSHORTCUT=1 -->
     <Property Id="INSTALLDESKTOPSHORTCUT" Value="0" Secure="yes" />
 
     <?if $(var.SelfContained) = "false" ?>

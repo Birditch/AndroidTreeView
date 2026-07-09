@@ -250,6 +250,60 @@ function ConvertTo-PlistString {
     return [System.Security.SecurityElement]::Escape($Value)
 }
 
+function New-IcnsFromPng {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourcePng,
+
+        [Parameter(Mandatory = $true)]
+        [string]$OutputIcns
+    )
+
+    # macOS .app icons are .icns files; the repo only ships a 256x256 PNG, so build the .icns from it
+    # with the system tools (sips resizes each slot, iconutil packs the iconset). Requires macOS.
+    if (-not (Get-Command sips -ErrorAction SilentlyContinue) -or -not (Get-Command iconutil -ErrorAction SilentlyContinue)) {
+        Write-Warning 'sips/iconutil not found; skipping macOS app icon generation.'
+        return $false
+    }
+
+    $iconsetDir = "$OutputIcns.iconset"
+    if (Test-Path -LiteralPath $iconsetDir) {
+        Remove-Item -Recurse -Force -LiteralPath $iconsetDir
+    }
+    New-Item -ItemType Directory -Force -Path $iconsetDir | Out-Null
+
+    # name => pixel size for the standard iconset slots (1x + @2x). Upscaled slots beyond the
+    # 256px source are slightly soft but valid; Dock/Finder common sizes stay crisp.
+    $slots = [ordered]@{
+        'icon_16x16.png'      = 16
+        'icon_16x16@2x.png'   = 32
+        'icon_32x32.png'      = 32
+        'icon_32x32@2x.png'   = 64
+        'icon_128x128.png'    = 128
+        'icon_128x128@2x.png' = 256
+        'icon_256x256.png'    = 256
+        'icon_256x256@2x.png' = 512
+        'icon_512x512.png'    = 512
+        'icon_512x512@2x.png' = 1024
+    }
+
+    foreach ($entry in $slots.GetEnumerator()) {
+        $target = Join-Path $iconsetDir $entry.Key
+        & sips -z $entry.Value $entry.Value $SourcePng --out $target *> $null
+        if ($LASTEXITCODE -ne 0) {
+            throw "sips failed to render '$($entry.Key)' from '$SourcePng'."
+        }
+    }
+
+    & iconutil -c icns $iconsetDir -o $OutputIcns
+    if ($LASTEXITCODE -ne 0) {
+        throw "iconutil failed to build '$OutputIcns'."
+    }
+
+    Remove-Item -Recurse -Force -LiteralPath $iconsetDir
+    return $true
+}
+
 function New-MacOSAppBundle {
     param(
         [Parameter(Mandatory = $true)]
@@ -306,6 +360,25 @@ function New-MacOSAppBundle {
     $bundleIdentifier = "com.birditch.$($ProductConfig.AppKey.Replace('-', '.'))"
     $displayName = $ProductConfig.ProductName
     $executableName = $ProductConfig.Executable
+
+    # Build the app icon (.icns) from the App's PNG so the bundle shows in Dock/Finder.
+    $iconSourcePng = Join-Path $repoRoot 'src/AndroidTreeView.App/Assets/atv-icon.png'
+    $iconFileName = ''
+    if (Test-Path -LiteralPath $iconSourcePng) {
+        $icnsPath = Join-Path $resourcesDir 'AppIcon.icns'
+        if (New-IcnsFromPng -SourcePng $iconSourcePng -OutputIcns $icnsPath) {
+            $iconFileName = 'AppIcon'
+        }
+    } else {
+        Write-Warning "Icon source '$iconSourcePng' not found; bundle will have no icon."
+    }
+
+    $iconPlistEntry = if ($iconFileName) {
+        "  <key>CFBundleIconFile</key>`n  <string>$(ConvertTo-PlistString $iconFileName)</string>`n"
+    } else {
+        ''
+    }
+
     $infoPlist = @"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -317,7 +390,7 @@ function New-MacOSAppBundle {
   <string>$(ConvertTo-PlistString $displayName)</string>
   <key>CFBundleExecutable</key>
   <string>$(ConvertTo-PlistString $executableName)</string>
-  <key>CFBundleIdentifier</key>
+$iconPlistEntry  <key>CFBundleIdentifier</key>
   <string>$(ConvertTo-PlistString $bundleIdentifier)</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
@@ -491,6 +564,10 @@ $zipPath = Join-Path $artifacts "$baseName.zip"
 $zipChecksumPath = "$zipPath.sha256"
 $packageKind = if ($ridInfo.IsWindows) { 'portable-x64' } else { "portable-$($ridInfo.Rid)" }
 $bundleFastbootValue = if ($productConfig.BundleFastboot) { 'true' } else { 'false' }
+# macOS has no system-level "install .NET runtime" prompt like Windows, so a framework-dependent
+# .app silently fails to launch on machines without the runtime. Bundle the runtime into the macOS
+# .app (self-contained). Windows stays framework-dependent: its apphost shows the OS download prompt.
+$selfContainedValue = if ($ridInfo.IsMacOS) { 'true' } else { 'false' }
 
 New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
 Assert-UnderDirectory -Path $publishDir -Parent $artifacts
@@ -513,7 +590,7 @@ $publishArgs = @(
     $productConfig.Project,
     '--configuration', $Configuration,
     '--runtime', $ridInfo.Rid,
-    '--self-contained', 'false',
+    '--self-contained', $selfContainedValue,
     "-p:Version=$Version",
     "-p:AssemblyVersion=$Version.0",
     "-p:FileVersion=$Version.0",

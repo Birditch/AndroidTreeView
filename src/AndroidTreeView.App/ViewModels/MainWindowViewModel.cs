@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace AndroidTreeView.App.ViewModels;
 
@@ -37,12 +38,18 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private readonly ILogger<MainWindowViewModel> _logger;
 
     // Per-device enrichment state (accessed only on the UI thread from OnDevicesChanged).
-    // Identity + root are re-probed on this cadence (not just once) so a card never drifts out of sync
-    // with the detail page (e.g. root becoming visible after a grant).
-    private static readonly TimeSpan StaticRefreshInterval = TimeSpan.FromSeconds(8);
-    private readonly Dictionary<string, DateTimeOffset> _staticEnrichedAt = new(StringComparer.Ordinal);
+    // Identity + root are static per connection: probed once when a device first appears and not
+    // re-polled on a timer. Re-probing all devices every few seconds forked a burst of adb processes
+    // (root alone is 6 probes/device) that stalled the main page when several devices were connected.
+    // A device that changes state (e.g. root granted) disconnects/reconnects or is refreshed on demand,
+    // which clears its entry and re-enriches it.
+    private readonly HashSet<string> _staticEnriched = new(StringComparer.Ordinal);
     private readonly HashSet<string> _enriching = new(StringComparer.Ordinal);
     private readonly HashSet<string> _fastbootEnriching = new(StringComparer.Ordinal);
+
+    // Device-list poll interval, loaded from settings at startup (was hardcoded to 1s, which ignored
+    // the DeviceRefreshIntervalSeconds setting and hammered adb once per second per device).
+    private TimeSpan _refreshInterval = TimeSpan.FromSeconds(3);
 
     private string? _releaseUrl;
     private UpdateCheckResult? _latestUpdate;
@@ -221,6 +228,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         _themeService.Apply(settings.Theme);
         _themeService.ApplyAccent(settings.AccentColor);
 
+        _refreshInterval = TimeSpan.FromSeconds(Math.Max(1, settings.DeviceRefreshIntervalSeconds));
+
         var location = await _locator.LocateAsync(settings.AdbPath).ConfigureAwait(true);
         _environment.Set(location);
 
@@ -239,7 +248,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             IsAdbAvailable = true;
             AdbStatusText = _localization.Get("adb.status.ready");
-            _monitor.UpdateInterval(TimeSpan.FromSeconds(1));
+            _monitor.UpdateInterval(_refreshInterval);
             _monitor.Start();
             CurrentContent = Devices;
         }
@@ -349,6 +358,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
+            // A manual refresh is the user asking for fresh facts, so drop the one-time static cache
+            // to force identity/root to be re-probed on the next enrichment pass.
+            _staticEnriched.Clear();
             await _monitor.RefreshNowAsync().ConfigureAwait(true);
         }
         catch (Exception ex)
@@ -474,7 +486,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
         if (!_monitor.IsRunning)
         {
-            _monitor.UpdateInterval(TimeSpan.FromSeconds(1));
+            _monitor.UpdateInterval(_refreshInterval);
             _monitor.Start();
         }
 
@@ -509,9 +521,17 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     }
 
     // Fills each online card with real data: battery every tick (fast), and static identity + root once
-    // per device. A per-serial guard prevents overlapping runs from piling up under the 1 Hz monitor.
+    // per device (first time it appears). A per-serial guard prevents overlapping runs from piling up.
     private void EnrichDevices(IReadOnlyList<AdbDevice> devices)
     {
+        // Forget devices that dropped off the list so a later reconnect re-runs the one-time static
+        // enrichment (identity / root) instead of showing stale data.
+        if (_staticEnriched.Count > 0)
+        {
+            var present = new HashSet<string>(devices.Select(d => d.Serial), StringComparer.Ordinal);
+            _staticEnriched.RemoveWhere(serial => !present.Contains(serial));
+        }
+
         foreach (var device in devices)
         {
             // Fastboot devices have no OS to query over adb — read their fastboot getvar facts instead.
@@ -552,9 +572,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             var battery = await _deviceService.GetBatteryAsync(serial).ConfigureAwait(true);
             card.ApplyBattery(battery);
 
-            var due = !_staticEnrichedAt.TryGetValue(serial, out var last)
-                      || DateTimeOffset.Now - last > StaticRefreshInterval;
-            if (due)
+            // Static identity + root are probed once per connection, not on a timer. Re-probing every
+            // device every few seconds was the main-page stall: root alone forks 6 adb processes per
+            // device, so N devices produced a periodic burst of dozens of concurrent adb calls.
+            if (_staticEnriched.Add(serial))
             {
                 var overview = await _deviceService.GetOverviewAsync(serial).ConfigureAwait(true);
                 card.ApplyOverview(overview);
@@ -563,8 +584,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 card.ApplyRoot(root);
 
                 await card.RefreshActionStateAsync().ConfigureAwait(true);
-
-                _staticEnrichedAt[serial] = DateTimeOffset.Now;
             }
         }
         catch (Exception ex)

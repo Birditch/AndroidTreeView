@@ -223,12 +223,21 @@ public sealed class NekoIndexUpdateService : IUpdateService
             return null;
         }
 
-        if (Uri.TryCreate(url, UriKind.Absolute, out var absolute))
+        var trimmedUrl = url.Trim();
+        var baseUri = new Uri(_product.UpdateServerBaseUrl.TrimEnd('/') + "/");
+        if (trimmedUrl.StartsWith("/", StringComparison.Ordinal) && !trimmedUrl.StartsWith("//", StringComparison.Ordinal))
         {
-            return absolute.ToString();
+            return new Uri(baseUri, trimmedUrl.TrimStart('/')).ToString();
         }
 
-        var baseUri = new Uri(_product.UpdateServerBaseUrl.TrimEnd('/') + "/");
-        return new Uri(baseUri, url).ToString();
+        if (Uri.TryCreate(trimmedUrl, UriKind.Absolute, out var absolute))
+        {
+            return absolute.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || absolute.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                ? absolute.ToString()
+                : null;
+        }
+
+        return new Uri(baseUri, trimmedUrl).ToString();
     }
 }

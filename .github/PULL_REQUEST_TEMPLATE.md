@@ -4,6 +4,11 @@
 
 <!-- 说明改动内容和原因 (What changed and why?). -->
 
+## SIGN 声明 (SIGN Declaration)
+
+- [ ] SIGN: 我确认我有权提交这些改动，并同意它们按本仓库许可证发布。
+      (I certify that I have the right to submit this work and agree it is provided under this repository's license.)
+
 ## 类型 (Type)
 
 - [ ] 缺陷修复 (Bug fix)
@@ -16,6 +21,13 @@
 ## 细节 (Details)
 
 <!-- 如有帮助，请补充实现说明、截图或 API 示例 (Add implementation notes, screenshots, or API examples if useful). -->
+
+## 安全影响 (Security Impact)
+
+- [ ] 未修改 GitHub Actions、发布脚本、打包脚本或二进制产物。
+      (No GitHub Actions, release scripts, packaging scripts, or binary artifacts were changed.)
+- [ ] 如修改了上述敏感区域，我已在摘要或细节中说明原因。
+      (If sensitive areas were changed, I explained why in the summary or details.)
 
 ## 验证 (Verification)
 

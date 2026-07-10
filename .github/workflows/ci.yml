@@ -16,6 +16,7 @@ env:
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  EnableWindowsTargeting: "true"
   CONFIGURATION: Release
   SOLUTION: AndroidTreeView.sln
 
@@ -37,17 +38,16 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -p:EnableWindowsTargeting=true
+        run: dotnet restore ${{ env.SOLUTION }}
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION }} -c ${{ env.CONFIGURATION }} --no-restore -p:EnableWindowsTargeting=true
+        run: dotnet build ${{ env.SOLUTION }} -c ${{ env.CONFIGURATION }} --no-restore
 
       - name: Test
         run: >-
           dotnet test ${{ env.SOLUTION }}
           -c ${{ env.CONFIGURATION }}
           --no-build
-          -p:EnableWindowsTargeting=true
           --logger trx
           --results-directory test-results
 
@@ -72,13 +72,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -p:EnableWindowsTargeting=true
+        run: dotnet restore ${{ env.SOLUTION }}
 
       - name: Check for vulnerable packages
         shell: bash
         run: |
           set -euo pipefail
-          dotnet list ${{ env.SOLUTION }} package --vulnerable --include-transitive 2>&1 | tee vulnerable.log
+          dotnet list ${{ env.SOLUTION }} package --vulnerable --include-transitive --no-restore 2>&1 | tee vulnerable.log
           if grep -q "has the following vulnerable packages" vulnerable.log; then
             echo "::error::Vulnerable NuGet packages detected. See the log above."
             exit 1
@@ -88,7 +88,6 @@ jobs:
   format:
     name: Format check (non-blocking)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -99,7 +98,14 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }} -p:EnableWindowsTargeting=true
+        run: dotnet restore ${{ env.SOLUTION }}
 
       - name: dotnet format --verify-no-changes
-        run: dotnet format ${{ env.SOLUTION }} --verify-no-changes --verbosity diagnostic
+        shell: bash
+        run: |
+          set +e
+          dotnet format "${{ env.SOLUTION }}" --no-restore --verify-no-changes --verbosity diagnostic
+          exit_code=$?
+          if [ "$exit_code" -ne 0 ]; then
+            echo "::warning::dotnet format found formatting differences. This check is informational and does not fail CI."
+          fi

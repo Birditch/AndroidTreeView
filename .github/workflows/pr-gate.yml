@@ -1,0 +1,147 @@
+name: PR Gate
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  metadata-and-safety:
+    name: Metadata and safety gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR metadata and third-party safety
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          (async () => {
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const pr = event.pull_request;
+          if (!pr) {
+            console.log('No pull_request payload; skipping.');
+            process.exit(0);
+          }
+
+          const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+          const token = process.env.GITHUB_TOKEN;
+          const headers = {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+          };
+
+          async function gh(path) {
+            const response = await fetch(`https://api.github.com${path}`, { headers });
+            if (!response.ok) {
+              throw new Error(`GitHub API ${path} failed: ${response.status} ${await response.text()}`);
+            }
+            return response.json();
+          }
+
+          async function listFiles() {
+            const files = [];
+            for (let page = 1; page <= 20; page += 1) {
+              const batch = await gh(`/repos/${owner}/${repo}/pulls/${pr.number}/files?per_page=100&page=${page}`);
+              files.push(...batch);
+              if (batch.length < 100) {
+                break;
+              }
+            }
+            return files;
+          }
+
+          function section(body, heading) {
+            const lines = body.split(/\r?\n/);
+            const start = lines.findIndex(line => line.trim() === `## ${heading}`);
+            if (start < 0) {
+              return '';
+            }
+
+            const collected = [];
+            for (const line of lines.slice(start + 1)) {
+              if (/^##\s+/.test(line)) {
+                break;
+              }
+              collected.push(line);
+            }
+
+            return collected.join('\n').replace(/<!--[\s\S]*?-->/g, '').trim();
+          }
+
+          const failures = [];
+          const warnings = [];
+          const body = pr.body || '';
+          const summary = section(body, '摘要 (Summary)');
+          const hasSign = /-\s*\[[xX]\]\s*SIGN:/i.test(body);
+
+          if (!hasSign) {
+            failures.push('PR must check the SIGN declaration in the pull request body.');
+          }
+
+          if (summary.length < 10) {
+            failures.push('PR summary is missing or too short.');
+          }
+
+          if ((pr.title || '').trim().length < 8) {
+            failures.push('PR title is too short to be useful.');
+          }
+
+          const trustedAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+          const sameRepository = pr.head.repo?.full_name === pr.base.repo?.full_name;
+          const trustedAuthor = sameRepository || trustedAssociations.has(pr.author_association);
+          const files = await listFiles();
+          const sensitivePatterns = [
+            /^\.github\/workflows\//,
+            /^\.github\/actions\//,
+            /^\.github\/CODEOWNERS$/,
+            /^build\//,
+            /^packaging\//,
+            /^tools\//,
+            /\.(bat|cmd|dll|dmg|exe|msi|pkg|ps1|psm1|sh|zip)$/i,
+          ];
+          const sensitiveFiles = files
+            .map(file => file.filename)
+            .filter(name => sensitivePatterns.some(pattern => pattern.test(name)));
+
+          if (!trustedAuthor && sensitiveFiles.length > 0) {
+            warnings.push(`Third-party PR changes sensitive files and needs maintainer review: ${sensitiveFiles.join(', ')}`);
+          } else if (sensitiveFiles.length > 0) {
+            warnings.push(`Sensitive files changed by trusted author: ${sensitiveFiles.join(', ')}`);
+          }
+
+          const summaryLines = [
+            '# PR Gate',
+            '',
+            `- PR: #${pr.number} ${pr.title}`,
+            `- Author association: ${pr.author_association}`,
+            `- Same repository branch: ${sameRepository ? 'yes' : 'no'}`,
+            `- Files changed: ${files.length}`,
+          ];
+
+          if (warnings.length > 0) {
+            summaryLines.push('', '## Warnings', ...warnings.map(warning => `- ${warning}`));
+          }
+
+          if (failures.length > 0) {
+            summaryLines.push('', '## Failures', ...failures.map(failure => `- ${failure}`));
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summaryLines.join('\n')}\n`);
+            for (const failure of failures) {
+              console.error(`::error::${failure}`);
+            }
+            process.exit(1);
+          }
+
+          summaryLines.push('', 'PR metadata and third-party safety checks passed.');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summaryLines.join('\n')}\n`);
+          })().catch(error => {
+            console.error(`::error::${error.message}`);
+            process.exit(1);
+          });
+          NODE

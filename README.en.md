@@ -1,19 +1,21 @@
 ﻿# AndroidTreeView
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0E7A5F.svg)](LICENSE)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/)
-[![Avalonia 11.3](https://img.shields.io/badge/Avalonia-11.3-663399.svg)](https://avaloniaui.net/)
+[![Release](https://img.shields.io/github/v/release/Birditch/AndroidTreeView?label=Release&color=0E7A5F)](https://github.com/Birditch/AndroidTreeView/releases/latest)
+[![CI](https://github.com/Birditch/AndroidTreeView/actions/workflows/ci.yml/badge.svg)](https://github.com/Birditch/AndroidTreeView/actions/workflows/ci.yml)
+[![.NET SDK](https://img.shields.io/badge/.NET-SDK-512BD4.svg)](https://dotnet.microsoft.com/)
+[![Avalonia UI](https://img.shields.io/badge/Avalonia-UI-663399.svg)](https://avaloniaui.net/)
 [![Platform: Windows + macOS](https://img.shields.io/badge/Platform-Windows%20%2B%20macOS-0078D6.svg)](#usage)
 
 [Simplified Chinese](README.md) | **English**
 
 AndroidTreeView is a desktop tool for inspecting, testing, and managing Android devices through ADB. The full app shows device cards, detail pages, mirroring, tools, settings, and updates. The Mini app stays resident, watches for devices, and starts mirroring automatically after authorization.
 
-Current version: **v1.0.6**. Current verification target: solution build passes, all tests pass, and GitHub Actions creates Windows x64 and macOS Apple Silicon ZIP artifacts for both App and Mini.
+See the Release badge above or [GitHub Releases](https://github.com/Birditch/AndroidTreeView/releases/latest) for the current published version. Runtime versions, target frameworks, and packaging settings are defined by the project files and release workflow.
 
 ## Product Preview
 
-![AndroidTreeView device overview](docs/images/product-devices-v1.0.6.png)
+![AndroidTreeView device overview](docs/images/product-devices-v1.0.5.png)
 
 ## Features
 
@@ -80,7 +82,7 @@ See [docs/adb-requirements.md](docs/adb-requirements.md) for platform-tools setu
 
 ## Release ZIP Packaging
 
-The product version is currently `1.0.6` and is kept in sync across runtime version, App/Mini assembly metadata, manifest, and the ZIP build script. Official releases are produced only by the GitHub Actions `Publish` workflow.
+Artifact versions are supplied consistently by the project files and release workflow. Official releases are produced only by the GitHub Actions `Publish` workflow.
 
 Local commands are for packaging validation only:
 
@@ -92,17 +94,17 @@ Local commands are for packaging validation only:
 Example output:
 
 ```text
-artifacts/AndroidTreeView-1.0.6-win-x64.zip
-artifacts/AndroidTreeView-1.0.6-osx-arm64.zip
-artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip
+artifacts/AndroidTreeView-<version>-win-x64.zip
+artifacts/AndroidTreeView-<version>-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-<version>-win-x64.zip
+artifacts/AndroidTreeView-Mini-<version>-osx-arm64.zip
 ```
 
 ## Auto Update
 
 - Full app update key: `android-tree-view-app`.
 - Mini update key: `android-tree-view-mini`.
-- `NekoIndexUpdateService` checks the internal update channel and compares semantic versions.
+- `GitHubUpdateService` queries GitHub Releases and compares semantic versions.
 - `UpdateInstaller` downloads, verifies, extracts, and launches the local update script.
 - Supported Windows updater packages are x64 ZIP files with `release.json`; GitHub Releases also contain macOS Apple Silicon ZIPs.
 - Loose-file ZIP replacement is intentionally rejected.

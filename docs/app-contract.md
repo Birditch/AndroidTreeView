@@ -21,7 +21,7 @@ Shared services include ADB location/environment, device monitoring, scrcpy laun
 - Full App: `UpdateProductOptions.ForMainApp()` -> `AppInfo.AppUpdateKey`
 - Mini: `UpdateProductOptions.ForMiniApp()` -> `AppInfo.MiniUpdateKey`
 
-Both products use `NekoIndexUpdateService` and `UpdateInstaller`.
+Both products use `GitHubUpdateService` and `UpdateInstaller`.
 
 ## App ViewModels
 

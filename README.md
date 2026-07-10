@@ -1,19 +1,21 @@
 # AndroidTreeView
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0E7A5F.svg)](LICENSE)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/)
-[![Avalonia 11.3](https://img.shields.io/badge/Avalonia-11.3-663399.svg)](https://avaloniaui.net/)
+[![Release](https://img.shields.io/github/v/release/Birditch/AndroidTreeView?label=Release&color=0E7A5F)](https://github.com/Birditch/AndroidTreeView/releases/latest)
+[![CI](https://github.com/Birditch/AndroidTreeView/actions/workflows/ci.yml/badge.svg)](https://github.com/Birditch/AndroidTreeView/actions/workflows/ci.yml)
+[![.NET SDK](https://img.shields.io/badge/.NET-SDK-512BD4.svg)](https://dotnet.microsoft.com/)
+[![Avalonia UI](https://img.shields.io/badge/Avalonia-UI-663399.svg)](https://avaloniaui.net/)
 [![Platform: Windows + macOS](https://img.shields.io/badge/Platform-Windows%20%2B%20macOS-0078D6.svg)](#使用说明)
 
 **简体中文** | [English](README.en.md) | [中文副本](README-CN.md)
 
 AndroidTreeView 是一个用于 Android 设备巡检、测试与管理的桌面工具，支持 Windows 与 macOS（Apple Silicon）。主程序负责设备总览、详情、投屏、基础工具、设置和更新；Mini 版本保持独立运行，常驻监听设备，并在授权后自动启动投屏。
 
-当前版本：**v1.0.6**。当前验证目标：App 构建通过、Mini 构建通过、全量测试通过，打包链路能为 App 和 Mini 分别生成 x64 上传 ZIP。
+当前发布请查看上方 Release 徽章或 [GitHub Releases](https://github.com/Birditch/AndroidTreeView/releases/latest)。运行时版本、目标框架和打包配置以项目文件与发布工作流为准。
 
 ## 产品样式展示
 
-![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.6.png)
+![AndroidTreeView 设备总览](docs/images/product-devices-v1.0.5.png)
 
 ## 核心能力
 
@@ -87,7 +89,7 @@ ADB 安装和排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 
 ## Release ZIP 打包
 
-当前版本号统一为 `1.0.6`，运行时版本、App/Mini 程序集版本、manifest 和 `build-update-zip.ps1` 默认版本保持一致。正式发布只通过 GitHub Actions 的 `Publish` 工作流完成，发布只接受 x64。
+产物版本由项目文件和发布工作流统一提供。正式发布只通过 GitHub Actions 的 `Publish` 工作流完成。
 
 本地命令仅用于验证打包链路：
 
@@ -99,17 +101,17 @@ ADB 安装和排错见 [docs/adb-requirements.md](docs/adb-requirements.md)。
 示例输出：
 
 ```text
-artifacts/AndroidTreeView-1.0.6-win-x64.zip
-artifacts/AndroidTreeView-1.0.6-osx-arm64.zip
-artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip
+artifacts/AndroidTreeView-<版本>-win-x64.zip
+artifacts/AndroidTreeView-<版本>-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-<版本>-win-x64.zip
+artifacts/AndroidTreeView-Mini-<版本>-osx-arm64.zip
 ```
 
 ## 自动更新
 
 - 主程序更新通道：`android-tree-view-app`。
 - Mini 更新通道：`android-tree-view-mini`。
-- `NekoIndexUpdateService` 检查内部更新通道并比较语义版本。
+- `GitHubUpdateService` 查询 GitHub Releases 并比较语义版本。
 - `UpdateInstaller` 下载、校验、解包并启动本地更新脚本。
 - Windows 自动更新支持带 `release.json` 的 x64 ZIP；GitHub Release 同时包含 macOS Apple Silicon ZIP。
 - 没有受支持发布清单的散文件 ZIP 会被拒绝。

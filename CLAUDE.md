@@ -117,7 +117,7 @@ Chinese**; English is the neutral/fallback resource.
   in `AndroidTreeView.Core/Options/SettingsEnums.cs`. `Get` returns the key itself if a resource is
   missing, so a missing translation is visible, not a crash.
 - **Implementation**: `LocalizationService` in `src/AndroidTreeView.App/Localization`, backed by two ResX
-  files with **identical key sets** (keep them in sync — currently 215 keys each):
+  files with **identical key sets** (keep them in sync — currently 217 keys each):
   - `src/AndroidTreeView.App/Resources/Strings.resx` — English (neutral fallback)
   - `src/AndroidTreeView.App/Resources/Strings.zh-Hans.resx` — Simplified Chinese (default)
   - Keys are dotted/namespaced: `app.title`, `nav.devices`, `common.refresh`, etc.

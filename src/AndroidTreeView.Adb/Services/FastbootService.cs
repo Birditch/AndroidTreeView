@@ -1,5 +1,5 @@
-using AndroidTreeView.Adb.Internal;
 using AndroidTreeView.Core.Interfaces;
+using AndroidTreeView.Core.Services;
 using Microsoft.Extensions.Logging;
 
 namespace AndroidTreeView.Adb.Services;
@@ -15,11 +15,16 @@ public sealed class FastbootService : IFastbootService
     private static readonly TimeSpan ActionTimeout = TimeSpan.FromSeconds(8);
 
     private readonly IAdbEnvironment _environment;
+    private readonly IExternalCommandRunner _runner;
     private readonly ILogger<FastbootService> _logger;
 
-    public FastbootService(IAdbEnvironment environment, ILogger<FastbootService> logger)
+    public FastbootService(
+        IAdbEnvironment environment,
+        IExternalCommandRunner runner,
+        ILogger<FastbootService> logger)
     {
         _environment = environment;
+        _runner = runner;
         _logger = logger;
     }
 
@@ -55,8 +60,9 @@ public sealed class FastbootService : IFastbootService
 
         try
         {
-            var result = await ProcessRunner.RunAsync(exe, new[] { "devices" }, ListTimeout, ct).ConfigureAwait(false);
-            return result.TimedOut || result.ExitCode != 0
+            var result = await _runner.RunAsync(CreateRequest(exe, ["devices"], ListTimeout), ct)
+                .ConfigureAwait(false);
+            return !result.IsSuccess
                 ? Array.Empty<string>()
                 : ParseSerials(result.StandardOutput);
         }
@@ -82,9 +88,14 @@ public sealed class FastbootService : IFastbootService
 
         try
         {
-            var result = await ProcessRunner
-                .RunAsync(exe, new[] { "-s", serial, "getvar", "all" }, ListTimeout, ct)
+            var result = await _runner
+                .RunAsync(CreateRequest(exe, ["-s", serial, "getvar", "all"], ListTimeout), ct)
                 .ConfigureAwait(false);
+
+            if (!result.IsSuccess)
+            {
+                return empty;
+            }
 
             // fastboot writes getvar output to STDERR, so parse both streams.
             return ParseVariables(result.StandardOutput + "\n" + result.StandardError);
@@ -124,7 +135,7 @@ public sealed class FastbootService : IFastbootService
 
         try
         {
-            await ProcessRunner.RunAsync(exe, args, ActionTimeout, ct).ConfigureAwait(false);
+            await _runner.RunAsync(CreateRequest(exe, args, ActionTimeout), ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -135,6 +146,17 @@ public sealed class FastbootService : IFastbootService
             _logger.LogDebug(ex, "fastboot '{Args}' failed.", string.Join(' ', args));
         }
     }
+
+    private static ExternalCommandRequest CreateRequest(
+        string executablePath,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout)
+        => new()
+        {
+            FileName = executablePath,
+            Arguments = arguments,
+            Timeout = timeout
+        };
 
     // Lines look like "SERIAL\tfastboot" (tabs or spaces). Keep the serial of any line that names fastboot.
     private static IReadOnlyList<string> ParseSerials(string output)

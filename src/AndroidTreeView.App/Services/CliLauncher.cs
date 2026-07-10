@@ -110,10 +110,12 @@ public sealed class CliLauncher : ICliLauncher
         var psi = new ProcessStartInfo
         {
             FileName = "open",
-            Arguments = $"-a Terminal.app \"{scriptPath}\"",
             WorkingDirectory = toolsDir,
             UseShellExecute = false,
         };
+        psi.ArgumentList.Add("-a");
+        psi.ArgumentList.Add("Terminal.app");
+        psi.ArgumentList.Add(scriptPath);
 
         var process = Process.Start(psi);
         if (process is not null)
@@ -408,8 +410,12 @@ public sealed class CliLauncher : ICliLauncher
         "done",
     });
 
-    // Single-quote escape for embedding a literal into a double-quoted bash string safely.
-    private static string ShEscape(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("$", "\\$").Replace("`", "\\`");
+    // Escape for embedding a literal into a double-quoted bash string safely.
+    private static string ShEscape(string value) =>
+        value.Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("$", "\\$")
+            .Replace("`", "\\`");
 
     private static string Join(IEnumerable<string> lines) => string.Join("\r\n", lines) + "\r\n";
 

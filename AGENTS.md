@@ -142,7 +142,7 @@ Fixtures are **inline `const` strings** inside the test classes, not external `.
   output parsing must add/update the matching parser test here** — this is where correctness is pinned.
 - **`Core.Tests`** — `AppSettings` clone/serialize, `DeviceMonitor` start/stop (with a fake
   `IDeviceService`), `SemanticVersion`, file-transfer service.
-- **`Infrastructure.Tests`** — `SettingsService` persistence, update check (`NekoIndexUpdateService`) and
+- **`Infrastructure.Tests`** — `SettingsService` persistence, update check (`GitHubUpdateService`) and
   `UpdateInstaller`, using test doubles in `TestDoubles.cs`.
 - **`App.Tests`** — ViewModel logic with fake services (`Fakes.cs`): device-list reconcile keeps
   selection, RawProperties filtering, Logcat bounding, DI graph resolves (`ServiceGraphTests`), and a boot
@@ -153,9 +153,10 @@ Fixtures are **inline `const` strings** inside the test classes, not external `.
 
 Version is unified across runtime version, App/Mini assembly versions, manifests, and
 `packaging/build-update-zip.ps1` — keep them in sync when bumping (currently `1.0.6`). Update channels:
-`android-tree-view-app` (App) and `android-tree-view-mini` (Mini). `NekoIndexUpdateService` checks the
-channel and compares semver; `UpdateInstaller` downloads, verifies SHA-256, unpacks the x64 ZIP, and runs
-a local update script. Loose ZIPs without a supported `release.json` manifest are rejected.
+`android-tree-view-app` (App) and `android-tree-view-mini` (Mini). `GitHubUpdateService` checks the latest
+GitHub Release, compares semver, and selects the matching product asset; `UpdateInstaller` downloads,
+verifies SHA-256, unpacks the x64 ZIP, and runs a local update script. Loose ZIPs without a supported
+`release.json` manifest are rejected.
 
 ## Bundled tools
 

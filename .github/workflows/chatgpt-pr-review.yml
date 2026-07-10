@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   review:
@@ -46,13 +46,6 @@ jobs:
           const prNumber = event.pull_request?.number || event.issue?.number;
           if (!prNumber) {
             console.log('No pull request number found; skipping.');
-            process.exit(0);
-          }
-
-          if (!process.env.OPENAI_API_KEY) {
-            fs.appendFileSync(
-              process.env.GITHUB_STEP_SUMMARY,
-              '# ChatGPT PR Review\n\nOPENAI_API_KEY is not configured, so the automatic review was skipped.\n');
             process.exit(0);
           }
 
@@ -133,10 +126,15 @@ jobs:
               'Content-Type': 'application/json',
             };
             const system = [
-              'You are doing a preliminary pull request review for AndroidTreeView.',
-              'Focus on correctness, security, CI risk, release risk, and missing tests.',
-              'Be concise. Write in Simplified Chinese unless a quoted code identifier is English.',
-              'Do not claim approval. This is an initial automated review only.',
+              'You are doing a friendly preliminary pull request review for the open-source AndroidTreeView project.',
+              'Favor merging useful contributions when they do not introduce a concrete correctness, security, CI, or release blocker.',
+              'Only call something blocking when the diff provides high-confidence evidence of a real user-facing failure, security vulnerability, data loss, broken build, or broken release.',
+              'Do not block on style preferences, optional refactors, speculative risks, pre-existing problems, minor documentation gaps, or missing non-critical tests.',
+              'Keep optional improvements under non-blocking suggestions and do not invent requirements that are not documented by the repository.',
+              'When no blocking issue exists, clearly conclude 建议通过 even if you have minor suggestions.',
+              'When reporting a blocker, cite the file and relevant code, explain the concrete impact, and state the smallest reasonable fix.',
+              'Write concise Simplified Chinese with exactly these sections: ## 结论, ## 阻塞问题, and ## 非阻塞建议.',
+              'Use 无 when a section has no findings. This remains an automated recommendation, not a formal maintainer approval.',
             ].join(' ');
 
             const responsesBody = {
@@ -208,44 +206,69 @@ jobs:
             }
           }
 
-          const pr = await gh(`/repos/${owner}/${repo}/pulls/${prNumber}`);
-          const files = await listFiles();
-          const diff = await ghText(`/repos/${owner}/${repo}/pulls/${prNumber}`, 'application/vnd.github.v3.diff');
-          const fileSummary = files
-            .map(file => `${file.status} ${file.filename} (+${file.additions}/-${file.deletions})`)
-            .join('\n');
-          const truncatedDiff = diff.length > 60000
-            ? `${diff.slice(0, 60000)}\n\n[Diff truncated for automated review.]`
-            : diff;
-
-          const prompt = [
-            `PR #${pr.number}: ${pr.title}`,
-            `Author: ${pr.user?.login} (${pr.author_association})`,
-            `Base: ${pr.base.ref}`,
-            `Head: ${pr.head.label}`,
-            '',
-            'PR body:',
-            pr.body || '(empty)',
-            '',
-            'Changed files:',
-            fileSummary || '(none)',
-            '',
-            'Unified diff:',
-            truncatedDiff,
-          ].join('\n');
-
-          const review = await callOpenAI(prompt);
-          const commentBody = [
+          const statusBody = [
             '## ChatGPT PR 初审',
             '',
-            review,
+            `状态：正在审查 PR #${prNumber}，请稍候。`,
             '',
-            '---',
-            '这是自动初审，不代表维护者批准。第三方 PR 的代码没有在此 workflow 中执行。',
+            '完成后，本评论会自动更新为审核结论。',
           ].join('\n');
+          await upsertComment(statusBody);
 
-          await upsertComment(commentBody);
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${commentBody}\n`);
+          try {
+            if (!process.env.OPENAI_API_KEY) {
+              throw new Error('OPENAI_API_KEY is not configured.');
+            }
+
+            const pr = await gh(`/repos/${owner}/${repo}/pulls/${prNumber}`);
+            const files = await listFiles();
+            const diff = await ghText(`/repos/${owner}/${repo}/pulls/${prNumber}`, 'application/vnd.github.v3.diff');
+            const fileSummary = files
+              .map(file => `${file.status} ${file.filename} (+${file.additions}/-${file.deletions})`)
+              .join('\n');
+            const truncatedDiff = diff.length > 60000
+              ? `${diff.slice(0, 60000)}\n\n[Diff truncated for automated review.]`
+              : diff;
+
+            const prompt = [
+              `PR #${pr.number}: ${pr.title}`,
+              `Author: ${pr.user?.login} (${pr.author_association})`,
+              `Base: ${pr.base.ref}`,
+              `Head: ${pr.head.label}`,
+              '',
+              'PR body:',
+              pr.body || '(empty)',
+              '',
+              'Changed files:',
+              fileSummary || '(none)',
+              '',
+              'Unified diff:',
+              truncatedDiff,
+            ].join('\n');
+
+            const review = await callOpenAI(prompt);
+            const commentBody = [
+              '## ChatGPT PR 初审',
+              '',
+              review,
+              '',
+              '---',
+              '这是自动初审建议，不代表维护者正式批准。第三方 PR 的代码没有在此 workflow 中执行。',
+            ].join('\n');
+
+            await upsertComment(commentBody);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${commentBody}\n`);
+          } catch (error) {
+            const failureBody = [
+              '## ChatGPT PR 初审',
+              '',
+              '状态：审查失败。',
+              '',
+              '自动审核服务或 GitHub 评论接口调用失败。请检查 Actions 运行日志，修复后重新发送 `/chatgpt-review`。',
+            ].join('\n');
+            await upsertComment(failureBody);
+            throw error;
+          }
           })().catch(error => {
             console.error(`::error::${error.message}`);
             process.exit(1);

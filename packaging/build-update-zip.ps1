@@ -415,6 +415,23 @@ $iconPlistEntry  <key>CFBundleIdentifier</key>
     Set-ExecutableBits -RidInfo $RidInfo -Directory $macOSDir -Names @($ProductConfig.Executable)
     Set-ExecutableBits -RidInfo $RidInfo -Directory (Join-Path $macOSDir 'scrcpy') -Names @('scrcpy', 'adb', 'fastboot')
 
+    if (-not (Get-Command codesign -ErrorAction SilentlyContinue)) {
+        throw 'codesign is required to produce a valid macOS app bundle.'
+    }
+
+    # dotnet signs the apphost before it is wrapped in the final bundle. Sign again after adding
+    # Info.plist and Resources so the bundle resource envelope matches the shipped contents.
+    # New-PackageArchive uses ditto to preserve the extended-attribute signatures on managed DLLs.
+    & codesign --force --deep --sign - --timestamp=none $bundleRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "codesign failed for '$bundleRoot'."
+    }
+
+    & codesign --verify --deep --strict $bundleRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "codesign verification failed for '$bundleRoot'."
+    }
+
     return $BundleStageDir
 }
 
@@ -529,16 +546,18 @@ function New-PackageArchive {
     }
 
     if ($RidInfo.IsMacOS) {
-        $zipFullPath = [System.IO.Path]::GetFullPath($ZipPath)
-        Push-Location $SourceDir
-        try {
-            & zip -qry $zipFullPath .
-            if ($LASTEXITCODE -ne 0) {
-                throw "zip failed with exit code $LASTEXITCODE."
-            }
+        if (-not (Get-Command ditto -ErrorAction SilentlyContinue)) {
+            throw 'ditto is required to preserve macOS app bundle signatures in ZIP packages.'
         }
-        finally {
-            Pop-Location
+
+        $appBundles = @(Get-ChildItem -LiteralPath $SourceDir -Directory -Filter '*.app')
+        if ($appBundles.Count -ne 1) {
+            throw "Expected exactly one .app bundle under '$SourceDir', found $($appBundles.Count)."
+        }
+
+        & ditto -c -k --sequesterRsrc --keepParent $appBundles[0].FullName $ZipPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "ditto failed with exit code $LASTEXITCODE."
         }
 
         return

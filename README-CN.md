@@ -36,6 +36,8 @@ dotnet run --project src/AndroidTreeView.App
 dotnet run --project src/AndroidTreeView.Mini
 ```
 
+功能规划与实施文档入口见 [docs/roadmap-features.md](docs/roadmap-features.md)。
+
 ## 使用说明
 
 1. 安装 Android platform-tools，或让应用在启动时引导选择 `adb.exe`。

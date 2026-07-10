@@ -59,6 +59,8 @@ dotnet run --project src/AndroidTreeView.App
 dotnet run --project src/AndroidTreeView.Mini
 ```
 
+功能规划与实施文档入口见 [docs/roadmap-features.md](docs/roadmap-features.md)。
+
 如果找不到 ADB，主程序会显示 ADB 设置页。请安装 Android platform-tools 并加入 `PATH`，或手动选择 `adb.exe`。
 
 ## 开启 USB 调试

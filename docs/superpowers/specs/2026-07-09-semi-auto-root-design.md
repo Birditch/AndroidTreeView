@@ -1,8 +1,14 @@
 # 半自动 Root 功能 — 设计规格
 
 - 日期：2026-07-09
-- 状态：已通过设计评审，待用户审阅规格文档
+- 状态：设计已确认，实施计划已起草；Magisk 修补链路待 M0 实机验证
 - 关联记忆：`root-feature-relaxes-safety`
+- 实施计划：[`../plans/2026-07-10-semi-auto-root-implementation.md`](../plans/2026-07-10-semi-auto-root-implementation.md)
+
+> 仓库现状校正（2026-07-10）：当前代码已包含 `IFastbootService` / `FastbootService`、fastboot
+> 设备列表合并、Windows/macOS App 打包和 App 内 fastboot 分发。实施时扩展这些现有能力，
+> 不再新建第二套 fastboot locator/environment 或 platform-tools 目录。Magisk“安装 APK 后直接
+> 调用组件”仍是 M0 硬门槛，未通过前不得进入刷写主链路。
 
 ## 1. 目标与范围
 
@@ -26,7 +32,7 @@
     （两槽都刷入同一修补后镜像，避免槽位翻转/刷错槽导致 Magisk 不生效）。
   - 刷入前**强制提示用户**双槽都会被写入及其风险（见 §5.3 确认 2、§3 已知风险）。
 - 只读检测：`fastboot getvar unlocked`（解锁状态）、**A/B 布局探测
-  （`fastboot getvar slot-count`）**、设备 ABI 探测。
+  （联合 `slot-count`、`has-slot:boot`、`current-slot`，矛盾或缺失时阻止刷写）**、设备 ABI 探测。
 - **刷入前自动备份原始未修补 `boot.img`** 到本地用户目录。
 - 平台：**Windows + macOS 双平台**，共用同一套 MVVM 代码。
 
@@ -49,12 +55,12 @@
 | 包格式范围 | **zip(含 Pixel 嵌套) + payload.bin** | 覆盖 factory image 与现代 A/B OTA |
 | A/B 机型刷入策略 | **两个槽 `boot_a`/`boot_b` 都刷同一镜像 + 刷入前强制提示** | 免探测 active slot、免刷错槽；代价（跨版本双槽变砖）以提示告知用户承担 |
 | 工具打包 | **构建时按平台下载打包进 `tools/`** | 对齐现有 scrcpy/adb 打包，开箱即用 |
-| UI 落点 | **App 新导航页，扩展 App 到 macOS** | Avalonia 本就跨平台，双平台共用 MVVM |
+| UI 落点 | **App 新导航页，复用现有 Windows/macOS App 发布链路** | 双平台共用同一套 Avalonia MVVM 代码 |
 | 修补第 4 步实现 | **安装官方 Magisk APK 后跑其自带 `boot_patch.sh`** | 最贴近官方；实机验证列为高风险里程碑 |
 
 ## 3. 可行性结论
 
-核心链路技术上全部可实现，跨平台可行。真正的风险**不在技术**，而在两个工具无法根除、
+核心链路技术上全部可实现，跨平台可行。真正的风险**不在技术**，而在三个工具无法根除、
 必须由用户承担的前提：
 
 - **前提 1 — bootloader 已解锁**：未解锁则 `fastboot flash` 必然失败。工具只检测并引导，
@@ -83,10 +89,10 @@ Models   FlashPackage, BootImageInfo(Path, Source, OriginalPackageName),
          RootWizardState(enum), DeviceFastbootStatus, PackageType(enum)
   ↑
 Core     接口：IBootImageExtractor, IMagiskPatcher, IFastbootService, IRootWizardService
-         IFastbootEnvironment（对齐 IAdbEnvironment），RootException 类型
+         IExternalCommandRunner、RootException 类型
   ↑
 Adb / Infrastructure
-         Adb：FastbootService(ProcessRunner)、FastbootLocator、
+         Adb：扩展现有 FastbootService、
               BootImageExtractor(zip + payload.bin)、MagiskPatcher(install APK + 手机端执行)、
               Parsers：FastbootVarParser、PackageTypeDetector、CpuAbiParser
          Infra：BootBackupService（备份原始 boot 到用户目录）
@@ -98,7 +104,8 @@ App      RootWizardViewModel + RootWizardView（新导航页，分步向导）
 
 - 所有 fastboot/adb 写操作走 `ProcessRunner`（异步、可取消、杀进程树）。
 - 解析类为纯函数放 `AndroidTreeView.Adb.Parsers`，配套解析测试（项目硬规则）。
-- 工具二进制通过新建 `build/AndroidTreeView.RootTools.targets` 按平台下载打包进 `tools/`。
+- fastboot 复用 App 已有 `scrcpy/fastboot[.exe]`；Magisk APK 与 payload-dumper 通过新建
+  `build/AndroidTreeView.RootTools.targets` 按发布 RID 下载、校验并只打包进完整 App。
 
 ## 5. 向导状态机与流程
 
@@ -113,7 +120,7 @@ Patching                    修补中（adb install Magisk APK → 手机执行 
 BootPatched                 已得修补后 boot + 已本地备份原始 boot
 AwaitingBootloaderConfirm   ⛔ 强制确认点 1：即将重启进 bootloader
 RebootingToBootloader       adb reboot bootloader（自动）
-InFastboot                  已进 fastboot，检测解锁状态 + A/B 布局（slot-count）
+InFastboot                  已进 fastboot，检测解锁状态 + A/B 布局（多变量联合判定）
 Blocked_Locked              未解锁：引导用户，终止自动流程（可重新检测）
 AwaitingFlashConfirm        ⛔ 强制确认点 2：即将 flash boot（显示目标槽位；A/B 明确告知双槽都刷）
 Flashing                    fastboot flash boot（A/B：先 boot_a 再 boot_b，自动）
@@ -199,19 +206,19 @@ Failed                      任一步失败（带错误信息 + 重试当前步 
 | `RebootToBootloaderAsync` | `adb reboot bootloader` | 从系统进 fastboot |
 | `WaitForFastbootDeviceAsync` | `fastboot devices` 轮询 | 等设备在 fastboot 出现（带超时） |
 | `GetUnlockStatusAsync` | `fastboot getvar unlocked` | 只读，`FastbootVarParser` 解析 `unlocked: yes/no` |
-| `GetSlotCountAsync` | `fastboot getvar slot-count` | 只读，`FastbootVarParser` 解析槽位数；`>1` 视为 A/B |
+| `GetBootLayoutAsync` | `fastboot getvar slot-count` + `has-slot:boot` + `current-slot` | 只读；联合判定 A/B，信息矛盾或缺失时返回 Unknown |
 | `FlashBootAsync` | 非 A/B：`fastboot flash boot <img>`；A/B：`fastboot flash boot_a <img>` **且** `fastboot flash boot_b <img>` | 核心写操作；A/B 两槽都刷同一镜像 |
 | `RebootAsync` | `fastboot reboot` | 刷完回系统 |
 
-解析 `getvar` / `fastboot devices` 输出为纯函数 + 解析测试。`slot-count` 复用同一
-`FastbootVarParser`（解析 `slot-count: N`）。A/B 双槽刷入时，`boot_a` 成功、`boot_b` 失败要
+解析 `getvar` / `fastboot devices` 输出为纯函数 + 解析测试。`slot-count`、`has-slot:boot`、
+`current-slot` 复用同一 `FastbootVarParser`。A/B 双槽刷入时，`boot_a` 成功、`boot_b` 失败要
 视为整体失败（进 `Failed`，错误摘要注明哪个槽失败），不可停在"只刷了一个槽"的中间态。
 
-### 6.4 fastboot 定位（`FastbootLocator` + `IFastbootEnvironment`）
+### 6.4 fastboot 定位（复用现有 `FastbootService`）
 
-对齐 `AdbLocator` / `IAdbEnvironment`：配置路径 → 打包
-`tools/platform-tools/<rid>/fastboot` → PATH → 常见 SDK 位置。单例持有当前路径。缺失时向导页
-显示"未找到 fastboot"引导（类比 App 现有 adb 缺失 Setup 页），不崩溃。
+现有 `FastbootService.ExecutablePath` 从 `IAdbEnvironment` 已定位的 adb 同目录解析
+`fastboot[.exe]`；发布脚本也已把 fastboot 放入 App 的 `scrcpy/` 目录。Root 向导扩展该服务的
+严格检测/刷写结果，不新建第二套 locator/environment。缺失时向导显示“未找到 fastboot”，不崩溃。
 
 ### 6.5 备份服务（`BootBackupService`，Infrastructure 层）
 
@@ -224,19 +231,16 @@ Failed                      任一步失败（带错误信息 + 重试当前步 
 
 ```
 tools/
-  platform-tools/
-    win-x64/    fastboot.exe (+ adb.exe)
-    osx-x64/    fastboot
-    osx-arm64/  fastboot
-  payload-dumper/
-    win-x64/  osx-x64/  osx-arm64/    payload_dumper
-  magisk/
-    Magisk.apk        固定版本官方 APK（内含各 ABI native 组件），运行时 adb install
+  scrcpy/                  现有目录，已含 adb + fastboot
+  root-tools/
+    payload-dumper/        win-x64 / osx-arm64 对应 payload-dumper-go
+    magisk/
+      Magisk.apk           固定版本官方 APK，运行时 adb install
 ```
 
-- **需支持 macOS 平台产出**（现有 scrcpy 仅 Windows 打包）。
+- Root 工具只打包进完整 App；Mini / Mini.Mac 不携带。
 - 下载源写明 URL + SHA-256 校验，文档登记版本，对齐项目"下载工具需校验 SHA-256"风格：
-  - platform-tools：Google 官方 dl 链接。
+  - fastboot：复用现有 Google platform-tools 下载与 App 打包路径。
   - magisk：官方 Magisk GitHub release 的 APK 整包（不在桌面侧拆 native 二进制，组件随 App
     安装到手机后使用）。
   - payload_dumper：可信开源发布。
@@ -250,8 +254,8 @@ tools/
    `boot_patch.sh` 在真机产出可用 `new-boot.img`（重点验证已装 App 的脚本是否可被 `adb shell`
    直接调到）。
 2. **真实 flash** — `fastboot flash boot` 在已解锁真机上成功且能正常开机。
-3. **payload.bin 解包** — `payload_dumper` 在三种 RID 上均能正确解出 boot 分区。
-4. **跨平台 fastboot/adb** — Windows 与 macOS(x64/arm64) 下二进制均能定位与执行。
+3. **payload.bin 解包** — `payload_dumper` 在 `win-x64`、`osx-arm64` 均能正确解出 boot 分区。
+4. **跨平台 fastboot/adb** — Windows x64 与 macOS arm64 下二进制均能定位与执行。
 
 ## 9. App UI
 
@@ -279,11 +283,13 @@ tools/
 ## 11. 测试
 
 - **Adb.Tests** 新增：
-  - `Parsers/FastbootVarParserTests`（`getvar unlocked` / `slot-count` / `fastboot devices`）
+  - `Parsers/FastbootVarParserTests`（`unlocked` / `slot-count` / `has-slot:boot` /
+    `current-slot` / `fastboot devices`）
   - `Parsers/PackageTypeDetectorTests`（zip 条目 → 包类型）
   - `Parsers/CpuAbiParserTests`（`ro.product.cpu.abi` 解析）
   - `Commands/`：fastboot/adb argv 构建测试（含 A/B 双槽 `flash boot_a`/`boot_b` 的 argv）
-  - `Services/`：`BootImageExtractor`、`MagiskPatcher`、`FastbootService`（假 `ProcessRunner`，
+  - `Services/`：`BootImageExtractor`、`MagiskPatcher`、`FastbootService`（假
+    `IExternalCommandRunner`，
     覆盖流程与错误路径；`MagiskPatcher` 覆盖 `adb install` 成功→调 `boot_patch.sh`、install
     失败→`Failed`、ABI 探测；`FlashBootAsync` 覆盖非 A/B 单槽、A/B 双槽成功、A/B 第二槽失败→整体失败）
 - **App.Tests** 新增：`RootWizardViewModel` 状态机推进、确认门控（未勾选不能 flash）、错误映射、

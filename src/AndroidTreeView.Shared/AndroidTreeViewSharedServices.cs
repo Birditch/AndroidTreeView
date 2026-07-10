@@ -40,7 +40,7 @@ public static class AndroidTreeViewSharedServices
         services.TryAddSingleton<DeviceFileTransferService>();
         services.TryAddSingleton<IScrcpyLauncher, ScrcpyLauncher>();
         services.TryAddSingleton<ISettingsService, SettingsService>();
-        services.TryAddSingleton<IUpdateService, NekoIndexUpdateService>();
+        services.TryAddSingleton<IUpdateService, GitHubUpdateService>();
         services.TryAddSingleton<IUpdateInstaller, UpdateInstaller>();
 
         return services;

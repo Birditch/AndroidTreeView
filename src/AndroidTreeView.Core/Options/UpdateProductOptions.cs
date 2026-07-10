@@ -3,8 +3,7 @@ using AndroidTreeView.Core;
 namespace AndroidTreeView.Core.Options;
 
 /// <summary>
-/// Identifies the concrete package channel used by the update API. The full app and Mini share the
-/// update implementation, but each points at its own app key.
+/// Identifies the GitHub Release asset used by each shipping executable.
 /// </summary>
 public sealed class UpdateProductOptions
 {
@@ -18,8 +17,11 @@ public sealed class UpdateProductOptions
 
     public string ReleasesUrl { get; init; } = AppInfo.ReleasesUrl;
 
-    public string LatestReleaseApiUrl =>
-        UpdateServerBaseUrl.TrimEnd('/') + "/api/update/" + AppKey + "/latest";
+    public string LatestReleaseApiUrl { get; init; } = AppInfo.LatestReleaseApiUrl;
+
+    public string ReleaseAssetPrefix { get; init; } = "AndroidTreeView";
+
+    public string? ReleaseAssetRid { get; init; } = GetInstallableRid();
 
     public static UpdateProductOptions ForMainApp() => new()
     {
@@ -28,6 +30,8 @@ public sealed class UpdateProductOptions
         AppKey = AppInfo.AppUpdateKey,
         UpdateServerBaseUrl = AppInfo.UpdateServerBaseUrl,
         ReleasesUrl = AppInfo.ReleasesUrl,
+        LatestReleaseApiUrl = AppInfo.LatestReleaseApiUrl,
+        ReleaseAssetPrefix = "AndroidTreeView",
     };
 
     public static UpdateProductOptions ForMiniApp() => new()
@@ -37,5 +41,13 @@ public sealed class UpdateProductOptions
         AppKey = AppInfo.MiniUpdateKey,
         UpdateServerBaseUrl = AppInfo.UpdateServerBaseUrl,
         ReleasesUrl = AppInfo.ReleasesUrl,
+        LatestReleaseApiUrl = AppInfo.LatestReleaseApiUrl,
+        ReleaseAssetPrefix = "AndroidTreeView-Mini",
     };
+
+    private static string? GetInstallableRid() =>
+        OperatingSystem.IsWindows() && System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture
+            == System.Runtime.InteropServices.Architecture.X64
+                ? "win-x64"
+                : null;
 }

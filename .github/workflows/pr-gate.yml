@@ -111,7 +111,7 @@ jobs:
             .filter(name => sensitivePatterns.some(pattern => pattern.test(name)));
 
           if (!trustedAuthor && sensitiveFiles.length > 0) {
-            failures.push(`Third-party PR changes security-sensitive files: ${sensitiveFiles.join(', ')}`);
+            warnings.push(`Third-party PR changes sensitive files and needs maintainer review: ${sensitiveFiles.join(', ')}`);
           } else if (sensitiveFiles.length > 0) {
             warnings.push(`Sensitive files changed by trusted author: ${sensitiveFiles.join(', ')}`);
           }

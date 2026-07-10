@@ -8,7 +8,7 @@ Every PR should fill in the template and check the `SIGN` declaration. The `PR G
 
 - The PR has a meaningful title and summary.
 - The `SIGN` declaration is checked.
-- Third-party PRs do not change privileged automation, packaging, script, or binary artifact paths without maintainer handling.
+- Changes to privileged automation, packaging, script, or binary artifact paths are surfaced as warnings for maintainer review.
 
 The gate uses `pull_request_target` but does not check out or execute contributor code.
 
@@ -27,6 +27,8 @@ or:
 ```
 
 The workflow reads PR metadata and diff through the GitHub API, then posts or updates one bot comment with the preliminary review. It does not execute pull request code.
+
+The bot first posts a review-in-progress status, then updates the same comment with the result or a visible failure reason. Reviews favor accepting useful open-source contributions: only concrete, high-confidence correctness, security, CI, or release problems are treated as blockers; style and optional improvements remain non-blocking suggestions.
 
 ## OpenAI Configuration
 

@@ -272,8 +272,8 @@ function New-IcnsFromPng {
     }
     New-Item -ItemType Directory -Force -Path $iconsetDir | Out-Null
 
-    # name => pixel size for the standard iconset slots (1x + @2x). Upscaled slots beyond the
-    # 256px source are slightly soft but valid; Dock/Finder common sizes stay crisp.
+    # name => pixel size for the standard iconset slots (1x + @2x). macOS app artwork occupies
+    # about 81% of each icon canvas; the transparent safe area keeps it aligned with system icons.
     $slots = [ordered]@{
         'icon_16x16.png'      = 16
         'icon_16x16@2x.png'   = 32
@@ -289,10 +289,20 @@ function New-IcnsFromPng {
 
     foreach ($entry in $slots.GetEnumerator()) {
         $target = Join-Path $iconsetDir $entry.Key
-        & sips -z $entry.Value $entry.Value $SourcePng --out $target *> $null
+        $contentSize = [Math]::Max(1, [Math]::Round($entry.Value * 0.8125))
+        $resizedTarget = "$target.resized.png"
+
+        & sips -z $contentSize $contentSize $SourcePng --out $resizedTarget *> $null
         if ($LASTEXITCODE -ne 0) {
-            throw "sips failed to render '$($entry.Key)' from '$SourcePng'."
+            throw "sips failed to resize '$($entry.Key)' from '$SourcePng'."
         }
+
+        & sips -p $entry.Value $entry.Value $resizedTarget --out $target *> $null
+        if ($LASTEXITCODE -ne 0) {
+            throw "sips failed to add the macOS safe area to '$($entry.Key)'."
+        }
+
+        Remove-Item -Force -LiteralPath $resizedTarget
     }
 
     & iconutil -c icns $iconsetDir -o $OutputIcns
@@ -415,6 +425,23 @@ $iconPlistEntry  <key>CFBundleIdentifier</key>
     Set-ExecutableBits -RidInfo $RidInfo -Directory $macOSDir -Names @($ProductConfig.Executable)
     Set-ExecutableBits -RidInfo $RidInfo -Directory (Join-Path $macOSDir 'scrcpy') -Names @('scrcpy', 'adb', 'fastboot')
 
+    if (-not (Get-Command codesign -ErrorAction SilentlyContinue)) {
+        throw 'codesign is required to produce a valid macOS app bundle.'
+    }
+
+    # dotnet signs the apphost before it is wrapped in the final bundle. Sign again after adding
+    # Info.plist and Resources so the bundle resource envelope matches the shipped contents.
+    # New-PackageArchive uses ditto to preserve the extended-attribute signatures on managed DLLs.
+    & codesign --force --deep --sign - --timestamp=none $bundleRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "codesign failed for '$bundleRoot'."
+    }
+
+    & codesign --verify --deep --strict $bundleRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "codesign verification failed for '$bundleRoot'."
+    }
+
     return $BundleStageDir
 }
 
@@ -529,16 +556,18 @@ function New-PackageArchive {
     }
 
     if ($RidInfo.IsMacOS) {
-        $zipFullPath = [System.IO.Path]::GetFullPath($ZipPath)
-        Push-Location $SourceDir
-        try {
-            & zip -qry $zipFullPath .
-            if ($LASTEXITCODE -ne 0) {
-                throw "zip failed with exit code $LASTEXITCODE."
-            }
+        if (-not (Get-Command ditto -ErrorAction SilentlyContinue)) {
+            throw 'ditto is required to preserve macOS app bundle signatures in ZIP packages.'
         }
-        finally {
-            Pop-Location
+
+        $appBundles = @(Get-ChildItem -LiteralPath $SourceDir -Directory -Filter '*.app')
+        if ($appBundles.Count -ne 1) {
+            throw "Expected exactly one .app bundle under '$SourceDir', found $($appBundles.Count)."
+        }
+
+        & ditto -c -k --sequesterRsrc --keepParent $appBundles[0].FullName $ZipPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "ditto failed with exit code $LASTEXITCODE."
         }
 
         return

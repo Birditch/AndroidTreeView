@@ -16,6 +16,14 @@ This roadmap captures the current App + Mini direction after the shared service 
 
 ## Remaining Backlog
 
+### Semi-Automatic Root Wizard
+
+- Design: [`superpowers/specs/2026-07-09-semi-auto-root-design.md`](superpowers/specs/2026-07-09-semi-auto-root-design.md)
+- Implementation plan: [`superpowers/plans/2026-07-10-semi-auto-root-implementation.md`](superpowers/plans/2026-07-10-semi-auto-root-implementation.md)
+- Complete the M0 real-device Magisk patching spike before implementing the flashing workflow.
+- Keep all boot writes inside the guided flow with explicit confirmation, an original-image backup,
+  unambiguous fastboot device matching, and per-slot failure reporting.
+
 ### Device Actions
 
 - Keep right-click/card actions universal, non-destructive by default, and no-root-required unless a root-only action is explicitly marked.

@@ -30,6 +30,7 @@ public static class AndroidTreeViewSharedServices
 
         services.TryAddSingleton<IAdbEnvironment, AdbEnvironment>();
         services.TryAddSingleton<IAdbLocator, AdbLocator>();
+        services.TryAddSingleton<IExternalCommandRunner, ExternalCommandRunner>();
         services.TryAddSingleton<IAdbCommandExecutor, AdbCommandExecutor>();
         services.TryAddSingleton<IDeviceService, AdbDeviceService>();
         services.TryAddSingleton<ILogcatService, LogcatService>();
@@ -40,7 +41,7 @@ public static class AndroidTreeViewSharedServices
         services.TryAddSingleton<DeviceFileTransferService>();
         services.TryAddSingleton<IScrcpyLauncher, ScrcpyLauncher>();
         services.TryAddSingleton<ISettingsService, SettingsService>();
-        services.TryAddSingleton<IUpdateService, NekoIndexUpdateService>();
+        services.TryAddSingleton<IUpdateService, GitHubUpdateService>();
         services.TryAddSingleton<IUpdateInstaller, UpdateInstaller>();
 
         return services;

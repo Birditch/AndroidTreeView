@@ -17,7 +17,7 @@ This addendum extends `docs/architecture.md` and reflects the current App + Mini
   - ADB location/environment/device monitor services
   - scrcpy launch logic
   - settings service
-  - NekoIndex update checking
+  - GitHub Releases update checking
   - update downloading/verification/automatic apply flow
   - scrcpy asset distribution through `build/AndroidTreeView.Scrcpy.targets`
 - Full App and Mini use different update keys:
@@ -33,7 +33,7 @@ This addendum extends `docs/architecture.md` and reflects the current App + Mini
 
 ## Update Automation
 
-- `IUpdateService` + `NekoIndexUpdateService` query the internal update API.
+- `IUpdateService` + `GitHubUpdateService` query the latest GitHub Release and resolve the matching product asset.
 - `IUpdateInstaller` + `UpdateInstaller` download packages, verify SHA-256 metadata when present, extract Windows x64 ZIP packages, and start the automated apply flow.
 - The user must not be asked to download a ZIP and replace files manually.
 - ZIP packages without a supported `release.json` and executable are rejected.

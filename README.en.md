@@ -13,6 +13,10 @@ AndroidTreeView is a desktop tool for inspecting, testing, and managing Android 
 
 See the Release badge above or [GitHub Releases](https://github.com/Birditch/AndroidTreeView/releases/latest) for the current published version. Runtime versions, target frameworks, and packaging settings are defined by the project files and release workflow.
 
+## Product Preview
+
+![AndroidTreeView device overview](docs/images/product-devices-v1.0.5.png)
+
 ## Features
 
 - Card-first device overview with serial, model, Android version, battery, charging, temperature, cycle count, connection state, root state, and last refresh time.
@@ -24,9 +28,29 @@ See the Release badge above or [GitHub Releases](https://github.com/Birditch/And
 - Update automation downloads packages, verifies SHA-256 metadata when available, extracts Windows x64 ZIP packages, and starts a local update script so users are not asked to manually replace files.
 - Simplified Chinese and English UI, with Light / Dark / System theme modes.
 
+## Repository Layout
+
+```text
+src/
+  AndroidTreeView.Models
+  AndroidTreeView.Core
+  AndroidTreeView.Adb
+  AndroidTreeView.Infrastructure
+  AndroidTreeView.Shared
+  AndroidTreeView.App
+  AndroidTreeView.Mini
+  AndroidTreeView.Mini.Mac
+tests/
+  AndroidTreeView.*.Tests
+packaging/
+  win-x64 / osx-arm64 ZIP packaging and optional WiX MSI packaging
+build/
+  Shared MSBuild targets
+```
+
 ## Build And Run
 
-Install the .NET SDK targeted by the project files:
+Requires the .NET 10 SDK:
 
 ```bash
 dotnet restore AndroidTreeView.sln
@@ -35,6 +59,8 @@ dotnet test AndroidTreeView.sln
 dotnet run --project src/AndroidTreeView.App
 dotnet run --project src/AndroidTreeView.Mini
 ```
+
+See [docs/roadmap-features.md](docs/roadmap-features.md) for feature roadmaps and implementation plans.
 
 If ADB is not found, the app opens an ADB setup screen. Install Android platform-tools and add it to `PATH`, or choose `adb.exe` manually.
 
@@ -54,11 +80,31 @@ See [docs/adb-requirements.md](docs/adb-requirements.md) for platform-tools setu
 3. Use the device cards for status, mirroring, CLI access, and non-destructive tools.
 4. Use Settings or About to check and install updates.
 
+## Release ZIP Packaging
+
+Artifact versions are supplied consistently by the project files and release workflow. Official releases are produced only by the GitHub Actions `Publish` workflow.
+
+Local commands are for packaging validation only:
+
+```powershell
+./packaging/build-update-zip.ps1 -Product App -Rid win-x64
+./packaging/build-update-zip.ps1 -Product Mini -Rid win-x64
+```
+
+Example output:
+
+```text
+artifacts/AndroidTreeView-<version>-win-x64.zip
+artifacts/AndroidTreeView-<version>-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-<version>-win-x64.zip
+artifacts/AndroidTreeView-Mini-<version>-osx-arm64.zip
+```
+
 ## Auto Update
 
 - Full app update key: `android-tree-view-app`.
 - Mini update key: `android-tree-view-mini`.
-- `NekoIndexUpdateService` checks the internal update channel and compares semantic versions.
+- `GitHubUpdateService` queries GitHub Releases and compares semantic versions.
 - `UpdateInstaller` downloads, verifies, extracts, and launches the local update script.
 - Supported Windows updater packages are x64 ZIP files with `release.json`; GitHub Releases also contain macOS Apple Silicon ZIPs.
 - Loose-file ZIP replacement is intentionally rejected.
@@ -72,13 +118,6 @@ dotnet build src/AndroidTreeView.Mini.Mac/AndroidTreeView.Mini.Mac.csproj --no-r
 dotnet test AndroidTreeView.sln --no-restore
 ```
 
-## License And Credits
-
-<p>
-  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-0E7A5F.svg"></a>
-  <a href="https://www.jetbrains.com/rider/"><img alt="JetBrains Rider" src="https://img.shields.io/badge/JetBrains-Rider-000000.svg?logo=jetbrains&logoColor=white"></a>
-  <a href="https://dotnet.microsoft.com/"><img alt=".NET SDK" src="https://img.shields.io/badge/.NET-SDK-512BD4.svg?logo=dotnet&logoColor=white"></a>
-  <a href="https://avaloniaui.net/"><img alt="Avalonia UI" src="https://img.shields.io/badge/Avalonia-UI-663399.svg"></a>
-</p>
+## License
 
 AndroidTreeView is open source under the [MIT License](LICENSE).

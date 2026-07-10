@@ -661,7 +661,7 @@
     <value>无法启动更新流程</value>
   </data>
   <data name="update.ready" xml:space="preserve">
-    <value>可以检查内网更新通道</value>
+    <value>可以检查 GitHub Releases</value>
   </data>
   <data name="update.source" xml:space="preserve">
     <value>更新源</value>
@@ -670,13 +670,13 @@
     <value>包标识</value>
   </data>
   <data name="update.norelease" xml:space="preserve">
-    <value>这个通道还没有上传版本</value>
+    <value>GitHub 仓库还没有发布版本</value>
   </data>
   <data name="update.network" xml:space="preserve">
-    <value>无法连接内网更新服务</value>
+    <value>无法连接 GitHub Releases</value>
   </data>
   <data name="update.ratelimited" xml:space="preserve">
-    <value>更新服务拒绝了本次请求</value>
+    <value>GitHub 拒绝了本次更新请求</value>
   </data>
   <data name="update.invalid" xml:space="preserve">
     <value>更新信息不完整</value>
@@ -715,4 +715,3 @@
     <value>加载 {0} 失败</value>
   </data>
 </root>
-

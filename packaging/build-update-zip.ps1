@@ -272,8 +272,8 @@ function New-IcnsFromPng {
     }
     New-Item -ItemType Directory -Force -Path $iconsetDir | Out-Null
 
-    # name => pixel size for the standard iconset slots (1x + @2x). Upscaled slots beyond the
-    # 256px source are slightly soft but valid; Dock/Finder common sizes stay crisp.
+    # name => pixel size for the standard iconset slots (1x + @2x). macOS app artwork occupies
+    # about 81% of each icon canvas; the transparent safe area keeps it aligned with system icons.
     $slots = [ordered]@{
         'icon_16x16.png'      = 16
         'icon_16x16@2x.png'   = 32
@@ -289,10 +289,20 @@ function New-IcnsFromPng {
 
     foreach ($entry in $slots.GetEnumerator()) {
         $target = Join-Path $iconsetDir $entry.Key
-        & sips -z $entry.Value $entry.Value $SourcePng --out $target *> $null
+        $contentSize = [Math]::Max(1, [Math]::Round($entry.Value * 0.8125))
+        $resizedTarget = "$target.resized.png"
+
+        & sips -z $contentSize $contentSize $SourcePng --out $resizedTarget *> $null
         if ($LASTEXITCODE -ne 0) {
-            throw "sips failed to render '$($entry.Key)' from '$SourcePng'."
+            throw "sips failed to resize '$($entry.Key)' from '$SourcePng'."
         }
+
+        & sips -p $entry.Value $entry.Value $resizedTarget --out $target *> $null
+        if ($LASTEXITCODE -ne 0) {
+            throw "sips failed to add the macOS safe area to '$($entry.Key)'."
+        }
+
+        Remove-Item -Force -LiteralPath $resizedTarget
     }
 
     & iconutil -c icns $iconsetDir -o $OutputIcns

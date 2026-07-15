@@ -27,7 +27,7 @@ param(
 
     [string]$Configuration = 'Release',
 
-    [string]$Version = '1.0.6'
+    [string]$Version = '1.0.7'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -35,7 +35,11 @@ $ErrorActionPreference = 'Stop'
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDir
 $artifacts = Join-Path $repoRoot 'artifacts'
-$scrcpyVersion = '4.0'
+$scrcpyVersion = '4.1'
+$platformToolsVersion = '37.0.0'
+$magiskVersion = '30.7'
+$magiskSha256 = 'e0d32d2123532860f97123d927b1bb86c4e08e6fd8a48bfc6b5bee0afae9ebd5'
+$payloadDumperVersion = '1.3.0'
 
 function Assert-UnderDirectory {
     param(
@@ -106,6 +110,7 @@ function Get-ProductConfig {
                 ArtifactName = 'AndroidTreeView-Mini'
                 Executable = if ($RidInfo.IsWindows) { 'AndroidTreeView.App.mini.exe' } else { 'AndroidTreeView.App.mini' }
                 BundleFastboot = $false
+                BundleRootTools = $false
             }
         }
         default {
@@ -116,6 +121,7 @@ function Get-ProductConfig {
                 ArtifactName = 'AndroidTreeView'
                 Executable = if ($RidInfo.IsWindows) { 'AndroidTreeView.App.exe' } else { 'AndroidTreeView.App' }
                 BundleFastboot = $true
+                BundleRootTools = $true
             }
         }
     }
@@ -146,6 +152,28 @@ function Invoke-Download {
     }
 
     Invoke-WebRequest @params
+}
+
+function Assert-FileSha256 {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedSha256,
+
+        [Parameter(Mandatory = $true)]
+        [string]$AssetName
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Cannot verify missing asset '$AssetName' at '$Path'."
+    }
+
+    $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+    if ($actual -ne $ExpectedSha256.ToLowerInvariant()) {
+        throw "SHA-256 mismatch for '$AssetName': expected '$ExpectedSha256', got '$actual'."
+    }
 }
 
 function Expand-ToolArchive {
@@ -424,6 +452,29 @@ $iconPlistEntry  <key>CFBundleIdentifier</key>
 
     Set-ExecutableBits -RidInfo $RidInfo -Directory $macOSDir -Names @($ProductConfig.Executable)
     Set-ExecutableBits -RidInfo $RidInfo -Directory (Join-Path $macOSDir 'scrcpy') -Names @('scrcpy', 'adb', 'fastboot')
+    if ($ProductConfig.BundleRootTools) {
+        Set-ExecutableBits `
+            -RidInfo $RidInfo `
+            -Directory (Join-Path (Join-Path $macOSDir 'root-tools') 'payload-dumper') `
+            -Names @('payload-dumper-go')
+    }
+
+    if (-not (Get-Command codesign -ErrorAction SilentlyContinue)) {
+        throw 'codesign is required to produce a valid macOS app bundle.'
+    }
+
+    # dotnet signs the apphost before it is wrapped in the final bundle. Sign again after adding
+    # Info.plist and Resources so the bundle resource envelope matches the shipped contents.
+    # New-PackageArchive uses ditto to preserve the extended-attribute signatures on managed DLLs.
+    & codesign --force --deep --sign - --timestamp=none $bundleRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "codesign failed for '$bundleRoot'."
+    }
+
+    & codesign --verify --deep --strict $bundleRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "codesign verification failed for '$bundleRoot'."
+    }
 
     if (-not (Get-Command codesign -ErrorAction SilentlyContinue)) {
         throw 'codesign is required to produce a valid macOS app bundle.'
@@ -500,14 +551,27 @@ function Ensure-Fastboot {
     )
 
     $fastbootPath = Join-Path $ScrcpyRoot $RidInfo.FastbootExecutable
+    $fastbootSha256 = switch ($RidInfo.Rid) {
+        'win-x64' { 'dd55fef77ab2753b6423f37f39d91cb00ce53ab4539a2431577f07c4abcaa32a' }
+        'osx-arm64' { '549420b5b6b843efd78bfcd47765bb4b581fa23093693bb65648fab9eaa5de7a' }
+        default { throw "No fastboot checksum is mapped for RID '$($RidInfo.Rid)'." }
+    }
     if (Test-Path -LiteralPath $fastbootPath) {
-        return
+        $actualFastbootSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $fastbootPath).Hash.ToLowerInvariant()
+        if ($actualFastbootSha256 -eq $fastbootSha256) {
+            return
+        }
     }
 
     $assetName = switch ($RidInfo.Rid) {
-        'win-x64' { 'platform-tools-latest-windows.zip' }
-        'osx-arm64' { 'platform-tools-latest-darwin.zip' }
+        'win-x64' { "platform-tools_r$platformToolsVersion-win.zip" }
+        'osx-arm64' { "platform-tools_r$platformToolsVersion-darwin.zip" }
         default { throw "No platform-tools asset is mapped for RID '$($RidInfo.Rid)'." }
+    }
+    $archiveSha256 = switch ($RidInfo.Rid) {
+        'win-x64' { '4fe305812db074cea32903a489d061eb4454cbc90a49e8fea677f4b7af764918' }
+        'osx-arm64' { '094a1395683c509fd4d48667da0d8b5ef4d42b2abfcd29f2e8149e2f989357c7' }
+        default { throw "No platform-tools archive checksum is mapped for RID '$($RidInfo.Rid)'." }
     }
 
     $downloadDir = Join-Path (Join-Path (Join-Path $artifacts 'downloads') 'platform-tools') $RidInfo.Rid
@@ -518,6 +582,7 @@ function Ensure-Fastboot {
     if (-not (Test-Path -LiteralPath $archivePath)) {
         Invoke-Download -Uri $url -OutFile $archivePath
     }
+    Assert-FileSha256 -Path $archivePath -ExpectedSha256 $archiveSha256 -AssetName $assetName
 
     Expand-ToolArchive -ArchivePath $archivePath -Destination $extractDir
 
@@ -528,6 +593,10 @@ function Ensure-Fastboot {
     }
 
     Copy-Item -LiteralPath $sourceFastboot -Destination $fastbootPath -Force
+    Assert-FileSha256 `
+        -Path $fastbootPath `
+        -ExpectedSha256 $fastbootSha256 `
+        -AssetName $RidInfo.FastbootExecutable
 
     if ($RidInfo.IsWindows) {
         $winPthread = Join-Path $platformTools 'libwinpthread-1.dll'
@@ -537,6 +606,84 @@ function Ensure-Fastboot {
     } else {
         Set-ExecutableBits -RidInfo $RidInfo -Directory $ScrcpyRoot -Names @($RidInfo.FastbootExecutable)
     }
+}
+
+function Ensure-RootTools {
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject]$RidInfo
+    )
+
+    $payloadAssetName = switch ($RidInfo.Rid) {
+        'win-x64' { "payload-dumper-go_${payloadDumperVersion}_windows_amd64.tar.gz" }
+        'osx-arm64' { "payload-dumper-go_${payloadDumperVersion}_darwin_arm64.tar.gz" }
+        default { throw "No payload-dumper-go asset is mapped for RID '$($RidInfo.Rid)'." }
+    }
+    $payloadSha256 = switch ($RidInfo.Rid) {
+        'win-x64' { '0f96e07477963327f7f50a03bf2aa9dac5c76dba110ab332dc759321ae345d52' }
+        'osx-arm64' { 'e6b95df4b08e4bf452077e35cc2c0d644ce8fd454696d1aceedde6887ef0df84' }
+        default { throw "No payload-dumper-go checksum is mapped for RID '$($RidInfo.Rid)'." }
+    }
+    $payloadExecutableSha256 = switch ($RidInfo.Rid) {
+        'win-x64' { 'cd017857a28d029e80b0830531bcc960be5bbd4b8c937b122024285197012cd7' }
+        'osx-arm64' { '56d5dd0f402cecc2548a563d840f3fd9e707521b5bd398430f59894c79d08450' }
+        default { throw "No payload-dumper-go executable checksum is mapped for RID '$($RidInfo.Rid)'." }
+    }
+    $payloadExecutable = if ($RidInfo.IsWindows) { 'payload-dumper-go.exe' } else { 'payload-dumper-go' }
+    $magiskAssetName = "Magisk-v$magiskVersion.apk"
+
+    $downloadDir = Join-Path (Join-Path (Join-Path $artifacts 'downloads') 'root-tools') $RidInfo.Rid
+    $magiskDownload = Join-Path $downloadDir $magiskAssetName
+    $payloadDownload = Join-Path $downloadDir $payloadAssetName
+    $extractDir = Join-Path $downloadDir 'payload-extract'
+
+    if (-not (Test-Path -LiteralPath $magiskDownload)) {
+        Invoke-Download `
+            -Uri "https://github.com/topjohnwu/Magisk/releases/download/v$magiskVersion/$magiskAssetName" `
+            -OutFile $magiskDownload
+    }
+    Assert-FileSha256 -Path $magiskDownload -ExpectedSha256 $magiskSha256 -AssetName $magiskAssetName
+
+    if (-not (Test-Path -LiteralPath $payloadDownload)) {
+        Invoke-Download `
+            -Uri "https://github.com/ssut/payload-dumper-go/releases/download/$payloadDumperVersion/$payloadAssetName" `
+            -OutFile $payloadDownload
+    }
+    Assert-FileSha256 -Path $payloadDownload -ExpectedSha256 $payloadSha256 -AssetName $payloadAssetName
+
+    Expand-ToolArchive -ArchivePath $payloadDownload -Destination $extractDir
+    $payloadSourceRoot = Resolve-ExtractedToolRoot `
+        -ExtractDir $extractDir `
+        -ExecutableName $payloadExecutable
+
+    $rootToolsDir = Join-Path (Join-Path (Join-Path $artifacts 'tools') 'root-tools') $RidInfo.Rid
+    Assert-UnderDirectory -Path $rootToolsDir -Parent $artifacts
+    if (Test-Path -LiteralPath $rootToolsDir) {
+        Remove-Item -Recurse -Force -LiteralPath $rootToolsDir
+    }
+
+    $magiskDir = Join-Path $rootToolsDir 'magisk'
+    $payloadDir = Join-Path $rootToolsDir 'payload-dumper'
+    New-Item -ItemType Directory -Force -Path $magiskDir, $payloadDir | Out-Null
+    Copy-Item -LiteralPath $magiskDownload -Destination (Join-Path $magiskDir $magiskAssetName) -Force
+    Copy-Item `
+        -LiteralPath (Join-Path $payloadSourceRoot $payloadExecutable) `
+        -Destination (Join-Path $payloadDir $payloadExecutable) `
+        -Force
+    Assert-FileSha256 `
+        -Path (Join-Path $payloadDir $payloadExecutable) `
+        -ExpectedSha256 $payloadExecutableSha256 `
+        -AssetName $payloadExecutable
+    Set-ExecutableBits -RidInfo $RidInfo -Directory $payloadDir -Names @($payloadExecutable)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $magiskDir $magiskAssetName))) {
+        throw "Root tools staging did not produce '$magiskAssetName'."
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $payloadDir $payloadExecutable))) {
+        throw "Root tools staging did not produce '$payloadExecutable'."
+    }
+
+    return $rootToolsDir
 }
 
 function New-PackageArchive {
@@ -593,6 +740,8 @@ $zipPath = Join-Path $artifacts "$baseName.zip"
 $zipChecksumPath = "$zipPath.sha256"
 $packageKind = if ($ridInfo.IsWindows) { 'portable-x64' } else { "portable-$($ridInfo.Rid)" }
 $bundleFastbootValue = if ($productConfig.BundleFastboot) { 'true' } else { 'false' }
+$bundleRootToolsValue = if ($productConfig.BundleRootTools) { 'true' } else { 'false' }
+$enableWindowsTargetingValue = if ($ridInfo.IsWindows) { 'true' } else { 'false' }
 # macOS has no system-level "install .NET runtime" prompt like Windows, so a framework-dependent
 # .app silently fails to launch on machines without the runtime. Bundle the runtime into the macOS
 # .app (self-contained). Windows stays framework-dependent: its apphost shows the OS download prompt.
@@ -612,6 +761,10 @@ $scrcpyDir = Ensure-ScrcpyBundle -RidInfo $ridInfo
 if ($productConfig.BundleFastboot) {
     Ensure-Fastboot -RidInfo $ridInfo -ScrcpyRoot $scrcpyDir
 }
+$rootToolsDir = ''
+if ($productConfig.BundleRootTools) {
+    $rootToolsDir = Ensure-RootTools -RidInfo $ridInfo
+}
 
 Write-Host "==> Publishing $($productConfig.ProductName) ($($ridInfo.Rid))..." -ForegroundColor Cyan
 $publishArgs = @(
@@ -629,6 +782,9 @@ $publishArgs = @(
     "-p:ScrcpyExecutableName=$($ridInfo.ScrcpyExecutable)",
     "-p:FastbootExecutableName=$($ridInfo.FastbootExecutable)",
     "-p:AndroidTreeViewBundleFastboot=$bundleFastbootValue",
+    "-p:AndroidTreeViewBundleRootTools=$bundleRootToolsValue",
+    "-p:EnableWindowsTargeting=$enableWindowsTargetingValue",
+    "-p:RootToolsDir=$rootToolsDir",
     '-p:DebugType=None',
     '-p:DebugSymbols=false',
     '--output', $publishDir
@@ -654,6 +810,22 @@ if (-not $productConfig.BundleFastboot) {
 
 Set-ExecutableBits -RidInfo $ridInfo -Directory $publishDir -Names @($productConfig.Executable)
 Set-ExecutableBits -RidInfo $ridInfo -Directory $publishedScrcpyDir -Names @('scrcpy', 'adb', 'fastboot')
+
+$publishedRootToolsDir = Join-Path $publishDir 'root-tools'
+if ($productConfig.BundleRootTools) {
+    Assert-UnderDirectory -Path $publishedRootToolsDir -Parent $publishDir
+    if (Test-Path -LiteralPath $publishedRootToolsDir) {
+        Remove-Item -Recurse -Force -LiteralPath $publishedRootToolsDir
+    }
+    Copy-DirectoryContents -Source $rootToolsDir -Destination $publishedRootToolsDir
+    $publishedPayloadDumper = if ($ridInfo.IsWindows) { 'payload-dumper-go.exe' } else { 'payload-dumper-go' }
+    Set-ExecutableBits `
+        -RidInfo $ridInfo `
+        -Directory (Join-Path $publishedRootToolsDir 'payload-dumper') `
+        -Names @($publishedPayloadDumper)
+} elseif (Test-Path -LiteralPath $publishedRootToolsDir) {
+    throw "Mini publish unexpectedly contains App-only Root tools at '$publishedRootToolsDir'."
+}
 
 $manifest = [ordered]@{
     packageKind = $packageKind

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.6.0" name="AndroidTreeView.App" />
+  <assemblyIdentity version="1.0.7.0" name="AndroidTreeView.App" />
 
   <!-- Run as the normal user (no UAC prompt). ADB device access, scrcpy mirroring, and the shell
        actions (reboot / settings tweaks over adb) do NOT require administrator rights, so we do not

@@ -224,11 +224,21 @@ internal sealed class FakeFilePickerService : IFilePickerService
 {
     public IReadOnlyList<string> TransferFiles { get; set; } = [];
 
+    public string? RootPackagePath { get; set; }
+
+    public List<string> OpenedUrls { get; } = [];
+
     public Task<string?> PickAdbExecutableAsync() => Task.FromResult<string?>(null);
 
     public Task<IReadOnlyList<string>> PickTransferFilesAsync() => Task.FromResult(TransferFiles);
 
-    public Task OpenUrlAsync(string url) => Task.CompletedTask;
+    public Task<string?> PickRootPackageAsync() => Task.FromResult(RootPackagePath);
+
+    public Task OpenUrlAsync(string url)
+    {
+        OpenedUrls.Add(url);
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>Auto-confirming <see cref="IDialogService"/> double so action commands proceed in tests.</summary>
@@ -262,6 +272,94 @@ internal sealed class FakeDialogService : IDialogService
         }
 
         public event EventHandler? CanExecuteChanged { add { } remove { } }
+    }
+}
+
+internal sealed class ConfigurableDialogService : IDialogService
+{
+    public bool ConfirmResult { get; set; } = true;
+
+    public bool IsOpen => false;
+
+    public string Title => string.Empty;
+
+    public string Message => string.Empty;
+
+    public string ConfirmText => string.Empty;
+
+    public string CancelText => string.Empty;
+
+    public ICommand ConfirmCommand { get; } = new NoopCommand();
+
+    public ICommand CancelCommand { get; } = new NoopCommand();
+
+    public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
+
+    public Task<bool> ConfirmAsync(string title, string message, string confirmText, string cancelText) =>
+        Task.FromResult(ConfirmResult);
+
+    private sealed class NoopCommand : ICommand
+    {
+        public bool CanExecute(object? parameter) => true;
+
+        public void Execute(object? parameter)
+        {
+        }
+
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+    }
+}
+
+internal sealed class LanguageAwareLocalizationService : ILocalizationService
+{
+    public AppLanguage CurrentLanguage { get; private set; } = AppLanguage.English;
+
+    public CultureInfo CurrentCulture => CultureInfo.InvariantCulture;
+
+    public event EventHandler? LanguageChanged;
+
+    public string Get(string key) => $"{CurrentLanguage}:{key}";
+
+    public string Format(string key, params object[] args) => Get(key);
+
+    public string this[string key] => Get(key);
+
+    public void SetLanguage(AppLanguage language)
+    {
+        CurrentLanguage = language;
+        LanguageChanged?.Invoke(this, EventArgs.Empty);
+    }
+}
+
+internal sealed class FakeRootDeviceMonitor : IDeviceMonitor
+{
+    private DeviceListChangedEventArgs _snapshot = new()
+    {
+        Devices = Array.Empty<AdbDevice>(),
+        AdbAvailable = true
+    };
+
+    public event EventHandler<DeviceListChangedEventArgs>? DevicesChanged;
+
+    public bool IsRunning => false;
+
+    public void Publish(params AdbDevice[] devices)
+    {
+        _snapshot = new DeviceListChangedEventArgs { Devices = devices, AdbAvailable = true };
+        DevicesChanged?.Invoke(this, _snapshot);
+    }
+
+    public void Start()
+    {
+    }
+
+    public Task StopAsync() => Task.CompletedTask;
+
+    public Task<DeviceListChangedEventArgs> RefreshNowAsync(CancellationToken ct = default) =>
+        Task.FromResult(_snapshot);
+
+    public void UpdateInterval(TimeSpan interval)
+    {
     }
 }
 

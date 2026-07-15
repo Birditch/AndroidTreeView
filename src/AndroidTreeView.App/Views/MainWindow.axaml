@@ -44,6 +44,12 @@
                         <Button Classes="nav"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
+                                Command="{Binding NavigateRootCommand}"
+                                Classes.active="{Binding CurrentSection, Converter={StaticResource EnumEquals}, ConverterParameter=Root}"
+                                Content="{loc:Localize Key=nav.root}" />
+                        <Button Classes="nav"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
                                 Command="{Binding NavigateSettingsCommand}"
                                 Classes.active="{Binding CurrentSection, Converter={StaticResource EnumEquals}, ConverterParameter=Settings}"
                                 Content="{loc:Localize Key=nav.settings}" />

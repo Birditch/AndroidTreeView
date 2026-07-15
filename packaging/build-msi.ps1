@@ -27,7 +27,7 @@
     Build configuration. Default: Release.
 
 .PARAMETER Version
-    Product version. Default: 1.0.6. Must match AndroidTreeView.Core.AppInfo.Version.
+    Product version. Default: 1.0.7. Must match AndroidTreeView.Core.AppInfo.Version.
 
 .EXAMPLE
     ./build-msi.ps1 -Product App -Arch x64
@@ -49,7 +49,7 @@ param(
 
     [string]$Configuration = 'Release',
 
-    [string]$Version = '1.0.6'
+    [string]$Version = '1.0.7'
 )
 
 $ErrorActionPreference = 'Stop'

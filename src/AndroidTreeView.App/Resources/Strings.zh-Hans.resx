@@ -741,4 +741,117 @@
   <data name="error.loadfailed" xml:space="preserve">
     <value>加载 {0} 失败</value>
   </data>
+  <data name="nav.root" xml:space="preserve"><value>Root 向导</value></data>
+  <data name="root.wizard.title" xml:space="preserve"><value>半自动 Root</value></data>
+  <data name="root.section.device" xml:space="preserve"><value>目标设备</value></data>
+  <data name="root.section.package" xml:space="preserve"><value>刷机包</value></data>
+  <data name="root.section.status" xml:space="preserve"><value>流程状态</value></data>
+  <data name="root.device.details" xml:space="preserve"><value>{0} | 产品：{1}</value></data>
+  <data name="root.device.adb.missing" xml:space="preserve"><value>ADB 不可用，请先完成 ADB 配置。</value></data>
+  <data name="root.device.empty" xml:space="preserve"><value>没有在线且已授权的 ADB 设备。</value></data>
+  <data name="root.device.choose" xml:space="preserve"><value>请明确选择要修改的设备。</value></data>
+  <data name="root.device.locked" xml:space="preserve"><value>本次会话已锁定目标设备；如需更换，请先取消当前流程。</value></data>
+  <data name="root.device.refresh.failed" xml:space="preserve"><value>无法刷新已连接设备。</value></data>
+  <data name="root.package.supported" xml:space="preserve"><value>支持刷机包 ZIP（含 Pixel 嵌套 ZIP）或 payload.bin。</value></data>
+  <data name="root.package.match.matched" xml:space="preserve"><value>包元数据与所选设备匹配</value></data>
+  <data name="root.package.match.mismatched" xml:space="preserve"><value>包元数据指向其他设备</value></data>
+  <data name="root.package.match.unverified" xml:space="preserve"><value>无法自动验证包元数据</value></data>
+  <data name="root.identity.verified" xml:space="preserve"><value>已验证 fastboot 设备 {0}（{1}）</value></data>
+  <data name="root.identity.unverified" xml:space="preserve"><value>未验证 fastboot 设备身份</value></data>
+  <data name="root.identity.pending" xml:space="preserve"><value>等待验证 ADB 到 fastboot 身份连续性</value></data>
+  <data name="root.identity.evidence.serial" xml:space="preserve"><value>序列号</value></data>
+  <data name="root.identity.evidence.usb" xml:space="preserve"><value>USB 路径</value></data>
+  <data name="root.identity.evidence.product" xml:space="preserve"><value>产品代号</value></data>
+  <data name="root.identity.evidence.none" xml:space="preserve"><value>无身份凭据</value></data>
+  <data name="root.identity.evidence.separator" xml:space="preserve"><value>、</value></data>
+  <data name="root.slot.single" xml:space="preserve"><value>单分区：{0}</value></data>
+  <data name="root.slot.ab" xml:space="preserve"><value>双槽：{0}_a 和 {1}_b</value></data>
+  <data name="root.slot.pending" xml:space="preserve"><value>尚未检测</value></data>
+  <data name="root.field.target" xml:space="preserve"><value>目标分区</value></data>
+  <data name="root.field.package.match" xml:space="preserve"><value>刷机包检查</value></data>
+  <data name="root.field.identity" xml:space="preserve"><value>设备身份</value></data>
+  <data name="root.field.slots" xml:space="preserve"><value>写入目标</value></data>
+  <data name="root.field.backup" xml:space="preserve"><value>原始镜像备份</value></data>
+  <data name="root.field.patched" xml:space="preserve"><value>修补后镜像</value></data>
+  <data name="root.action.refresh.devices" xml:space="preserve"><value>刷新设备</value></data>
+  <data name="root.action.prepare" xml:space="preserve"><value>提取并修补</value></data>
+  <data name="root.action.enter.bootloader" xml:space="preserve"><value>进入 Bootloader</value></data>
+  <data name="root.action.recheck" xml:space="preserve"><value>重新检测 Fastboot</value></data>
+  <data name="root.action.flash" xml:space="preserve"><value>刷入修补镜像</value></data>
+  <data name="root.action.open.backup" xml:space="preserve"><value>打开备份目录</value></data>
+  <data name="root.confirm.bootloader.title" xml:space="preserve"><value>进入 Bootloader？</value></data>
+  <data name="root.confirm.bootloader.message" xml:space="preserve"><value>所选设备将重启进入 fastboot。请保持 USB 数据线稳定，不要切换设备。</value></data>
+  <data name="root.confirm.flash.title" xml:space="preserve"><value>最终写入确认</value></data>
+  <data name="root.confirm.flash.warning" xml:space="preserve"><value>刷错镜像可能导致设备无法启动。请核对下方设备、刷机包、分区和备份。</value></data>
+  <data name="root.confirm.flash.ab.warning" xml:space="preserve"><value>A/B 两个槽都会写入同一镜像。若两槽系统版本不同，日后切换槽位可能导致无法启动。</value></data>
+  <data name="root.confirm.flash.package.unverified" xml:space="preserve"><value>刷机包没有提供足够元数据，无法确认其属于当前设备。请将包与设备的匹配状态视为未验证。</value></data>
+  <data name="root.confirm.flash.experimental.title" xml:space="preserve"><value>实验性写入链路</value></data>
+  <data name="root.confirm.flash.experimental.message" xml:space="preserve"><value>在 M0 与 M1 实机验证里程碑留下记录前，真实 Magisk 修补和 fastboot 刷写默认禁用。</value></data>
+  <data name="root.confirm.flash.acknowledge" xml:space="preserve"><value>我已理解风险，并已核对目标设备和刷机包。</value></data>
+  <data name="root.blocked.title" xml:space="preserve"><value>流程已阻止</value></data>
+  <data name="root.blocked.locked.guide" xml:space="preserve"><value>Bootloader 尚未解锁。请按厂商流程自行解锁（通常会清除全部数据）后重新检测；本工具不会代为解锁。</value></data>
+  <data name="root.blocked.identity.guide" xml:space="preserve"><value>无法证明 fastboot 设备就是所选 ADB 设备。请仅连接目标设备后重新检测；此安全检查不可绕过。</value></data>
+  <data name="root.blocked.layout.guide" xml:space="preserve"><value>目标槽位信息缺失或互相矛盾，刷写保持禁用。</value></data>
+  <data name="root.blocked.target.guide" xml:space="preserve"><value>刷机包或设备没有提供唯一且受支持的启动目标。请选择匹配包；首版不支持 recovery 修补。</value></data>
+  <data name="root.partial.title" xml:space="preserve"><value>危险的中间状态</value></data>
+  <data name="root.partial.message" xml:space="preserve"><value>至少一次写入可能已经完成，但整体结果不安全。请勿断开设备，并仅重试失败的分区。</value></data>
+  <data name="root.completed.title" xml:space="preserve"><value>Root 镜像已刷入</value></data>
+  <data name="root.completed.message" xml:space="preserve"><value>已验证的 fastboot 设备已重启。确认设备成功开机前，请保留原始镜像备份。</value></data>
+  <data name="root.step.select" xml:space="preserve"><value>选择</value></data>
+  <data name="root.step.extract" xml:space="preserve"><value>提取</value></data>
+  <data name="root.step.patch" xml:space="preserve"><value>修补与备份</value></data>
+  <data name="root.step.fastboot" xml:space="preserve"><value>验证 Fastboot</value></data>
+  <data name="root.step.flash" xml:space="preserve"><value>刷入</value></data>
+  <data name="root.step.complete" xml:space="preserve"><value>完成</value></data>
+  <data name="root.step.done" xml:space="preserve"><value>已完成</value></data>
+  <data name="root.step.current" xml:space="preserve"><value>当前步骤</value></data>
+  <data name="root.step.pending" xml:space="preserve"><value>待执行</value></data>
+  <data name="root.error.title" xml:space="preserve"><value>Root 流程错误</value></data>
+  <data name="root.error.generic" xml:space="preserve"><value>Root 流程无法继续。</value></data>
+  <data name="root.error.device" xml:space="preserve"><value>所选设备缺失、离线或未授权。</value></data>
+  <data name="root.error.package" xml:space="preserve"><value>所选刷机包缺失、损坏、不安全或不受支持。</value></data>
+  <data name="root.error.package.mismatch" xml:space="preserve"><value>刷机包明确指向其他设备。</value></data>
+  <data name="root.error.payload" xml:space="preserve"><value>payload 提取工具不可用或提取失败。</value></data>
+  <data name="root.error.target" xml:space="preserve"><value>无法确定安全的 boot 或 init_boot 目标。</value></data>
+  <data name="root.error.recoveryonly" xml:space="preserve"><value>所选 boot 镜像不含 ramdisk，暂不支持 Recovery 模式的 Magisk 安装。</value></data>
+  <data name="root.error.backup" xml:space="preserve"><value>无法备份并验证原始镜像，刷写已禁用。</value></data>
+  <data name="root.error.magisk" xml:space="preserve"><value>Magisk 安装或镜像修补失败。</value></data>
+  <data name="root.error.patched.flags" xml:space="preserve"><value>修补后的镜像未通过校验：其 Magisk verity/加密标志与本机要求不符。刷入会导致设备无法挂载系统分区。</value></data>
+  <data name="root.error.fastboot" xml:space="preserve"><value>Fastboot 不可用，或设备未进入 Bootloader。</value></data>
+  <data name="root.error.identity" xml:space="preserve"><value>无法验证 fastboot 设备身份。</value></data>
+  <data name="root.error.locked" xml:space="preserve"><value>设备 Bootloader 尚未解锁。</value></data>
+  <data name="root.error.layout" xml:space="preserve"><value>启动分区槽位未知或互相矛盾。</value></data>
+  <data name="root.error.flash.partial" xml:space="preserve"><value>一个分区已写入，但后续分区写入失败。</value></data>
+  <data name="root.error.flash.unknown" xml:space="preserve"><value>刷写命令被中断，无法确定写入结果。</value></data>
+  <data name="root.error.flash" xml:space="preserve"><value>未能确认镜像写入成功。</value></data>
+  <data name="root.error.reboot" xml:space="preserve"><value>镜像已写入，但 fastboot 无法重启设备。</value></data>
+  <data name="root.error.risk" xml:space="preserve"><value>必须确认写入风险后才能刷入。</value></data>
+  <data name="root.state.idle" xml:space="preserve"><value>请选择在线设备及与其匹配的刷机包。</value></data>
+  <data name="root.state.packageselected" xml:space="preserve"><value>已准备提取并修补所选刷机包。</value></data>
+  <data name="root.state.extracting" xml:space="preserve"><value>正在检查刷机包并提取目标镜像...</value></data>
+  <data name="root.state.bootextracted" xml:space="preserve"><value>目标镜像已提取。</value></data>
+  <data name="root.state.patching" xml:space="preserve"><value>正在备份原始镜像并用 Magisk 修补...</value></data>
+  <data name="root.state.bootpatched" xml:space="preserve"><value>修补镜像和已验证备份均已就绪。</value></data>
+  <data name="root.state.awaitingbootloaderconfirm" xml:space="preserve"><value>请确认后再将所选设备重启进入 Bootloader。</value></data>
+  <data name="root.state.rebootingtobootloader" xml:space="preserve"><value>正在等待同一设备进入 fastboot...</value></data>
+  <data name="root.state.infastboot" xml:space="preserve"><value>Fastboot 身份已验证，正在检查解锁和槽位...</value></data>
+  <data name="root.state.blockedunsupportedtarget" xml:space="preserve"><value>刷机包没有安全且受支持的目标。</value></data>
+  <data name="root.state.blockedfastbootidentity" xml:space="preserve"><value>Fastboot 身份验证失败。</value></data>
+  <data name="root.state.blockedlocked" xml:space="preserve"><value>Bootloader 尚未解锁。</value></data>
+  <data name="root.state.blockedbootlayout" xml:space="preserve"><value>启动槽位信息不满足安全要求。</value></data>
+  <data name="root.state.awaitingflashconfirm" xml:space="preserve"><value>请核对全部写入目标并确认风险。</value></data>
+  <data name="root.state.flashing" xml:space="preserve"><value>正在写入修补镜像，请勿断开设备...</value></data>
+  <data name="root.state.rebooting" xml:space="preserve"><value>已确认写入，正在重启设备...</value></data>
+  <data name="root.state.completed" xml:space="preserve"><value>Root 流程已完成。</value></data>
+  <data name="root.state.failed" xml:space="preserve"><value>当前步骤失败，可安全重试。</value></data>
+  <data name="root.state.failedpartialflash" xml:space="preserve"><value>A/B 前一分区成功后，后续分区写入失败。</value></data>
+  <data name="root.state.flashoutcomeunknown" xml:space="preserve"><value>刷写结果未知，请勿断开设备。</value></data>
+  <data name="root.state.cancelled" xml:space="preserve"><value>流程已取消；原始镜像备份已保留。</value></data>
+  <data name="picker.adb.title" xml:space="preserve"><value>选择 adb 可执行文件</value></data>
+  <data name="picker.transfer.title" xml:space="preserve"><value>选择 APK 或文件</value></data>
+  <data name="picker.root.title" xml:space="preserve"><value>选择刷机包 ZIP 或 payload.bin</value></data>
+  <data name="picker.type.apk" xml:space="preserve"><value>Android 安装包（APK）</value></data>
+  <data name="picker.type.firmware" xml:space="preserve"><value>受支持的刷机包</value></data>
+  <data name="picker.type.adb" xml:space="preserve"><value>Android 调试桥</value></data>
+  <data name="picker.type.executable" xml:space="preserve"><value>可执行文件</value></data>
 </root>

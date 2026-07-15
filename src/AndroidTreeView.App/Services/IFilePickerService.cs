@@ -11,6 +11,9 @@ public interface IFilePickerService
     /// <summary>Prompts the user to pick one or more files for device transfer or APK install.</summary>
     Task<IReadOnlyList<string>> PickTransferFilesAsync();
 
+    /// <summary>Prompts for one supported firmware ZIP or payload.bin file.</summary>
+    Task<string?> PickRootPackageAsync();
+
     /// <summary>Opens <paramref name="url"/> in the default browser.</summary>
     Task OpenUrlAsync(string url);
 }

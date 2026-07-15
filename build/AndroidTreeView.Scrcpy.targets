@@ -3,14 +3,17 @@
   <!-- Shared bundled tools flow for AndroidTreeView.App and Mini variants.
        scrcpy ships adb; fastboot is folded into the same folder when available. -->
   <PropertyGroup>
-    <ScrcpyVersion Condition="'$(ScrcpyVersion)' == ''">4.0</ScrcpyVersion>
+    <ScrcpyVersion Condition="'$(ScrcpyVersion)' == ''">4.1</ScrcpyVersion>
+    <PlatformToolsVersion Condition="'$(PlatformToolsVersion)' == ''">37.0.0</PlatformToolsVersion>
     <ScrcpyDir Condition="'$(ScrcpyDir)' == ''">$(MSBuildThisFileDirectory)../tools/scrcpy</ScrcpyDir>
     <ScrcpyExecutableName Condition="'$(ScrcpyExecutableName)' == '' and '$(OS)' == 'Windows_NT'">scrcpy.exe</ScrcpyExecutableName>
     <ScrcpyExecutableName Condition="'$(ScrcpyExecutableName)' == ''">scrcpy</ScrcpyExecutableName>
     <FastbootExecutableName Condition="'$(FastbootExecutableName)' == '' and '$(OS)' == 'Windows_NT'">fastboot.exe</FastbootExecutableName>
     <FastbootExecutableName Condition="'$(FastbootExecutableName)' == ''">fastboot</FastbootExecutableName>
     <ScrcpyUrl Condition="'$(ScrcpyUrl)' == ''">https://github.com/Genymobile/scrcpy/releases/download/v$(ScrcpyVersion)/scrcpy-win64-v$(ScrcpyVersion).zip</ScrcpyUrl>
-    <PlatformToolsUrl Condition="'$(PlatformToolsUrl)' == ''">https://dl.google.com/android/repository/platform-tools-latest-windows.zip</PlatformToolsUrl>
+    <PlatformToolsUrl Condition="'$(PlatformToolsUrl)' == ''">https://dl.google.com/android/repository/platform-tools_r$(PlatformToolsVersion)-win.zip</PlatformToolsUrl>
+    <PlatformToolsSha256 Condition="'$(PlatformToolsSha256)' == ''">4fe305812db074cea32903a489d061eb4454cbc90a49e8fea677f4b7af764918</PlatformToolsSha256>
+    <FastbootSha256 Condition="'$(FastbootSha256)' == ''">dd55fef77ab2753b6423f37f39d91cb00ce53ab4539a2431577f07c4abcaa32a</FastbootSha256>
     <AndroidTreeViewBundleFastboot Condition="'$(AndroidTreeViewBundleFastboot)' == ''">true</AndroidTreeViewBundleFastboot>
   </PropertyGroup>
 
@@ -40,6 +43,12 @@
                   DestinationFileName="platform-tools.zip" Retries="1" ContinueOnError="true">
       <Output TaskParameter="DownloadedFile" PropertyName="_AtvFbZip" />
     </DownloadFile>
+    <GetFileHash Condition="'$(_AtvFbZip)' != '' and Exists('$(_AtvFbZip)')"
+                 Files="$(_AtvFbZip)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Items" ItemName="_AtvPlatformToolsHash" />
+    </GetFileHash>
+    <Error Condition="'%(_AtvPlatformToolsHash.FileHash)' != '$(PlatformToolsSha256)'"
+           Text="platform-tools SHA-256 mismatch: expected $(PlatformToolsSha256), got %(_AtvPlatformToolsHash.FileHash)." />
     <Unzip Condition="'$(_AtvFbZip)' != '' and Exists('$(_AtvFbZip)')"
            SourceFiles="$(_AtvFbZip)" DestinationFolder="$(IntermediateOutputPath)fb\x" ContinueOnError="true" />
     <ItemGroup Condition="Exists('$(IntermediateOutputPath)fb\x\platform-tools\fastboot.exe')">
@@ -49,6 +58,15 @@
     </ItemGroup>
     <Copy Condition="'@(_AtvFbFiles)' != ''" SourceFiles="@(_AtvFbFiles)"
           DestinationFolder="$(ScrcpyDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+
+  <Target Name="AtvVerifyFastboot" BeforeTargets="Build;Publish" DependsOnTargets="AtvEnsureFastboot"
+          Condition="'$(OS)' == 'Windows_NT' and '$(AndroidTreeViewBundleFastboot)' == 'true' and Exists('$(ScrcpyDir)/$(FastbootExecutableName)')">
+    <GetFileHash Files="$(ScrcpyDir)/$(FastbootExecutableName)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Items" ItemName="_AtvFastbootHash" />
+    </GetFileHash>
+    <Error Condition="'%(_AtvFastbootHash.FileHash)' != '$(FastbootSha256)'"
+           Text="fastboot SHA-256 mismatch: expected $(FastbootSha256), got %(_AtvFastbootHash.FileHash). Delete the cached fastboot and rebuild." />
   </Target>
 
   <Target Name="AtvCopyScrcpyToOutput" AfterTargets="Build" Condition="Exists('$(ScrcpyDir)/$(ScrcpyExecutableName)')">

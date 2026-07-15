@@ -17,6 +17,7 @@ public enum AppLayoutMode
 public enum NavSection
 {
     Devices,
+    Root,
     Settings,
     About
 }

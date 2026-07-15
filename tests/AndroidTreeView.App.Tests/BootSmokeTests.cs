@@ -58,7 +58,7 @@ public sealed class BootSmokeTests
     }
 
     [AvaloniaFact]
-    public async Task ViewLocator_resolves_devices_and_setup_views()
+    public async Task ViewLocator_resolves_devices_setup_and_root_views()
     {
         var services = new ServiceCollection();
         services.ConfigureAppServices();
@@ -71,5 +71,8 @@ public sealed class BootSmokeTests
 
         var setupView = locator.Build(provider.GetRequiredService<SetupViewModel>());
         Assert.IsType<SetupView>(setupView);
+
+        var rootView = locator.Build(provider.GetRequiredService<RootWizardViewModel>());
+        Assert.IsType<RootWizardView>(rootView);
     }
 }

@@ -255,9 +255,9 @@ jobs:
             }
 
             $payloadPath = Join-Path $extractDir "${appPrefix}root-tools/payload-dumper/$payloadExecutable"
-            & /usr/bin/test -x $payloadPath
-            if ($LASTEXITCODE -ne 0) {
-              throw "macOS payload-dumper-go is not executable in '$($zip.Name)'."
+            $mode = [System.IO.File]::GetUnixFileMode($payloadPath)
+            if (-not ($mode -band [System.IO.UnixFileMode]::UserExecute)) {
+              throw "macOS payload-dumper-go is not executable in '$($zip.Name)' (mode: $mode)."
             }
           }
 

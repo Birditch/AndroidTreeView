@@ -3,7 +3,7 @@
   <!-- Shared bundled tools flow for AndroidTreeView.App and Mini variants.
        scrcpy ships adb; fastboot is folded into the same folder when available. -->
   <PropertyGroup>
-    <ScrcpyVersion Condition="'$(ScrcpyVersion)' == ''">4.0</ScrcpyVersion>
+    <ScrcpyVersion Condition="'$(ScrcpyVersion)' == ''">4.1</ScrcpyVersion>
     <PlatformToolsVersion Condition="'$(PlatformToolsVersion)' == ''">37.0.0</PlatformToolsVersion>
     <ScrcpyDir Condition="'$(ScrcpyDir)' == ''">$(MSBuildThisFileDirectory)../tools/scrcpy</ScrcpyDir>
     <ScrcpyExecutableName Condition="'$(ScrcpyExecutableName)' == '' and '$(OS)' == 'Windows_NT'">scrcpy.exe</ScrcpyExecutableName>

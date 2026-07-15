@@ -54,7 +54,7 @@ Supported release RIDs are `win-x64` and `osx-arm64`.
 
 The script:
 
-1. downloads the matching upstream scrcpy asset (`scrcpy-win64-v4.0.zip` or `scrcpy-macos-aarch64-v4.0.tar.gz`)
+1. downloads the matching upstream scrcpy asset (`scrcpy-win64-v4.1.zip` or `scrcpy-macos-aarch64-v4.1.tar.gz`)
 2. folds hash-verified Android SDK Platform-Tools 37.0.0 `fastboot` into the full App package
 3. for the full App only, downloads and verifies Magisk v30.7 and payload-dumper-go 1.3.0
 4. runs `dotnet publish`

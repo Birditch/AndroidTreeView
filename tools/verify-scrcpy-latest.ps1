@@ -13,7 +13,7 @@
 [CmdletBinding()]
 param(
     [string]$ScrcpyExe = '',
-    [string]$ExpectedVersion = '4.0',
+    [string]$ExpectedVersion = '4.1',
     [string]$LatestReleaseApi = 'https://api.github.com/repos/Genymobile/scrcpy/releases/latest'
 )
 

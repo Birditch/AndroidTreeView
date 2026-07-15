@@ -1,7 +1,7 @@
 # 半自动 Root 功能 — 设计规格
 
 - 日期：2026-07-09
-- 状态：设计已确认，实施计划已起草；Magisk 修补链路待 M0 实机验证
+- 状态：代码已实现并通过自动化验证；Magisk 修补链路待 M0、真实刷写待 M1 实机验证
 - 关联记忆：`root-feature-relaxes-safety`
 - 实施计划：[`../plans/2026-07-10-semi-auto-root-implementation.md`](../plans/2026-07-10-semi-auto-root-implementation.md)
 
@@ -9,6 +9,12 @@
 > 设备列表合并、Windows/macOS App 打包和 App 内 fastboot 分发。实施时扩展这些现有能力，
 > 不再新建第二套 fastboot locator/environment 或 platform-tools 目录。Magisk“安装 APK 后直接
 > 调用组件”仍是 M0 硬门槛，未通过前不得进入刷写主链路。
+
+> 实现校正（2026-07-14）：普通 Android shell 不保证提供 `unzip`，安装 APK 也不会把 `assets`
+> 自动展开为可执行文件。实际实现先安装同一固定官方 APK，再由桌面端 `ZipArchive` 从经过
+> SHA-256 校验的 APK 中按精确白名单提取官方脚本和当前 ABI 组件，逐个 push 到隔离会话目录。
+> 这不引入第三方 `magiskboot`，并移除了设备端 `unzip` 依赖。真实 flash 不再由环境变量门控，
+> 仅由应用内确认页与显式风险勾选把关；用户确认后即写入目标分区。
 
 ## 1. 目标与范围
 
@@ -187,7 +193,9 @@ Failed                      任一步失败（带错误信息 + 重试当前步 
 - Payload → 调用打包的 `payload_dumper`（走 `ProcessRunner`）按探测结果解出 `boot` 或 `init_boot`。
 - 目标判定必须同时满足设备侧分区、GKI 版本证据与包内候选镜像；只有 `init_boot` 存在且内核为
   GKI 13+ 时才选择 `init_boot`。设备要求 `init_boot` 但包中缺失，或两侧证据矛盾时返回阻塞错误。
-  Magisk 判定 recovery-only 时明确提示首版不支持。
+  实际目标镜像落盘后解析标准 Android boot header v0-v4，并验证 header、页布局、文件边界和
+  `ramdisk_size`。`boot` 的 ramdisk 为零时按 recovery-only 明确阻断；未知版本、OEM 包装或解析
+  矛盾时 fail closed，不猜测 `boot`、`recovery` 或其他分区。
 - 输出到工作区 `~/.androidtreeview/root-work/<timestamp>/`。
 
 **可测试性**：`PackageTypeDetector` 纯函数（zip 条目列表/文件头样本做测试）；payload 解包用假
@@ -225,7 +233,7 @@ Failed                      任一步失败（带错误信息 + 重试当前步 
 | `CaptureFastbootBaselineAsync` | `fastboot devices -l` | 重启前记录已有 fastboot serial / USB 身份，防止误认其他设备 |
 | `WaitForMatchingFastbootDeviceAsync` | `fastboot devices -l` 轮询 + `getvar product` | 只接受新出现且能与所选 ADB 设备相互印证的设备 |
 | `GetUnlockStatusAsync` | `fastboot getvar unlocked` | 只读，`FastbootVarParser` 解析 `unlocked: yes/no` |
-| `GetBootLayoutAsync` | `fastboot getvar slot-count` + `has-slot:<target>` + `current-slot` | 只读；联合判定目标分区 A/B，矛盾或缺失时返回 Unknown |
+| `GetBootLayoutAsync` | `fastboot getvar slot-count` + `has-slot:<target>` + `current-slot` | 只读；联合判定目标分区 A/B，矛盾或证据全缺时返回 Unknown；`slot-count=0/1` 与 `has-slot=no` 同为单槽的肯定证据 |
 | `FlashBootAsync` | 非 A/B：`fastboot flash <target> <img>`；A/B：依次刷 `<target>_a`、`<target>_b` | 核心写操作；A/B 两槽都刷同一镜像 |
 | `RebootAsync` | `fastboot reboot` | 刷完回系统 |
 

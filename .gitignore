@@ -54,6 +54,10 @@ coverage*.info
 # ---- Bundled tooling (Android platform-tools, fetched at build time) ----
 tools/*
 !tools/verify-scrcpy-latest.ps1
+!tools/verify-roottools-latest.ps1
+
+# ---- Local agent/tooling config ----
+.claude/
 
 # ---- OS cruft ----
 .DS_Store

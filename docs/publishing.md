@@ -2,7 +2,7 @@
 
 Repository: `Birditch/AndroidTreeView`.
 
-Current product version: `1.0.6`.
+Current product version: `1.0.7`.
 
 ## Release Policy
 
@@ -14,6 +14,8 @@ Each Windows ZIP must contain:
 
 - published application files
 - platform-matched `scrcpy`/`adb`
+- full App only: `fastboot`, verified Magisk APK, and payload-dumper-go under `root-tools/`
+- Mini: no `root-tools/` entries
 - `release.json`
 - the product executable named by `release.json`
 
@@ -37,27 +39,32 @@ Keep these values identical for every release:
 - `src/AndroidTreeView.App/app.manifest` -> `assemblyIdentity version`
 - `packaging/build-update-zip.ps1` -> default `Version`
 
-For `1.0.6`, release artifacts are named:
+For `1.0.7`, release artifacts are named:
 
 ```text
-AndroidTreeView-1.0.6-win-x64.zip
-AndroidTreeView-1.0.6-win-x64.zip.sha256
-AndroidTreeView-1.0.6-osx-arm64.zip
-AndroidTreeView-1.0.6-osx-arm64.zip.sha256
-AndroidTreeView-Mini-1.0.6-win-x64.zip
-AndroidTreeView-Mini-1.0.6-win-x64.zip.sha256
-AndroidTreeView-Mini-1.0.6-osx-arm64.zip
-AndroidTreeView-Mini-1.0.6-osx-arm64.zip.sha256
+AndroidTreeView-1.0.7-win-x64.zip
+AndroidTreeView-1.0.7-win-x64.zip.sha256
+AndroidTreeView-1.0.7-osx-arm64.zip
+AndroidTreeView-1.0.7-osx-arm64.zip.sha256
+AndroidTreeView-Mini-1.0.7-win-x64.zip
+AndroidTreeView-Mini-1.0.7-win-x64.zip.sha256
+AndroidTreeView-Mini-1.0.7-osx-arm64.zip
+AndroidTreeView-Mini-1.0.7-osx-arm64.zip.sha256
 ```
 
 ## Build Upload ZIP Packages
 
 Official publication happens through the `Publish` GitHub Actions workflow:
 
-- push a tag named `v<major>.<minor>.<patch>`, for example `v1.0.6`
+- push a tag named `v<major>.<minor>.<patch>`, for example `v1.0.7`
 - or run `workflow_dispatch` and provide the same version string
 
-The workflow validates on Windows, verifies the pinned scrcpy release against the latest upstream release, builds the two Windows portable ZIPs and two macOS `.app` bundle ZIPs, writes SHA-256 sidecars, uploads workflow artifacts, and creates the GitHub Release.
+The workflow validates on Windows, verifies the pinned scrcpy and Root-tool releases, builds the two Windows
+portable ZIPs and two macOS `.app` bundle ZIPs, checks Root-tool package isolation and macOS executable bits,
+writes SHA-256 sidecars, uploads workflow artifacts, and creates the GitHub Release.
+
+The packaged `fastboot` binary is pinned to Android SDK Platform-Tools 37.0.0 and verified against the
+repository-maintained archive and executable SHA-256 values. Do not switch back to a `latest` URL.
 
 For local validation only:
 
@@ -77,8 +84,8 @@ The full app and Mini share the same update implementation but use different app
 
 Each product resolves its own Windows ZIP from the latest GitHub Release:
 
-- `android-tree-view-app` -> `AndroidTreeView-1.0.6-win-x64.zip`
-- `android-tree-view-mini` -> `AndroidTreeView-Mini-1.0.6-win-x64.zip`
+- `android-tree-view-app` -> `AndroidTreeView-1.0.7-win-x64.zip`
+- `android-tree-view-mini` -> `AndroidTreeView-Mini-1.0.7-win-x64.zip`
 
 `GitHubUpdateService` queries `AppInfo.LatestReleaseApiUrl`, compares the release tag with `AppInfo.Version`, and resolves the matching ZIP and `.sha256` assets. `UpdateInstaller` downloads the package, verifies SHA-256 metadata when present, extracts the ZIP, verifies the portable Windows x64 manifest, and starts the automated update script.
 

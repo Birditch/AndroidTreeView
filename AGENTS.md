@@ -103,7 +103,11 @@ Key architectural rules (see `docs/architecture.md` for the full binding type/in
 - Views use **compiled bindings** (`x:DataType`) and bind only to members that exist on the VM. No
   business logic or ADB calls in views.
 - **No hardcoded user-facing strings.** Use localization for every user-visible string (see below).
-- **Read-only / safe by design**: do not introduce ADB commands that modify, wipe, or flash a device.
+- **Safe by design**: device inspection remains read-only. The only write exception is the dedicated
+  semi-automatic Root wizard, which may install the pinned Magisk APK and flash only an evidence-backed
+  `boot` / `init_boot` image after backup, ADB-to-fastboot identity verification, unlock/layout checks,
+  and two explicit confirmations. Never automate bootloader unlock, erase/format, or other partitions.
+  Real flash is gated only by those in-app confirmations; there is no environment-variable override.
 - Keep files under ~400 lines; the App never crashes on normal ADB/device errors — map them to friendly
   `ErrorMessage` state.
 
@@ -117,7 +121,7 @@ Chinese**; English is the neutral/fallback resource.
   in `AndroidTreeView.Core/Options/SettingsEnums.cs`. `Get` returns the key itself if a resource is
   missing, so a missing translation is visible, not a crash.
 - **Implementation**: `LocalizationService` in `src/AndroidTreeView.App/Localization`, backed by two ResX
-  files with **identical key sets** (keep them in sync — currently 217 keys each):
+  files with **identical key sets** (keep them in sync — currently 329 keys each):
   - `src/AndroidTreeView.App/Resources/Strings.resx` — English (neutral fallback)
   - `src/AndroidTreeView.App/Resources/Strings.zh-Hans.resx` — Simplified Chinese (default)
   - Keys are dotted/namespaced: `app.title`, `nav.devices`, `common.refresh`, etc.
@@ -146,13 +150,14 @@ Fixtures are **inline `const` strings** inside the test classes, not external `.
   `UpdateInstaller`, using test doubles in `TestDoubles.cs`.
 - **`App.Tests`** — ViewModel logic with fake services (`Fakes.cs`): device-list reconcile keeps
   selection, RawProperties filtering, Logcat bounding, DI graph resolves (`ServiceGraphTests`), and a boot
-  smoke test via `Avalonia.Headless` (`TestAppBuilder.cs`, `BootSmokeTests.cs`). No real ADB, no on-screen
-  rendering.
+  smoke test via `Avalonia.Headless` (`TestAppBuilder.cs`, `BootSmokeTests.cs`). Root wizard tests cover
+  device locking, both confirmation gates, retry/partial-write states, localization, and compiled bindings.
+  No real ADB, no on-screen rendering.
 
 ## Versioning & updates
 
 Version is unified across runtime version, App/Mini assembly versions, manifests, and
-`packaging/build-update-zip.ps1` — keep them in sync when bumping (currently `1.0.6`). Update channels:
+`packaging/build-update-zip.ps1` — keep them in sync when bumping (currently `1.0.7`). Update channels:
 `android-tree-view-app` (App) and `android-tree-view-mini` (Mini). `GitHubUpdateService` checks the latest
 GitHub Release, compares semver, and selects the matching product asset; `UpdateInstaller` downloads,
 verifies SHA-256, unpacks the x64 ZIP, and runs a local update script. Loose ZIPs without a supported
@@ -162,3 +167,6 @@ verifies SHA-256, unpacks the x64 ZIP, and runs a local update script. Loose ZIP
 
 `build/AndroidTreeView.Scrcpy.targets` downloads and bundles scrcpy (which ships adb) into `tools/scrcpy`
 at build/publish time on Windows. `tools/verify-scrcpy-latest.ps1` checks for newer scrcpy releases.
+The full App also imports `build/AndroidTreeView.RootTools.targets`, which pins and verifies the official
+Magisk APK and payload-dumper-go for `win-x64` / `osx-arm64`. Mini variants never import or ship Root tools.
+Fastboot comes from pinned Android SDK Platform-Tools 37.0.0 and is hash-verified before packaging.

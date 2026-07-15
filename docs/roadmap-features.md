@@ -13,16 +13,23 @@ This roadmap captures the current App + Mini direction after the shared service 
   - Mini uses `android-tree-view-mini`.
 - Updates are ZIP-driven. The updater downloads, verifies SHA-256 metadata when present, extracts Windows x64 release ZIPs, and starts the automated apply flow. Unsupported loose-file ZIPs are rejected.
 - Packaging is product-aware and can produce first-class App and Mini ZIPs for Windows x64 and macOS Apple Silicon.
+- The full App includes a semi-automatic Root wizard with safe package extraction, original-image backup,
+  pinned official Magisk components, ADB-to-fastboot identity continuity, two confirmation gates, and
+  single-slot/A-B partial-write reporting. Mini remains Root-tool-free.
 
 ## Remaining Backlog
 
-### Semi-Automatic Root Wizard
+### Root Wizard Release Validation
 
 - Design: [`superpowers/specs/2026-07-09-semi-auto-root-design.md`](superpowers/specs/2026-07-09-semi-auto-root-design.md)
 - Implementation plan: [`superpowers/plans/2026-07-10-semi-auto-root-implementation.md`](superpowers/plans/2026-07-10-semi-auto-root-implementation.md)
-- Complete the M0 real-device Magisk patching spike before implementing the flashing workflow.
-- Keep all boot writes inside the guided flow with explicit confirmation, an original-image backup,
-  unambiguous fastboot device matching, and per-slot failure reporting.
+- Complete M0 on expendable devices for both `boot` and Android 13+ `init_boot` patching.
+- Complete M1 on recoverable single-slot and A/B devices, including second-slot failure recovery.
+- Validate recovery-only blocking against representative standard v0-v4 images and document any OEM-wrapped
+  boot image formats; unrecognized formats remain blocked rather than guessed.
+- Smoke-test pinned payload-dumper and packaged executable permissions on Windows x64 and macOS arm64.
+- Remove the default flash gate only after those records are accepted; until then the environment override is
+  restricted to recoverable M1 test devices.
 
 ### Device Actions
 

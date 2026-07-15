@@ -44,6 +44,7 @@ public sealed class ServiceGraphTests
     [InlineData(typeof(ILogcatService))]
     [InlineData(typeof(IAdbLocator))]
     [InlineData(typeof(IAdbEnvironment))]
+    [InlineData(typeof(IRootWizardService))]
     public async Task Resolves_every_registered_service(Type serviceType)
     {
         await using var provider = BuildProvider();
@@ -67,6 +68,7 @@ public sealed class ServiceGraphTests
     [InlineData(typeof(RootStatusViewModel))]
     [InlineData(typeof(LogcatViewModel))]
     [InlineData(typeof(RawPropertiesViewModel))]
+    [InlineData(typeof(RootWizardViewModel))]
     public async Task Resolves_every_registered_view_model(Type viewModelType)
     {
         await using var provider = BuildProvider();
@@ -109,8 +111,26 @@ public sealed class ServiceGraphTests
             provider.GetRequiredService<DevicesViewModel>(),
             provider.GetRequiredService<DevicesViewModel>());
 
+        Assert.Same(
+            provider.GetRequiredService<RootWizardViewModel>(),
+            provider.GetRequiredService<RootWizardViewModel>());
+
         Assert.NotSame(
             provider.GetRequiredService<SettingsViewModel>(),
             provider.GetRequiredService<SettingsViewModel>());
+    }
+
+    [Fact]
+    public async Task Root_navigation_reuses_the_singleton_wizard_state()
+    {
+        await using var provider = BuildProvider();
+        var shell = provider.GetRequiredService<MainWindowViewModel>();
+        var rootWizard = provider.GetRequiredService<RootWizardViewModel>();
+
+        shell.NavigateRootCommand.Execute(null);
+
+        Assert.Equal(NavSection.Root, shell.CurrentSection);
+        Assert.Same(rootWizard, shell.CurrentContent);
+        Assert.Same(rootWizard, shell.RootWizard);
     }
 }

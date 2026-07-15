@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using AndroidTreeView.Core.Interfaces;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -14,11 +15,12 @@ namespace AndroidTreeView.App.Services;
 public sealed class FilePickerService : IFilePickerService
 {
     private readonly ILogger<FilePickerService> _logger;
+    private readonly ILocalizationService _localization;
 
-    public FilePickerService(ILogger<FilePickerService> logger)
+    public FilePickerService(ILogger<FilePickerService> logger, ILocalizationService localization)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _localization = localization ?? throw new ArgumentNullException(nameof(localization));
     }
 
     /// <inheritdoc />
@@ -33,7 +35,7 @@ public sealed class FilePickerService : IFilePickerService
 
         var options = new FilePickerOpenOptions
         {
-            Title = "Select adb executable",
+            Title = _localization.Get("picker.adb.title"),
             AllowMultiple = false,
             FileTypeFilter = BuildFilters()
         };
@@ -50,11 +52,36 @@ public sealed class FilePickerService : IFilePickerService
     /// <inheritdoc />
     public Task<IReadOnlyList<string>> PickTransferFilesAsync() =>
         PickFilesAsync(
-            "Select APKs or files",
+            _localization.Get("picker.transfer.title"),
             [
-                new FilePickerFileType("APK") { Patterns = ["*.apk"] },
+                new FilePickerFileType(_localization.Get("picker.type.apk")) { Patterns = ["*.apk"] },
                 FilePickerFileTypes.All
             ]);
+
+    /// <inheritdoc />
+    public async Task<string?> PickRootPackageAsync()
+    {
+        var window = GetMainWindow();
+        if (window?.StorageProvider is not { CanOpen: true } provider)
+        {
+            _logger.LogWarning("No storage provider is available for the root package picker.");
+            return null;
+        }
+
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = _localization.Get("picker.root.title"),
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType(_localization.Get("picker.type.firmware"))
+                {
+                    Patterns = ["*.zip", "payload.bin"]
+                }
+            ]
+        }).ConfigureAwait(true);
+        return files.Count == 0 ? null : files[0].TryGetLocalPath();
+    }
 
     /// <inheritdoc />
     public Task OpenUrlAsync(string url)
@@ -76,21 +103,21 @@ public sealed class FilePickerService : IFilePickerService
         return Task.CompletedTask;
     }
 
-    private static IReadOnlyList<FilePickerFileType> BuildFilters()
+    private IReadOnlyList<FilePickerFileType> BuildFilters()
     {
         if (OperatingSystem.IsWindows())
         {
             return new[]
             {
-                new FilePickerFileType("adb") { Patterns = new[] { "adb.exe" } },
-                new FilePickerFileType("Executables") { Patterns = new[] { "*.exe" } },
+                new FilePickerFileType(_localization.Get("picker.type.adb")) { Patterns = new[] { "adb.exe" } },
+                new FilePickerFileType(_localization.Get("picker.type.executable")) { Patterns = new[] { "*.exe" } },
                 FilePickerFileTypes.All
             };
         }
 
         return new[]
         {
-            new FilePickerFileType("adb") { Patterns = new[] { "adb" } },
+            new FilePickerFileType(_localization.Get("picker.type.adb")) { Patterns = new[] { "adb" } },
             FilePickerFileTypes.All
         };
     }

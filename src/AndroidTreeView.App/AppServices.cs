@@ -36,6 +36,7 @@ public static class AppServices
         // Shell + device grid view models (singletons).
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<DevicesViewModel>();
+        services.AddSingleton<RootWizardViewModel>();
 
         // Page + detail view models (transient).
         services.AddTransient<SettingsViewModel>();

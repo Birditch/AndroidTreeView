@@ -1,0 +1,103 @@
+<Project>
+
+  <!-- Root workflow tools are App-only. Mini projects must never import this target. -->
+  <PropertyGroup>
+    <MagiskVersion Condition="'$(MagiskVersion)' == ''">30.7</MagiskVersion>
+    <MagiskAssetName Condition="'$(MagiskAssetName)' == ''">Magisk-v$(MagiskVersion).apk</MagiskAssetName>
+    <MagiskUrl Condition="'$(MagiskUrl)' == ''">https://github.com/topjohnwu/Magisk/releases/download/v$(MagiskVersion)/$(MagiskAssetName)</MagiskUrl>
+    <MagiskSha256 Condition="'$(MagiskSha256)' == ''">e0d32d2123532860f97123d927b1bb86c4e08e6fd8a48bfc6b5bee0afae9ebd5</MagiskSha256>
+
+    <PayloadDumperVersion Condition="'$(PayloadDumperVersion)' == ''">1.3.0</PayloadDumperVersion>
+    <PayloadDumperPlatform Condition="'$(RuntimeIdentifier)' == 'win-x64'">windows_amd64</PayloadDumperPlatform>
+    <PayloadDumperPlatform Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">darwin_arm64</PayloadDumperPlatform>
+    <PayloadDumperExecutableName Condition="'$(RuntimeIdentifier)' == 'win-x64'">payload-dumper-go.exe</PayloadDumperExecutableName>
+    <PayloadDumperExecutableName Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">payload-dumper-go</PayloadDumperExecutableName>
+    <PayloadDumperSha256 Condition="'$(RuntimeIdentifier)' == 'win-x64'">0f96e07477963327f7f50a03bf2aa9dac5c76dba110ab332dc759321ae345d52</PayloadDumperSha256>
+    <PayloadDumperSha256 Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">e6b95df4b08e4bf452077e35cc2c0d644ce8fd454696d1aceedde6887ef0df84</PayloadDumperSha256>
+    <PayloadDumperExecutableSha256 Condition="'$(RuntimeIdentifier)' == 'win-x64'">cd017857a28d029e80b0830531bcc960be5bbd4b8c937b122024285197012cd7</PayloadDumperExecutableSha256>
+    <PayloadDumperExecutableSha256 Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">56d5dd0f402cecc2548a563d840f3fd9e707521b5bd398430f59894c79d08450</PayloadDumperExecutableSha256>
+    <PayloadDumperAssetName Condition="'$(PayloadDumperPlatform)' != ''">payload-dumper-go_$(PayloadDumperVersion)_$(PayloadDumperPlatform).tar.gz</PayloadDumperAssetName>
+    <PayloadDumperUrl Condition="'$(PayloadDumperUrl)' == '' and '$(PayloadDumperAssetName)' != ''">https://github.com/ssut/payload-dumper-go/releases/download/$(PayloadDumperVersion)/$(PayloadDumperAssetName)</PayloadDumperUrl>
+
+    <RootToolsDir Condition="'$(RootToolsDir)' == ''">$(IntermediateOutputPath)root-tools</RootToolsDir>
+    <RootToolsDownloadDir>$(IntermediateOutputPath)root-tools-download</RootToolsDownloadDir>
+    <AndroidTreeViewBundleRootTools Condition="'$(AndroidTreeViewBundleRootTools)' == ''">true</AndroidTreeViewBundleRootTools>
+    <_RootToolsSupportedRid Condition="'$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'osx-arm64'">true</_RootToolsSupportedRid>
+  </PropertyGroup>
+
+  <Target Name="AtvEnsureRootTools" BeforeTargets="Build;Publish"
+          Condition="'$(AndroidTreeViewBundleRootTools)' == 'true' and '$(_RootToolsSupportedRid)' == 'true' and (!Exists('$(RootToolsDir)/magisk/$(MagiskAssetName)') or !Exists('$(RootToolsDir)/payload-dumper/$(PayloadDumperExecutableName)'))">
+    <Message Importance="high" Text="AndroidTreeView: fetching verified App-only Root tools for $(RuntimeIdentifier)..." />
+    <MakeDir Directories="$(RootToolsDownloadDir);$(RootToolsDownloadDir)/payload-extract;$(RootToolsDir)/magisk;$(RootToolsDir)/payload-dumper" />
+
+    <DownloadFile SourceUrl="$(MagiskUrl)" DestinationFolder="$(RootToolsDownloadDir)"
+                  DestinationFileName="$(MagiskAssetName)" Retries="1">
+      <Output TaskParameter="DownloadedFile" PropertyName="_MagiskDownload" />
+    </DownloadFile>
+    <GetFileHash Files="$(RootToolsDownloadDir)/$(MagiskAssetName)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Items" ItemName="_MagiskHash" />
+    </GetFileHash>
+    <Error Condition="'%(_MagiskHash.FileHash)' != '$(MagiskSha256)'"
+           Text="Magisk SHA-256 mismatch: expected $(MagiskSha256), got %(_MagiskHash.FileHash)." />
+    <Copy SourceFiles="$(RootToolsDownloadDir)/$(MagiskAssetName)"
+          DestinationFiles="$(RootToolsDir)/magisk/$(MagiskAssetName)" />
+
+    <DownloadFile SourceUrl="$(PayloadDumperUrl)" DestinationFolder="$(RootToolsDownloadDir)"
+                  DestinationFileName="$(PayloadDumperAssetName)" Retries="1">
+      <Output TaskParameter="DownloadedFile" PropertyName="_PayloadDumperDownload" />
+    </DownloadFile>
+    <GetFileHash Files="$(RootToolsDownloadDir)/$(PayloadDumperAssetName)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Items" ItemName="_PayloadDumperHash" />
+    </GetFileHash>
+    <Error Condition="'%(_PayloadDumperHash.FileHash)' != '$(PayloadDumperSha256)'"
+           Text="payload-dumper-go SHA-256 mismatch: expected $(PayloadDumperSha256), got %(_PayloadDumperHash.FileHash)." />
+    <Exec Command="tar -xzf &quot;$(RootToolsDownloadDir)/$(PayloadDumperAssetName)&quot; -C &quot;$(RootToolsDownloadDir)/payload-extract&quot;" />
+    <Copy SourceFiles="$(RootToolsDownloadDir)/payload-extract/$(PayloadDumperExecutableName)"
+          DestinationFiles="$(RootToolsDir)/payload-dumper/$(PayloadDumperExecutableName)" />
+    <Exec Condition="'$(RuntimeIdentifier)' == 'osx-arm64'"
+          Command="chmod +x &quot;$(RootToolsDir)/payload-dumper/$(PayloadDumperExecutableName)&quot;" />
+
+    <Error Condition="!Exists('$(RootToolsDir)/magisk/$(MagiskAssetName)')"
+           Text="Verified Magisk asset was not copied to the Root tools layout." />
+    <Error Condition="!Exists('$(RootToolsDir)/payload-dumper/$(PayloadDumperExecutableName)')"
+           Text="Verified payload-dumper-go asset was not copied to the Root tools layout." />
+  </Target>
+
+  <Target Name="AtvVerifyRootTools" BeforeTargets="Build;Publish" DependsOnTargets="AtvEnsureRootTools"
+          Condition="'$(AndroidTreeViewBundleRootTools)' == 'true' and '$(_RootToolsSupportedRid)' == 'true'">
+    <Error Condition="!Exists('$(RootToolsDir)/magisk/$(MagiskAssetName)') or !Exists('$(RootToolsDir)/payload-dumper/$(PayloadDumperExecutableName)')"
+           Text="Root tools are incomplete for $(RuntimeIdentifier)." />
+    <GetFileHash Files="$(RootToolsDir)/magisk/$(MagiskAssetName)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Items" ItemName="_VerifiedMagiskHash" />
+    </GetFileHash>
+    <GetFileHash Files="$(RootToolsDir)/payload-dumper/$(PayloadDumperExecutableName)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Items" ItemName="_VerifiedPayloadDumperHash" />
+    </GetFileHash>
+    <Error Condition="'%(_VerifiedMagiskHash.FileHash)' != '$(MagiskSha256)'"
+           Text="Cached Magisk SHA-256 mismatch: expected $(MagiskSha256), got %(_VerifiedMagiskHash.FileHash)." />
+    <Error Condition="'%(_VerifiedPayloadDumperHash.FileHash)' != '$(PayloadDumperExecutableSha256)'"
+           Text="Cached payload-dumper-go SHA-256 mismatch: expected $(PayloadDumperExecutableSha256), got %(_VerifiedPayloadDumperHash.FileHash)." />
+  </Target>
+
+  <Target Name="AtvCopyRootToolsToOutput" AfterTargets="Build"
+          Condition="'$(AndroidTreeViewBundleRootTools)' == 'true' and '$(_RootToolsSupportedRid)' == 'true' and Exists('$(RootToolsDir)')">
+    <ItemGroup>
+      <_RootToolsOut Include="$(RootToolsDir)/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_RootToolsOut)"
+          DestinationFiles="@(_RootToolsOut->'$(OutDir)root-tools/%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="AtvCopyRootToolsToPublish" BeforeTargets="ComputeFilesToPublish"
+          Condition="'$(AndroidTreeViewBundleRootTools)' == 'true' and '$(_RootToolsSupportedRid)' == 'true' and Exists('$(RootToolsDir)')">
+    <ItemGroup>
+      <_RootToolsPub Include="$(RootToolsDir)/**/*" />
+      <ResolvedFileToPublish Include="@(_RootToolsPub)">
+        <RelativePath>root-tools/%(_RootToolsPub.RecursiveDir)%(_RootToolsPub.Filename)%(_RootToolsPub.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -366,6 +366,20 @@ public interface IAdbEnvironment {   // shared adb availability state, updated b
 - Static `AdbCommands` constants live in `AndroidTreeView.Adb.Commands` (see §7). Property-key
   constants (`ro.product.manufacturer`, etc.) live in `AndroidTreeView.Adb.Commands.PropKeys`.
 
+### 6.6 Semi-automatic Root workflow
+
+- Root domain records live under `AndroidTreeView.Models.Rooting`; `RootWizardSnapshot` is immutable and
+  contains machine state only.
+- `RootWizardService` is the UI-independent state machine. It depends on `IBootImageExtractor`,
+  `IBootBackupService`, `IMagiskPatcher`, and the strict `IRootFastbootService`.
+- Existing `IFastbootService` keeps best-effort device-list semantics. Dangerous workflow operations use
+  the separate strict interface so errors, partial writes, and unknown outcomes cannot be swallowed.
+- The only permitted flash targets are the evidence-backed `boot` / `init_boot` partitions. Unknown target,
+  package mismatch, unverified fastboot identity, locked bootloader, unknown slot layout, missing backup,
+  or absent risk acknowledgement are hard blockers.
+- A/B writes are ordered `_a` then `_b`; retry receives the completed partition set and never repeats a
+  confirmed write. Cancellation during a running command produces `FlashOutcome.Unknown`.
+
 ## 7. Adb (project `AndroidTreeView.Adb`)
 
 ### 7.1 `.Commands`

@@ -714,4 +714,117 @@
   <data name="error.loadfailed" xml:space="preserve">
     <value>Failed to load {0}</value>
   </data>
+  <data name="nav.root" xml:space="preserve"><value>Root wizard</value></data>
+  <data name="root.wizard.title" xml:space="preserve"><value>Semi-automatic Root</value></data>
+  <data name="root.section.device" xml:space="preserve"><value>Target device</value></data>
+  <data name="root.section.package" xml:space="preserve"><value>Firmware package</value></data>
+  <data name="root.section.status" xml:space="preserve"><value>Workflow status</value></data>
+  <data name="root.device.details" xml:space="preserve"><value>{0} | product: {1}</value></data>
+  <data name="root.device.adb.missing" xml:space="preserve"><value>ADB is unavailable. Configure ADB before starting.</value></data>
+  <data name="root.device.empty" xml:space="preserve"><value>No online, authorized ADB device is available.</value></data>
+  <data name="root.device.choose" xml:space="preserve"><value>Select the exact device you intend to modify.</value></data>
+  <data name="root.device.locked" xml:space="preserve"><value>The target identity is locked for this session. Cancel before choosing another device.</value></data>
+  <data name="root.device.refresh.failed" xml:space="preserve"><value>Could not refresh connected devices.</value></data>
+  <data name="root.package.supported" xml:space="preserve"><value>Supported: firmware ZIP (including Pixel nested ZIP) or payload.bin.</value></data>
+  <data name="root.package.match.matched" xml:space="preserve"><value>Package metadata matches the selected device</value></data>
+  <data name="root.package.match.mismatched" xml:space="preserve"><value>Package metadata identifies another device</value></data>
+  <data name="root.package.match.unverified" xml:space="preserve"><value>Package metadata could not be verified automatically</value></data>
+  <data name="root.identity.verified" xml:space="preserve"><value>Verified fastboot device {0} ({1})</value></data>
+  <data name="root.identity.unverified" xml:space="preserve"><value>Fastboot identity is not verified</value></data>
+  <data name="root.identity.pending" xml:space="preserve"><value>Waiting for ADB-to-fastboot verification</value></data>
+  <data name="root.identity.evidence.serial" xml:space="preserve"><value>serial</value></data>
+  <data name="root.identity.evidence.usb" xml:space="preserve"><value>USB path</value></data>
+  <data name="root.identity.evidence.product" xml:space="preserve"><value>product</value></data>
+  <data name="root.identity.evidence.none" xml:space="preserve"><value>no identity evidence</value></data>
+  <data name="root.identity.evidence.separator" xml:space="preserve"><value>, </value></data>
+  <data name="root.slot.single" xml:space="preserve"><value>Single partition: {0}</value></data>
+  <data name="root.slot.ab" xml:space="preserve"><value>Both slots: {0}_a and {1}_b</value></data>
+  <data name="root.slot.pending" xml:space="preserve"><value>Not detected yet</value></data>
+  <data name="root.field.target" xml:space="preserve"><value>Target partition</value></data>
+  <data name="root.field.package.match" xml:space="preserve"><value>Package check</value></data>
+  <data name="root.field.identity" xml:space="preserve"><value>Device identity</value></data>
+  <data name="root.field.slots" xml:space="preserve"><value>Write targets</value></data>
+  <data name="root.field.backup" xml:space="preserve"><value>Original image backup</value></data>
+  <data name="root.field.patched" xml:space="preserve"><value>Patched image</value></data>
+  <data name="root.action.refresh.devices" xml:space="preserve"><value>Refresh devices</value></data>
+  <data name="root.action.prepare" xml:space="preserve"><value>Extract and patch</value></data>
+  <data name="root.action.enter.bootloader" xml:space="preserve"><value>Enter bootloader</value></data>
+  <data name="root.action.recheck" xml:space="preserve"><value>Recheck fastboot</value></data>
+  <data name="root.action.flash" xml:space="preserve"><value>Flash patched image</value></data>
+  <data name="root.action.open.backup" xml:space="preserve"><value>Open backup folder</value></data>
+  <data name="root.confirm.bootloader.title" xml:space="preserve"><value>Enter bootloader?</value></data>
+  <data name="root.confirm.bootloader.message" xml:space="preserve"><value>The selected device will reboot into fastboot. Keep the USB cable connected and do not switch devices.</value></data>
+  <data name="root.confirm.flash.title" xml:space="preserve"><value>Final write confirmation</value></data>
+  <data name="root.confirm.flash.warning" xml:space="preserve"><value>Writing the wrong image can stop the device from booting. Verify the device, package, partition, and backup shown below.</value></data>
+  <data name="root.confirm.flash.ab.warning" xml:space="preserve"><value>Both A/B slots will receive the same image. If the slots contain different system versions, switching slots later may cause a boot loop.</value></data>
+  <data name="root.confirm.flash.package.unverified" xml:space="preserve"><value>The package does not contain enough metadata to verify that it belongs to this device. Treat the package-device match as unverified.</value></data>
+  <data name="root.confirm.flash.experimental.title" xml:space="preserve"><value>Experimental write path</value></data>
+  <data name="root.confirm.flash.experimental.message" xml:space="preserve"><value>Real Magisk patching and fastboot flashing remain disabled by default until the M0 and M1 device-validation milestones are recorded.</value></data>
+  <data name="root.confirm.flash.acknowledge" xml:space="preserve"><value>I understand the risk and have verified the target device and firmware package.</value></data>
+  <data name="root.blocked.title" xml:space="preserve"><value>Workflow blocked</value></data>
+  <data name="root.blocked.locked.guide" xml:space="preserve"><value>The bootloader is locked. Unlock it using the device manufacturer's procedure, which may erase all data, then recheck. This app will not unlock it for you.</value></data>
+  <data name="root.blocked.identity.guide" xml:space="preserve"><value>The fastboot device cannot be proven to be the selected ADB device. Reconnect only the intended device and recheck; this safety check cannot be bypassed.</value></data>
+  <data name="root.blocked.layout.guide" xml:space="preserve"><value>The target slot layout is missing or contradictory. Flashing remains disabled.</value></data>
+  <data name="root.blocked.target.guide" xml:space="preserve"><value>The package or device does not provide an unambiguous supported boot target. Choose a matching package; recovery patching is not supported.</value></data>
+  <data name="root.partial.title" xml:space="preserve"><value>Dangerous intermediate state</value></data>
+  <data name="root.partial.message" xml:space="preserve"><value>At least one write may have completed, but the full result is not safe. Do not disconnect the device. Review the status and retry only the failed partition.</value></data>
+  <data name="root.completed.title" xml:space="preserve"><value>Root image flashed</value></data>
+  <data name="root.completed.message" xml:space="preserve"><value>The verified fastboot device was rebooted. Keep the original-image backup until the device has booted successfully.</value></data>
+  <data name="root.step.select" xml:space="preserve"><value>Select</value></data>
+  <data name="root.step.extract" xml:space="preserve"><value>Extract</value></data>
+  <data name="root.step.patch" xml:space="preserve"><value>Patch and back up</value></data>
+  <data name="root.step.fastboot" xml:space="preserve"><value>Verify fastboot</value></data>
+  <data name="root.step.flash" xml:space="preserve"><value>Flash</value></data>
+  <data name="root.step.complete" xml:space="preserve"><value>Complete</value></data>
+  <data name="root.step.done" xml:space="preserve"><value>Done</value></data>
+  <data name="root.step.current" xml:space="preserve"><value>Current step</value></data>
+  <data name="root.step.pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="root.error.title" xml:space="preserve"><value>Root workflow error</value></data>
+  <data name="root.error.generic" xml:space="preserve"><value>The root workflow could not continue.</value></data>
+  <data name="root.error.device" xml:space="preserve"><value>The selected device is missing, offline, or unauthorized.</value></data>
+  <data name="root.error.package" xml:space="preserve"><value>The selected package is missing, corrupt, unsafe, or unsupported.</value></data>
+  <data name="root.error.package.mismatch" xml:space="preserve"><value>The firmware package explicitly targets a different device.</value></data>
+  <data name="root.error.payload" xml:space="preserve"><value>The payload extraction tool is unavailable or extraction failed.</value></data>
+  <data name="root.error.target" xml:space="preserve"><value>A safe boot or init_boot target could not be established.</value></data>
+  <data name="root.error.recoveryonly" xml:space="preserve"><value>The selected boot image has no ramdisk. Recovery-mode Magisk installation is not supported.</value></data>
+  <data name="root.error.backup" xml:space="preserve"><value>The original image could not be backed up and verified. Flashing is disabled.</value></data>
+  <data name="root.error.magisk" xml:space="preserve"><value>Magisk installation or image patching failed.</value></data>
+  <data name="root.error.patched.flags" xml:space="preserve"><value>The patched image was rejected: its Magisk verity/encryption flags do not match what this device requires. Flashing it would leave the device unable to mount its system partition.</value></data>
+  <data name="root.error.fastboot" xml:space="preserve"><value>Fastboot is unavailable or the device did not enter bootloader mode.</value></data>
+  <data name="root.error.identity" xml:space="preserve"><value>The fastboot device identity could not be verified.</value></data>
+  <data name="root.error.locked" xml:space="preserve"><value>The device bootloader is locked.</value></data>
+  <data name="root.error.layout" xml:space="preserve"><value>The boot partition slot layout is unknown or contradictory.</value></data>
+  <data name="root.error.flash.partial" xml:space="preserve"><value>One partition was written but a later partition failed.</value></data>
+  <data name="root.error.flash.unknown" xml:space="preserve"><value>The flash command was interrupted and its write outcome is unknown.</value></data>
+  <data name="root.error.flash" xml:space="preserve"><value>The image was not confirmed written.</value></data>
+  <data name="root.error.reboot" xml:space="preserve"><value>The image was written, but fastboot could not reboot the device.</value></data>
+  <data name="root.error.risk" xml:space="preserve"><value>Acknowledge the write risk before flashing.</value></data>
+  <data name="root.state.idle" xml:space="preserve"><value>Select an online device and its matching firmware package.</value></data>
+  <data name="root.state.packageselected" xml:space="preserve"><value>Ready to extract and patch the selected package.</value></data>
+  <data name="root.state.extracting" xml:space="preserve"><value>Inspecting the package and extracting the target image...</value></data>
+  <data name="root.state.bootextracted" xml:space="preserve"><value>Target image extracted.</value></data>
+  <data name="root.state.patching" xml:space="preserve"><value>Backing up the original and patching with Magisk...</value></data>
+  <data name="root.state.bootpatched" xml:space="preserve"><value>Patched image and verified backup are ready.</value></data>
+  <data name="root.state.awaitingbootloaderconfirm" xml:space="preserve"><value>Confirm before rebooting the selected device into bootloader.</value></data>
+  <data name="root.state.rebootingtobootloader" xml:space="preserve"><value>Waiting for the same device in fastboot...</value></data>
+  <data name="root.state.infastboot" xml:space="preserve"><value>Fastboot identity verified; checking unlock and slot layout...</value></data>
+  <data name="root.state.blockedunsupportedtarget" xml:space="preserve"><value>The package has no safe supported target.</value></data>
+  <data name="root.state.blockedfastbootidentity" xml:space="preserve"><value>Fastboot identity verification failed.</value></data>
+  <data name="root.state.blockedlocked" xml:space="preserve"><value>The bootloader is locked.</value></data>
+  <data name="root.state.blockedbootlayout" xml:space="preserve"><value>The boot slot layout is not safe to use.</value></data>
+  <data name="root.state.awaitingflashconfirm" xml:space="preserve"><value>Review every write target and acknowledge the risk.</value></data>
+  <data name="root.state.flashing" xml:space="preserve"><value>Writing the patched image. Do not disconnect the device...</value></data>
+  <data name="root.state.rebooting" xml:space="preserve"><value>Write confirmed; rebooting the device...</value></data>
+  <data name="root.state.completed" xml:space="preserve"><value>Root workflow completed.</value></data>
+  <data name="root.state.failed" xml:space="preserve"><value>The current step failed and may be retried safely.</value></data>
+  <data name="root.state.failedpartialflash" xml:space="preserve"><value>A later A/B write failed after an earlier partition succeeded.</value></data>
+  <data name="root.state.flashoutcomeunknown" xml:space="preserve"><value>The flash outcome is unknown. Do not disconnect the device.</value></data>
+  <data name="root.state.cancelled" xml:space="preserve"><value>The workflow was cancelled; original backups were retained.</value></data>
+  <data name="picker.adb.title" xml:space="preserve"><value>Select adb executable</value></data>
+  <data name="picker.transfer.title" xml:space="preserve"><value>Select APKs or files</value></data>
+  <data name="picker.root.title" xml:space="preserve"><value>Select firmware ZIP or payload.bin</value></data>
+  <data name="picker.type.apk" xml:space="preserve"><value>Android package (APK)</value></data>
+  <data name="picker.type.firmware" xml:space="preserve"><value>Supported firmware package</value></data>
+  <data name="picker.type.adb" xml:space="preserve"><value>Android Debug Bridge</value></data>
+  <data name="picker.type.executable" xml:space="preserve"><value>Executable files</value></data>
 </root>

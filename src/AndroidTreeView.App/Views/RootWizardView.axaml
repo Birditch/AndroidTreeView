@@ -1,0 +1,284 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidTreeView.App.ViewModels"
+             xmlns:controls="using:AndroidTreeView.App.Controls"
+             xmlns:loc="using:AndroidTreeView.App.Localization"
+             mc:Ignorable="d"
+             x:Class="AndroidTreeView.App.Views.RootWizardView"
+             x:DataType="vm:RootWizardViewModel"
+             x:CompileBindings="True">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="4">
+        <ScrollViewer Grid.Row="0"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled"
+                      Margin="0,0,0,12">
+            <ItemsControl ItemsSource="{Binding Steps}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="8" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RootWizardStepItem">
+                        <Border Classes="softPanel"
+                                MinWidth="148"
+                                Padding="10,8"
+                                BorderBrush="{DynamicResource DividerBrush}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <Border Grid.Column="0"
+                                        Width="28" Height="28"
+                                        CornerRadius="14"
+                                        Background="{DynamicResource AccentBrush}">
+                                    <TextBlock Text="{Binding Number}"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding StatusText}"
+                                               FontSize="11"
+                                               Opacity="0.7" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12" Margin="0,0,4,12">
+                <Border IsVisible="{Binding HasError}"
+                        Background="#22D13438"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <TextBlock Text="!" FontSize="18" FontWeight="Bold" />
+                        <StackPanel Grid.Column="1" Spacing="3">
+                            <TextBlock Text="{loc:Localize Key=root.error.title}"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border IsVisible="{Binding ShowPartialFlashWarning}"
+                        Background="#33D13438"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}"
+                        BorderThickness="2"
+                        CornerRadius="8"
+                        Padding="14">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{loc:Localize Key=root.partial.title}"
+                                   FontWeight="Bold" FontSize="16" />
+                        <TextBlock Text="{loc:Localize Key=root.partial.message}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <controls:SectionCard Header="{loc:Localize Key=root.section.device}">
+                    <StackPanel Spacing="8">
+                        <ListBox ItemsSource="{Binding Devices}"
+                                 SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+                                 IsEnabled="{Binding IsDeviceSelectionEnabled}"
+                                 MaxHeight="210">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RootDeviceOptionViewModel">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Details}"
+                                                   FontSize="12" Opacity="0.7"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock Text="{Binding DeviceListMessage}"
+                                   TextWrapping="Wrap" Opacity="0.75" />
+                        <TextBlock Text="{loc:Localize Key=root.device.locked}"
+                                   IsVisible="{Binding IsSelectionLocked}"
+                                   TextWrapping="Wrap" Opacity="0.75" />
+                    </StackPanel>
+                </controls:SectionCard>
+
+                <controls:SectionCard Header="{loc:Localize Key=root.section.package}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <StackPanel Grid.Column="0" Spacing="3">
+                            <TextBlock Text="{Binding PackageDisplayName, FallbackValue=''}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <SelectableTextBlock Text="{Binding SelectedPackagePath}"
+                                                 FontSize="12" Opacity="0.7"
+                                                 TextWrapping="Wrap" />
+                            <TextBlock Text="{loc:Localize Key=root.package.supported}"
+                                       FontSize="12" Opacity="0.65"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Command="{Binding PickPackageCommand}"
+                                Content="{loc:Localize Key=common.browse}" />
+                    </Grid>
+                </controls:SectionCard>
+
+                <controls:SectionCard Header="{loc:Localize Key=root.section.status}">
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <TextBlock Text="{Binding StateText}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <ProgressBar Grid.Column="1"
+                                         Width="120"
+                                         IsIndeterminate="True"
+                                         IsVisible="{Binding IsBusy}" />
+                        </Grid>
+                        <controls:InfoRow Label="{loc:Localize Key=root.field.target}"
+                                          Value="{Binding TargetPartitionText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=root.field.package.match}"
+                                          Value="{Binding PackageMatchText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=root.field.identity}"
+                                          Value="{Binding IdentityText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=root.field.slots}"
+                                          Value="{Binding SlotText}" />
+                        <StackPanel Spacing="3" IsVisible="{Binding BackupPath, Converter={StaticResource NullToBool}}">
+                            <TextBlock Text="{loc:Localize Key=root.field.backup}"
+                                       FontSize="12" Opacity="0.7" />
+                            <SelectableTextBlock Text="{Binding BackupPath}"
+                                                 TextWrapping="Wrap" FontSize="12" />
+                            <Button Command="{Binding OpenBackupFolderCommand}"
+                                    HorizontalAlignment="Left"
+                                    Content="{loc:Localize Key=root.action.open.backup}" />
+                        </StackPanel>
+                    </StackPanel>
+                </controls:SectionCard>
+
+                <Border IsVisible="{Binding ShowBlockedGuidance}"
+                        Classes="softPanel"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{loc:Localize Key=root.blocked.title}"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding BlockedGuidanceText}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border IsVisible="{Binding ShowFlashConfirmation}"
+                        Background="#33D13438"
+                        BorderBrush="{DynamicResource Badge.Unauthorized}"
+                        BorderThickness="2"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="{loc:Localize Key=root.confirm.flash.title}"
+                                   FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="{loc:Localize Key=root.confirm.flash.warning}"
+                                   TextWrapping="Wrap" FontWeight="SemiBold" />
+                        <TextBlock Text="{loc:Localize Key=root.confirm.flash.ab.warning}"
+                                   IsVisible="{Binding IsAbLayout}"
+                                   TextWrapping="Wrap" />
+                        <Border IsVisible="{Binding IsPackageMatchUnverified}"
+                                Background="#33D97706"
+                                BorderBrush="#D97706"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <TextBlock Text="!" FontWeight="Bold" FontSize="17" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{loc:Localize Key=root.confirm.flash.package.unverified}"
+                                           TextWrapping="Wrap"
+                                           FontWeight="SemiBold" />
+                            </Grid>
+                        </Border>
+                        <Border Background="#22D97706"
+                                BorderBrush="#D97706"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <TextBlock Text="!" FontWeight="Bold" FontSize="17" />
+                                <StackPanel Grid.Column="1" Spacing="3">
+                                    <TextBlock Text="{loc:Localize Key=root.confirm.flash.experimental.title}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{loc:Localize Key=root.confirm.flash.experimental.message}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <controls:InfoRow Label="{loc:Localize Key=root.field.target}"
+                                          Value="{Binding TargetPartitionText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=root.field.slots}"
+                                          Value="{Binding SlotText}" />
+                        <controls:InfoRow Label="{loc:Localize Key=root.field.identity}"
+                                          Value="{Binding IdentityText}" />
+                        <TextBlock Text="{loc:Localize Key=root.field.patched}" FontSize="12" Opacity="0.7" />
+                        <SelectableTextBlock Text="{Binding PatchedImagePath}" TextWrapping="Wrap" FontSize="12" />
+                        <TextBlock Text="{loc:Localize Key=root.field.backup}" FontSize="12" Opacity="0.7" />
+                        <SelectableTextBlock Text="{Binding BackupPath}" TextWrapping="Wrap" FontSize="12" />
+                        <CheckBox IsChecked="{Binding HasAcknowledgedRisk, Mode=TwoWay}"
+                                  Content="{loc:Localize Key=root.confirm.flash.acknowledge}" />
+                    </StackPanel>
+                </Border>
+
+                <Border IsVisible="{Binding ShowCompleted}"
+                        Classes="softPanel"
+                        BorderBrush="{DynamicResource Badge.Root}">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="{loc:Localize Key=root.completed.title}"
+                                   FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{loc:Localize Key=root.completed.message}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="0,10,0,0">
+            <WrapPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Command="{Binding RefreshTargetsCommand}"
+                        Margin="0,0,8,8"
+                        Content="{loc:Localize Key=root.action.refresh.devices}" />
+                <Button Command="{Binding StartCommand}"
+                        IsVisible="{Binding CanStart}"
+                        Classes="accent"
+                        Margin="0,0,8,8"
+                        Content="{loc:Localize Key=root.action.prepare}" />
+                <Button Command="{Binding ConfirmBootloaderCommand}"
+                        IsVisible="{Binding CanConfirmBootloader}"
+                        Classes="accent"
+                        Margin="0,0,8,8"
+                        Content="{loc:Localize Key=root.action.enter.bootloader}" />
+                <Button Command="{Binding RecheckFastbootCommand}"
+                        IsVisible="{Binding CanRecheckFastboot}"
+                        Margin="0,0,8,8"
+                        Content="{loc:Localize Key=root.action.recheck}" />
+                <Button Command="{Binding RetryCommand}"
+                        IsVisible="{Binding CanRetry}"
+                        Margin="0,0,8,8"
+                        Content="{loc:Localize Key=common.retry}" />
+                <Button Command="{Binding FlashCommand}"
+                        IsVisible="{Binding ShowFlashConfirmation}"
+                        Margin="0,0,8,8"
+                        Content="{loc:Localize Key=root.action.flash}" />
+                <Button Command="{Binding CancelCommand}"
+                        IsVisible="{Binding CanCancel}"
+                        Margin="0,0,0,8"
+                        Content="{loc:Localize Key=common.cancel}" />
+            </WrapPanel>
+        </Border>
+    </Grid>
+</UserControl>

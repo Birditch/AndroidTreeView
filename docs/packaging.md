@@ -2,7 +2,7 @@
 
 Packaging files live under `packaging/`.
 
-Current default product version: `1.0.6`.
+Current default product version: `1.0.7`.
 
 Official release artifacts are created by GitHub Actions (`.github/workflows/publish.yml`) only. Local packaging commands are validation helpers and must not be used as the authority for publishing a release.
 
@@ -11,17 +11,17 @@ Official release artifacts are created by GitHub Actions (`.github/workflows/pub
 Every GitHub Release must contain exactly these four ZIP packages plus matching `.sha256` sidecars:
 
 ```text
-artifacts/AndroidTreeView-1.0.6-win-x64.zip
-artifacts/AndroidTreeView-1.0.6-win-x64.zip.sha256
-artifacts/AndroidTreeView-1.0.6-osx-arm64.zip
-artifacts/AndroidTreeView-1.0.6-osx-arm64.zip.sha256
-artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip
-artifacts/AndroidTreeView-Mini-1.0.6-win-x64.zip.sha256
-artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip
-artifacts/AndroidTreeView-Mini-1.0.6-osx-arm64.zip.sha256
+artifacts/AndroidTreeView-1.0.7-win-x64.zip
+artifacts/AndroidTreeView-1.0.7-win-x64.zip.sha256
+artifacts/AndroidTreeView-1.0.7-osx-arm64.zip
+artifacts/AndroidTreeView-1.0.7-osx-arm64.zip.sha256
+artifacts/AndroidTreeView-Mini-1.0.7-win-x64.zip
+artifacts/AndroidTreeView-Mini-1.0.7-win-x64.zip.sha256
+artifacts/AndroidTreeView-Mini-1.0.7-osx-arm64.zip
+artifacts/AndroidTreeView-Mini-1.0.7-osx-arm64.zip.sha256
 ```
 
-Windows ZIPs contain the published application files, the platform-matched `scrcpy` bundle, and `release.json` at the ZIP root. macOS ZIPs contain a top-level `.app` bundle (`AndroidTreeView.app` or `AndroidTreeView Mini.app`); the published files, `scrcpy`, and `release.json` live inside the bundle.
+Windows ZIPs contain the published application files, the platform-matched `scrcpy` bundle, and `release.json` at the ZIP root. Full App ZIPs additionally contain verified `root-tools/` assets; Mini ZIPs must not. macOS ZIPs contain a top-level `.app` bundle (`AndroidTreeView.app` or `AndroidTreeView Mini.app`); the published files, tool bundles, and `release.json` live inside the bundle.
 
 The Windows updater treats the ZIP as the source of truth for application files. During an update, files that exist in the installed directory but are missing from the new ZIP are removed unless they are config-like files such as `.env`, `settings.json`, `appsettings.*.json`, `*.local.json`, `*.user`, `.config`, `.ini`, `.json`, `.yaml`, `.yml`, or `.toml`.
 
@@ -55,12 +55,18 @@ Supported release RIDs are `win-x64` and `osx-arm64`.
 The script:
 
 1. downloads the matching upstream scrcpy asset (`scrcpy-win64-v4.0.zip` or `scrcpy-macos-aarch64-v4.0.tar.gz`)
-2. folds `fastboot` into the full App package
-3. runs `dotnet publish`
-4. writes `release.json`
-5. stages a macOS `.app` bundle for `osx-arm64`
-6. compresses the package folder to `artifacts/`
-7. writes `<zip>.sha256`
+2. folds hash-verified Android SDK Platform-Tools 37.0.0 `fastboot` into the full App package
+3. for the full App only, downloads and verifies Magisk v30.7 and payload-dumper-go 1.3.0
+4. runs `dotnet publish`
+5. writes `release.json`
+6. stages a macOS `.app` bundle for `osx-arm64`
+7. verifies App Root-tool presence and Mini Root-tool absence
+8. compresses the package folder to `artifacts/`
+9. writes `<zip>.sha256`
+
+Root assets use fixed SHA-256 values in `build/AndroidTreeView.RootTools.targets` and
+`packaging/build-update-zip.ps1`. `tools/verify-roottools-latest.ps1` checks the pinned upstream release
+metadata and payload checksum manifest without downloading the large assets.
 
 macOS ZIPs are created with the system `zip` command so executable bits and `.app` bundle layout are preserved.
 
@@ -74,7 +80,7 @@ The updater uses `release.json` to distinguish an automated release ZIP from a r
   "product": "App",
   "productName": "AndroidTreeView",
   "appKey": "android-tree-view-app",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "platform": "win",
   "arch": "x64",
   "rid": "win-x64",
@@ -102,8 +108,8 @@ The WiX project rejects non-x64 platforms.
 `build-update-zip.ps1` writes checksums automatically. Manual verification:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-1.0.6-win-x64.zip
-Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-Mini-1.0.6-win-x64.zip
+Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-1.0.7-win-x64.zip
+Get-FileHash -Algorithm SHA256 artifacts\AndroidTreeView-Mini-1.0.7-win-x64.zip
 ```
 
 The sidecar uses `<hash> *<filename>` format for compatibility with `sha256sum -c`.

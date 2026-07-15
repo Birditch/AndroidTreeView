@@ -84,6 +84,10 @@ jobs:
         shell: pwsh
         run: ./tools/verify-scrcpy-latest.ps1
 
+      - name: Verify Root tool release pins
+        shell: pwsh
+        run: ./tools/verify-roottools-latest.ps1
+
   package:
     name: Package ${{ matrix.product }} ${{ matrix.rid }}
     runs-on: ${{ matrix.os }}
@@ -166,6 +170,98 @@ jobs:
           }
 
           Write-Host "Verified macOS ZIP contains $appName."
+
+      - name: Verify package integrity and Root tools isolation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          $zip = Get-ChildItem -Path artifacts -Filter '*.zip' | Select-Object -First 1
+          if ($null -eq $zip) {
+            throw 'No ZIP artifact was produced.'
+          }
+
+          $sidecarPath = "$($zip.FullName).sha256"
+          if (-not (Test-Path -LiteralPath $sidecarPath)) {
+            throw "ZIP '$($zip.Name)' is missing its SHA-256 sidecar."
+          }
+
+          $sidecar = (Get-Content -LiteralPath $sidecarPath -Raw).Trim()
+          if ($sidecar -notmatch '^([0-9a-fA-F]{64}) \*([^\\/\r\n]+)$') {
+            throw "SHA-256 sidecar for '$($zip.Name)' has an invalid format."
+          }
+
+          $expectedHash = $Matches[1].ToLowerInvariant()
+          $expectedName = $Matches[2]
+          $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip.FullName).Hash.ToLowerInvariant()
+          if ($expectedName -ne $zip.Name -or $expectedHash -ne $actualHash) {
+            throw "SHA-256 sidecar does not match ZIP '$($zip.Name)'."
+          }
+
+          $product = '${{ matrix.product }}'
+          $rid = '${{ matrix.rid }}'
+          $appPrefix = if ($rid -eq 'osx-arm64') { 'AndroidTreeView.app/Contents/MacOS/' } else { '' }
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($zip.FullName)
+          try {
+            $entries = @($archive.Entries | ForEach-Object { $_.FullName })
+          } finally {
+            $archive.Dispose()
+          }
+
+          if ($rid -eq 'win-x64') {
+            $executable = if ($product -eq 'Mini') { 'AndroidTreeView.App.mini.exe' } else { 'AndroidTreeView.App.exe' }
+            $requiredWindowsEntries = @(
+              $executable,
+              'release.json',
+              'scrcpy/scrcpy.exe',
+              'scrcpy/adb.exe'
+            )
+            foreach ($entry in $requiredWindowsEntries) {
+              if ($entries -notcontains $entry) {
+                throw "Windows ZIP '$($zip.Name)' is missing required entry '$entry'."
+              }
+            }
+          }
+
+          $rootEntries = @($entries | Where-Object { $_ -match '(^|/)root-tools/' })
+          if ($product -eq 'Mini') {
+            if ($rootEntries.Count -ne 0) {
+              throw "Mini ZIP '$($zip.Name)' contains App-only Root tools: $($rootEntries -join ', ')."
+            }
+            Write-Host "Verified Mini ZIP does not contain root-tools/."
+            exit 0
+          }
+
+          $payloadExecutable = if ($rid -eq 'win-x64') { 'payload-dumper-go.exe' } else { 'payload-dumper-go' }
+          $fastbootExecutable = if ($rid -eq 'win-x64') { 'fastboot.exe' } else { 'fastboot' }
+          $requiredEntries = @(
+            "${appPrefix}scrcpy/$fastbootExecutable",
+            "${appPrefix}root-tools/magisk/Magisk-v30.7.apk",
+            "${appPrefix}root-tools/payload-dumper/$payloadExecutable"
+          )
+          foreach ($entry in $requiredEntries) {
+            if ($entries -notcontains $entry) {
+              throw "App ZIP '$($zip.Name)' is missing required Root tool '$entry'."
+            }
+          }
+
+          if ($rid -eq 'osx-arm64') {
+            $extractDir = Join-Path $env:RUNNER_TEMP 'root-tools-mode-check'
+            New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
+            & unzip -q $zip.FullName -d $extractDir
+            if ($LASTEXITCODE -ne 0) {
+              throw "Could not extract '$($zip.FullName)' to verify executable mode."
+            }
+
+            $payloadPath = Join-Path $extractDir "${appPrefix}root-tools/payload-dumper/$payloadExecutable"
+            & /usr/bin/test -x $payloadPath
+            if ($LASTEXITCODE -ne 0) {
+              throw "macOS payload-dumper-go is not executable in '$($zip.Name)'."
+            }
+          }
+
+          Write-Host "Verified App ZIP contains fastboot, Magisk, and payload-dumper-go."
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v7

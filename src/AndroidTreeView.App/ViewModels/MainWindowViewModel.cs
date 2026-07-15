@@ -127,6 +127,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel(
         DevicesViewModel devices,
+        RootWizardViewModel rootWizard,
         SettingsViewModel settings,
         SetupViewModel setup,
         Func<AboutViewModel> aboutFactory,
@@ -148,6 +149,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         ILogger<MainWindowViewModel> logger)
     {
         Devices = devices;
+        RootWizard = rootWizard;
         Dialog = dialog;
         _cli = cli;
         _fastboot = fastboot;
@@ -184,6 +186,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>The device grid view model (also the default content).</summary>
     public DevicesViewModel Devices { get; }
+
+    /// <summary>The persistent semi-automatic root workflow page.</summary>
+    public RootWizardViewModel RootWizard { get; }
 
     /// <summary>The settings page view model.</summary>
     public SettingsViewModel Settings { get; }
@@ -315,10 +320,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase
                 ? AppLayoutMode.Medium
                 : AppLayoutMode.Narrow;
 
+        var enteringNarrow = mode == AppLayoutMode.Narrow && LayoutMode != AppLayoutMode.Narrow;
         LayoutMode = mode;
         IsWide = mode == AppLayoutMode.Wide;
         IsMedium = mode == AppLayoutMode.Medium;
         IsNarrow = mode == AppLayoutMode.Narrow;
+        if (enteringNarrow)
+        {
+            IsSidebarOpen = false;
+        }
     }
 
     [RelayCommand]
@@ -326,6 +336,16 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         CurrentSection = NavSection.Devices;
         CurrentContent = Devices;
+        CloseSidebarOnNarrow();
+    }
+
+    [RelayCommand]
+    private void NavigateRoot()
+    {
+        CurrentSection = NavSection.Root;
+        CurrentContent = RootWizard;
+        CloseSidebarOnNarrow();
+        _ = RootWizard.RefreshDevicesAsync();
     }
 
     [RelayCommand]
@@ -333,6 +353,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         CurrentSection = NavSection.Settings;
         CurrentContent = Settings;
+        CloseSidebarOnNarrow();
     }
 
     [RelayCommand]
@@ -340,10 +361,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         CurrentSection = NavSection.About;
         CurrentContent = _aboutFactory();
+        CloseSidebarOnNarrow();
     }
 
     [RelayCommand]
-    private Task RefreshAsync() => RefreshDevicesAsync();
+    private Task RefreshAsync() => CurrentSection == NavSection.Root
+        ? RootWizard.RefreshDevicesAsync()
+        : RefreshDevicesAsync();
 
     private async Task RefreshDevicesAsync()
     {
@@ -359,6 +383,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     [RelayCommand]
     private void ToggleSidebar() => IsSidebarOpen = !IsSidebarOpen;
+
+    private void CloseSidebarOnNarrow()
+    {
+        if (IsNarrow)
+        {
+            IsSidebarOpen = false;
+        }
+    }
 
     [RelayCommand]
     private void Back()
@@ -491,6 +523,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private string TitleFor(NavSection section) => section switch
     {
         NavSection.Settings => _localization.Get("settings.title"),
+        NavSection.Root => _localization.Get("root.wizard.title"),
         NavSection.About => _localization.Get("about.title"),
         _ => _localization.Get("devices.title"),
     };
@@ -550,6 +583,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             }
 
             var battery = await _deviceService.GetBatteryAsync(serial).ConfigureAwait(true);
+            if (!IsCurrentOnlineCard(serial, card))
+            {
+                return;
+            }
+
             card.ApplyBattery(battery);
 
             var due = !_staticEnrichedAt.TryGetValue(serial, out var last)
@@ -557,12 +595,26 @@ public sealed partial class MainWindowViewModel : ViewModelBase
             if (due)
             {
                 var overview = await _deviceService.GetOverviewAsync(serial).ConfigureAwait(true);
+                if (!IsCurrentOnlineCard(serial, card))
+                {
+                    return;
+                }
+
                 card.ApplyOverview(overview);
 
                 var root = await _deviceService.GetRootStatusAsync(serial).ConfigureAwait(true);
+                if (!IsCurrentOnlineCard(serial, card))
+                {
+                    return;
+                }
+
                 card.ApplyRoot(root);
 
                 await card.RefreshActionStateAsync().ConfigureAwait(true);
+                if (!IsCurrentOnlineCard(serial, card))
+                {
+                    return;
+                }
 
                 _staticEnrichedAt[serial] = DateTimeOffset.Now;
             }
@@ -575,6 +627,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         {
             _enriching.Remove(serial);
         }
+    }
+
+    private bool IsCurrentOnlineCard(string serial, DeviceCardViewModel card)
+    {
+        var current = Devices.FindCard(serial);
+        return ReferenceEquals(current, card) && current.IsOnline && !current.IsFastboot;
     }
 
     // Fetch fastboot getvar facts once per fastboot device (until it has them or is unplugged).

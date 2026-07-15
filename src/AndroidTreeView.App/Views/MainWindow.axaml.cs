@@ -55,14 +55,21 @@ public partial class MainWindow : Window
 
     private static void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
+        e.DragEffects = sender is MainWindow
+        {
+            DataContext: MainWindowViewModel { CurrentSection: NavSection.Devices }
+        }
+            && e.DataTransfer.Contains(DataFormat.File)
             ? DragDropEffects.Copy
             : DragDropEffects.None;
     }
 
     private static async void OnDrop(object? sender, DragEventArgs e)
     {
-        if (sender is not MainWindow { DataContext: MainWindowViewModel vm })
+        if (sender is not MainWindow
+            {
+                DataContext: MainWindowViewModel { CurrentSection: NavSection.Devices } vm
+            })
         {
             return;
         }

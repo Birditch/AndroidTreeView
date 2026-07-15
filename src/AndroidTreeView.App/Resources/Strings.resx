@@ -411,6 +411,33 @@
   <data name="batch.clear" xml:space="preserve">
     <value>Clear</value>
   </data>
+  <data name="batch.progress.preparing" xml:space="preserve">
+    <value>Preparing transfer...</value>
+  </data>
+  <data name="batch.progress.waiting" xml:space="preserve">
+    <value>Waiting for the first file</value>
+  </data>
+  <data name="batch.progress.count" xml:space="preserve">
+    <value>{0}/{1} complete</value>
+  </data>
+  <data name="batch.progress.bytes" xml:space="preserve">
+    <value>{0} of {1} complete</value>
+  </data>
+  <data name="batch.progress.installing" xml:space="preserve">
+    <value>Installing {0} on {1}</value>
+  </data>
+  <data name="batch.progress.transferring" xml:space="preserve">
+    <value>Transferring {0} to {1}</value>
+  </data>
+  <data name="batch.progress.installed" xml:space="preserve">
+    <value>Installed {0} on {1}</value>
+  </data>
+  <data name="batch.progress.transferred" xml:space="preserve">
+    <value>Transferred {0} to {1}</value>
+  </data>
+  <data name="batch.progress.failed" xml:space="preserve">
+    <value>Failed {0} on {1}</value>
+  </data>
   <data name="menu.screen" xml:space="preserve">
     <value>Screen Mirror</value>
   </data>

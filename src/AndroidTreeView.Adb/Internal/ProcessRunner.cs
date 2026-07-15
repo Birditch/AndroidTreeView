@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Channels;
 
 namespace AndroidTreeView.Adb.Internal;
@@ -81,6 +82,56 @@ internal static class ProcessRunner
     }
 
     /// <summary>
+    /// Runs a text process to completion while forwarding stdout/stderr chunks as they arrive.
+    /// Useful for commands such as <c>adb push</c> that update progress with carriage returns.
+    /// </summary>
+    public static async Task<ProcessRunResult> RunTextStreamingAsync(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        TimeSpan timeout,
+        Action<string>? onChunk,
+        CancellationToken ct)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        using var process = new Process { StartInfo = BuildStartInfo(fileName, arguments) };
+
+        process.Start();
+
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
+
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+        var stdoutTask = ReadTextChunksAsync(process.StandardOutput.BaseStream, stdout, onChunk, linked.Token);
+        var stderrTask = ReadTextChunksAsync(process.StandardError.BaseStream, stderr, onChunk, linked.Token);
+
+        var timedOut = false;
+        try
+        {
+            await process.WaitForExitAsync(linked.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            timedOut = timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested;
+            KillTree(process);
+            await SafeWaitForExitAsync(process).ConfigureAwait(false);
+
+            if (!timedOut)
+            {
+                ct.ThrowIfCancellationRequested();
+            }
+        }
+
+        await SafeReadChunksAsync(stdoutTask).ConfigureAwait(false);
+        await SafeReadChunksAsync(stderrTask).ConfigureAwait(false);
+        stopwatch.Stop();
+
+        var exitCode = timedOut ? -1 : SafeExitCode(process);
+        return new ProcessRunResult(exitCode, stdout.ToString(), stderr.ToString(), timedOut, stopwatch.Elapsed);
+    }
+
+    /// <summary>
     /// Runs a process to completion, capturing stdout as raw bytes. Safe for binary payloads
     /// such as PNG frames from <c>adb exec-out screencap -p</c> (reading stdout as text would
     /// corrupt binary data). Stderr is still captured as text. Timeout and cancellation behaviour
@@ -134,6 +185,65 @@ internal static class ProcessRunner
     }
 
     /// <summary>
+    /// Runs a process with a local file streamed to stdin, reporting cumulative bytes written.
+    /// Used for progress-aware <c>adb exec-in</c> file transfers.
+    /// </summary>
+    public static async Task<ProcessRunResult> RunWithInputFileAsync(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        string inputFilePath,
+        TimeSpan timeout,
+        IProgress<long>? progress,
+        CancellationToken ct)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        using var process = new Process
+        {
+            StartInfo = BuildStartInfo(fileName, arguments, redirectStandardInput: true)
+        };
+
+        process.Start();
+
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+        var timedOut = false;
+        try
+        {
+            await CopyFileToAsync(inputFilePath, process.StandardInput.BaseStream, progress, linked.Token)
+                .ConfigureAwait(false);
+            process.StandardInput.Close();
+            await process.WaitForExitAsync(linked.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            timedOut = timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested;
+            KillTree(process);
+            await SafeWaitForExitAsync(process).ConfigureAwait(false);
+
+            if (!timedOut)
+            {
+                ct.ThrowIfCancellationRequested();
+            }
+        }
+        catch (IOException)
+        {
+            KillTree(process);
+            await SafeWaitForExitAsync(process).ConfigureAwait(false);
+        }
+
+        var stdout = await SafeReadAsync(stdoutTask).ConfigureAwait(false);
+        var stderr = await SafeReadAsync(stderrTask).ConfigureAwait(false);
+        stopwatch.Stop();
+
+        var exitCode = timedOut ? -1 : SafeExitCode(process);
+        return new ProcessRunResult(exitCode, stdout, stderr, timedOut, stopwatch.Elapsed);
+    }
+
+    /// <summary>
     /// Runs a process and yields its stdout lines as they arrive via a <see cref="Channel{T}"/>.
     /// Used for long-lived streams such as logcat. The process tree is killed on cancellation
     /// or when enumeration ends.
@@ -182,11 +292,15 @@ internal static class ProcessRunner
         }
     }
 
-    private static ProcessStartInfo BuildStartInfo(string fileName, IReadOnlyList<string> arguments)
+    private static ProcessStartInfo BuildStartInfo(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        bool redirectStandardInput = false)
     {
         var info = new ProcessStartInfo
         {
             FileName = fileName,
+            RedirectStandardInput = redirectStandardInput,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -199,6 +313,41 @@ internal static class ProcessRunner
         }
 
         return info;
+    }
+
+    private static async Task CopyFileToAsync(
+        string inputFilePath,
+        Stream destination,
+        IProgress<long>? progress,
+        CancellationToken ct)
+    {
+        const int BufferSize = 1024 * 128;
+        var buffer = new byte[BufferSize];
+        var total = 0L;
+
+        await using var source = new FileStream(
+            inputFilePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            BufferSize,
+            useAsync: true);
+
+        while (true)
+        {
+            var read = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)
+                .ConfigureAwait(false);
+            if (read == 0)
+            {
+                break;
+            }
+
+            await destination.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+            total += read;
+            progress?.Report(total);
+        }
+
+        await destination.FlushAsync(ct).ConfigureAwait(false);
     }
 
     private static void KillTree(Process process)
@@ -245,6 +394,61 @@ internal static class ProcessRunner
         catch (IOException)
         {
             return string.Empty;
+        }
+    }
+
+    private static async Task ReadTextChunksAsync(
+        Stream stream,
+        StringBuilder builder,
+        Action<string>? onChunk,
+        CancellationToken ct)
+    {
+        var buffer = new byte[4096];
+        while (true)
+        {
+            int read;
+            try
+            {
+                read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (IOException)
+            {
+                return;
+            }
+
+            if (read == 0)
+            {
+                return;
+            }
+
+            var text = Encoding.UTF8.GetString(buffer, 0, read);
+            builder.Append(text);
+            try
+            {
+                onChunk?.Invoke(text);
+            }
+            catch (Exception)
+            {
+                // Progress observers must not be able to break the adb operation.
+            }
+        }
+    }
+
+    private static async Task SafeReadChunksAsync(Task readTask)
+    {
+        try
+        {
+            await readTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (IOException)
+        {
         }
     }
 

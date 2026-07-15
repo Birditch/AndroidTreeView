@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AndroidTreeView.App.Services;
 using AndroidTreeView.Core.Interfaces;
@@ -26,6 +28,7 @@ public sealed partial class DevicesViewModel : ViewModelBase
     private readonly IFilePickerService _filePicker;
     private readonly IFastbootService _fastboot;
     private readonly IDialogService _dialog;
+    private int _transferProgressVersion;
 
     // Full, ordered backlog of cards (device numbering is stable across filtering).
     private readonly List<DeviceCardViewModel> _all = new();
@@ -61,11 +64,38 @@ public sealed partial class DevicesViewModel : ViewModelBase
 
     /// <summary>Whether at least one card is checked (shows the batch action bar).</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBatchBarVisible))]
     private bool _hasSelection;
 
     /// <summary>Localized "N selected" text for the batch bar.</summary>
     [ObservableProperty]
     private string _selectionText = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBatchBarVisible))]
+    [NotifyCanExecuteChangedFor(nameof(BatchPickTransferFilesCommand))]
+    private bool _isTransferInProgress;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBatchBarVisible))]
+    private bool _isTransferProgressVisible;
+
+    [ObservableProperty]
+    private double _transferProgressValue;
+
+    [ObservableProperty]
+    private string _transferProgressText = string.Empty;
+
+    [ObservableProperty]
+    private string _transferProgressPercentText = string.Empty;
+
+    [ObservableProperty]
+    private string _transferProgressBytesText = string.Empty;
+
+    [ObservableProperty]
+    private string _transferProgressDetail = string.Empty;
+
+    public bool IsBatchBarVisible => HasSelection || IsTransferProgressVisible;
 
     public DevicesViewModel(
         ILocalizationService localization,
@@ -214,7 +244,7 @@ public sealed partial class DevicesViewModel : ViewModelBase
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartTransfer))]
     private async Task BatchPickTransferFilesAsync()
     {
         var paths = await _filePicker.PickTransferFilesAsync().ConfigureAwait(true);
@@ -223,6 +253,14 @@ public sealed partial class DevicesViewModel : ViewModelBase
 
     public Task HandleDroppedFilesAsync(IReadOnlyList<string> paths) =>
         ProcessPickedFilesAsync(paths, "batch.drop.result");
+
+    partial void OnHasSelectionChanged(bool value)
+    {
+        if (!value && !IsTransferInProgress)
+        {
+            IsTransferProgressVisible = false;
+        }
+    }
 
     private Task ProcessPickedFilesAsync(IReadOnlyList<string> paths, string resultKey)
     {
@@ -241,13 +279,33 @@ public sealed partial class DevicesViewModel : ViewModelBase
         IReadOnlyList<string> paths,
         string resultKey)
     {
-        var result = await _fileTransfer.ProcessAsync(targetSerials, paths)
-            .ConfigureAwait(true);
+        BeginTransferProgress();
+        var progressVersion = _transferProgressVersion;
+        DeviceFileTransferResult result;
+        try
+        {
+            var progress = CreateTransferProgress(progressVersion);
+            result = await _fileTransfer.ProcessAsync(targetSerials, paths, progress: progress)
+                .ConfigureAwait(true);
+        }
+        finally
+        {
+            IsTransferInProgress = false;
+            if (!HasSelection)
+            {
+                IsTransferProgressVisible = false;
+            }
+        }
+
         if (result.ValidFileCount == 0)
         {
+            _transferProgressVersion++;
+            IsTransferProgressVisible = false;
             Notifier.Notify(_localization.Get("batch.files.none"), NotifierLevel.Warning);
             return;
         }
+
+        CompleteTransferProgress(result, resultKey);
 
         var level = result.TotalFailed == 0
             ? NotifierLevel.Success
@@ -261,6 +319,111 @@ public sealed partial class DevicesViewModel : ViewModelBase
                 result.TransferSucceeded,
                 result.TransferFailed),
             level);
+    }
+
+    private bool CanStartTransfer() => !IsTransferInProgress;
+
+    private IProgress<DeviceFileTransferProgress> CreateTransferProgress(int version) =>
+        SynchronizationContext.Current is null
+            ? new InlineProgress<DeviceFileTransferProgress>(progress => ApplyTransferProgress(version, progress))
+            : new Progress<DeviceFileTransferProgress>(progress => ApplyTransferProgress(version, progress));
+
+    private void BeginTransferProgress()
+    {
+        _transferProgressVersion++;
+        IsTransferProgressVisible = true;
+        IsTransferInProgress = true;
+        TransferProgressValue = 0;
+        TransferProgressPercentText = string.Format(_localization.CurrentCulture, "{0:0}%", 0);
+        TransferProgressBytesText = _localization.Format(
+            "batch.progress.bytes",
+            FormatTransferSize(0),
+            FormatTransferSize(0));
+        TransferProgressText = _localization.Get("batch.progress.preparing");
+        TransferProgressDetail = _localization.Get("batch.progress.waiting");
+    }
+
+    private void ApplyTransferProgress(int version, DeviceFileTransferProgress progress)
+    {
+        if (!IsTransferInProgress || version != _transferProgressVersion)
+        {
+            return;
+        }
+
+        var total = Math.Max(progress.TotalCount, 0);
+        var completed = total == 0
+            ? 0
+            : Math.Clamp(progress.CompletedCount, 0, total);
+        var completedBytes = Math.Clamp(progress.CompletedBytes, 0, Math.Max(progress.TotalBytes, 0));
+        var percent = progress.TotalBytes > 0
+            ? completedBytes * 100d / progress.TotalBytes
+            : total == 0 ? 0 : completed * 100d / total;
+
+        TransferProgressValue = percent;
+        TransferProgressPercentText = string.Format(_localization.CurrentCulture, "{0:0}%", percent);
+        TransferProgressBytesText = _localization.Format(
+            "batch.progress.bytes",
+            FormatTransferSize(completedBytes),
+            FormatTransferSize(progress.TotalBytes));
+        TransferProgressText = total == 0
+            ? _localization.Get("batch.progress.preparing")
+            : _localization.Format("batch.progress.count", completed, total);
+
+        if (progress.Path is null || progress.Serial is null || progress.Operation is null)
+        {
+            TransferProgressDetail = _localization.Get("batch.progress.waiting");
+            return;
+        }
+
+        var fileName = Path.GetFileName(progress.Path);
+        var key = progress.Succeeded switch
+        {
+            false => "batch.progress.failed",
+            null => progress.Operation == DeviceFileTransferOperation.InstallApk
+                ? "batch.progress.installing"
+                : "batch.progress.transferring",
+            _ => progress.Operation == DeviceFileTransferOperation.InstallApk
+                ? "batch.progress.installed"
+                : "batch.progress.transferred"
+        };
+        TransferProgressDetail = _localization.Format(key, fileName, progress.Serial);
+    }
+
+    private void CompleteTransferProgress(DeviceFileTransferResult result, string resultKey)
+    {
+        _transferProgressVersion++;
+        var total = result.ValidFileCount * result.TargetCount;
+        TransferProgressValue = 100;
+        TransferProgressPercentText = string.Format(_localization.CurrentCulture, "{0:0}%", 100);
+        TransferProgressBytesText = _localization.Format(
+            "batch.progress.bytes",
+            FormatTransferSize(result.TotalBytes),
+            FormatTransferSize(result.TotalBytes));
+        TransferProgressText = _localization.Format("batch.progress.count", total, total);
+        TransferProgressDetail = _localization.Format(
+            resultKey,
+            result.InstallSucceeded,
+            result.InstallFailed,
+            result.TransferSucceeded,
+            result.TransferFailed);
+    }
+
+    private string FormatTransferSize(long bytes)
+    {
+        const double Kib = 1024d;
+        const double Mib = Kib * 1024d;
+
+        if (bytes < Mib)
+        {
+            return string.Format(_localization.CurrentCulture, "{0:0.0} KB", bytes / Kib);
+        }
+
+        return string.Format(_localization.CurrentCulture, "{0:0.0} MB", bytes / Mib);
+    }
+
+    private sealed class InlineProgress<T>(Action<T> handler) : IProgress<T>
+    {
+        public void Report(T value) => handler(value);
     }
 
     private void OnCardPropertyChanged(object? sender, PropertyChangedEventArgs e)

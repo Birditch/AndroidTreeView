@@ -33,15 +33,25 @@ public sealed partial class OverviewViewModel : DeviceCategoryViewModelBase
         _logger = logger;
     }
 
-    public string OemUnlockSupportedText => FormatNullableBool(Overview?.OemUnlockSupported);
+    public string OemUnlockSupportedText =>
+        UnlockStateFormatter.FormatNullableBool(Overview?.OemUnlockSupported, _localization);
 
-    public string OemUnlockAllowedText => FormatNullableBool(Overview?.OemUnlockAllowed);
+    public string OemUnlockAllowedText => UnlockStateFormatter.FormatOemUnlockAllowed(
+        Overview?.OemUnlockAllowed,
+        Overview?.BootloaderLockState,
+        Overview?.DeviceState,
+        Overview?.VerifiedBootState,
+        _localization);
 
-    public string BootloaderLockText => FormatState(Overview?.BootloaderLockState);
+    public string BootloaderLockText => UnlockStateFormatter.FormatBootloaderLock(
+        Overview?.BootloaderLockState,
+        Overview?.DeviceState,
+        Overview?.VerifiedBootState,
+        _localization);
 
-    public string DeviceStateText => FormatState(Overview?.DeviceState);
+    public string DeviceStateText => UnlockStateFormatter.FormatState(Overview?.DeviceState, _localization);
 
-    public string VerifiedBootText => FormatState(Overview?.VerifiedBootState);
+    public string VerifiedBootText => UnlockStateFormatter.FormatState(Overview?.VerifiedBootState, _localization);
 
     public string MagiskInstalledText => Overview?.MagiskInstalled == true
         ? _localization.Get("common.yes")
@@ -61,29 +71,4 @@ public sealed partial class OverviewViewModel : DeviceCategoryViewModelBase
         }, ct);
     }
 
-    private string FormatNullableBool(bool? value) => value switch
-    {
-        true => _localization.Get("common.yes"),
-        false => _localization.Get("common.no"),
-        _ => _localization.Get("common.unavailable")
-    };
-
-    private string FormatState(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return _localization.Get("common.unavailable");
-        }
-
-        return value.Trim().ToLowerInvariant() switch
-        {
-            "locked" => _localization.Get("state.locked"),
-            "unlocked" => _localization.Get("state.unlocked"),
-            "green" => _localization.Get("state.green"),
-            "yellow" => _localization.Get("state.yellow"),
-            "orange" => _localization.Get("state.orange"),
-            "red" => _localization.Get("state.red"),
-            var state => state
-        };
-    }
 }

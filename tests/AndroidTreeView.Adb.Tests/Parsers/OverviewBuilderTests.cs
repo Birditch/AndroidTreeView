@@ -77,6 +77,19 @@ public class OverviewBuilderTests
     }
 
     [Fact]
+    public void Build_BootloaderLockState_UsesVbmetaDeviceStateFallback()
+    {
+        var props = new Dictionary<string, string>
+        {
+            [PropKeys.VbmetaDeviceState] = "unlocked"
+        };
+
+        var overview = OverviewBuilder.Build(props);
+
+        Assert.Equal("unlocked", overview.BootloaderLockState);
+    }
+
+    [Fact]
     public void Build_DisplayName_PrependsManufacturerWhenModelLacksIt()
     {
         var overview = OverviewBuilder.Build(Props());

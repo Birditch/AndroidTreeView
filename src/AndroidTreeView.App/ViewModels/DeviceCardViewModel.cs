@@ -348,11 +348,20 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
             AndroidVersion = overview.AndroidVersion!;
         }
 
-        OemUnlockSupportedText = FormatNullableBool(overview.OemUnlockSupported);
-        OemUnlockAllowedText = FormatNullableBool(overview.OemUnlockAllowed);
-        BootloaderLockText = FormatState(overview.BootloaderLockState);
-        DeviceStateText = FormatState(overview.DeviceState);
-        VerifiedBootText = FormatState(overview.VerifiedBootState);
+        OemUnlockSupportedText = UnlockStateFormatter.FormatNullableBool(overview.OemUnlockSupported, _localization);
+        OemUnlockAllowedText = UnlockStateFormatter.FormatOemUnlockAllowed(
+            overview.OemUnlockAllowed,
+            overview.BootloaderLockState,
+            overview.DeviceState,
+            overview.VerifiedBootState,
+            _localization);
+        BootloaderLockText = UnlockStateFormatter.FormatBootloaderLock(
+            overview.BootloaderLockState,
+            overview.DeviceState,
+            overview.VerifiedBootState,
+            _localization);
+        DeviceStateText = UnlockStateFormatter.FormatState(overview.DeviceState, _localization);
+        VerifiedBootText = UnlockStateFormatter.FormatState(overview.VerifiedBootState, _localization);
         NotifyMagiskStateChange(overview.MagiskInstalled);
         MagiskInstalled = overview.MagiskInstalled;
         _magiskStateKnown = true;
@@ -490,32 +499,6 @@ public sealed partial class DeviceCardViewModel : ViewModelBase
         return vars.TryGetValue("securestate", out var secureState) && !string.IsNullOrWhiteSpace(secureState)
             ? secureState
             : "—";
-    }
-
-    private string FormatNullableBool(bool? value) => value switch
-    {
-        true => _localization.Get("common.yes"),
-        false => _localization.Get("common.no"),
-        _ => _localization.Get("common.unavailable")
-    };
-
-    private string FormatState(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return _localization.Get("common.unavailable");
-        }
-
-        return value.Trim().ToLowerInvariant() switch
-        {
-            "locked" => _localization.Get("state.locked"),
-            "unlocked" => _localization.Get("state.unlocked"),
-            "green" => _localization.Get("state.green"),
-            "yellow" => _localization.Get("state.yellow"),
-            "orange" => _localization.Get("state.orange"),
-            "red" => _localization.Get("state.red"),
-            var state => state
-        };
     }
 
     private void NotifyMagiskStateChange(bool installed)

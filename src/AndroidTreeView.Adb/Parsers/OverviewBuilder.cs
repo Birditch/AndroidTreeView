@@ -17,6 +17,9 @@ public static class OverviewBuilder
         var manufacturer = Get(props, PropKeys.Manufacturer);
         var model = Get(props, PropKeys.Model);
 
+        var deviceState = NormalizeState(GetFirst(props, PropKeys.DeviceStateKeys));
+        var verifiedBootState = NormalizeState(Get(props, PropKeys.VerifiedBootState));
+
         return new DeviceOverview
         {
             DisplayName = BuildDisplayName(manufacturer, model),
@@ -35,9 +38,9 @@ public static class OverviewBuilder
             BuildType = Get(props, PropKeys.BuildType),
             OemUnlockSupported = GetBool(props, PropKeys.OemUnlockSupported),
             OemUnlockAllowed = GetBool(props, PropKeys.OemUnlockAllowed),
-            BootloaderLockState = GetBootloaderLockState(props),
-            DeviceState = NormalizeState(GetFirst(props, PropKeys.DeviceStateKeys)),
-            VerifiedBootState = NormalizeState(Get(props, PropKeys.VerifiedBootState)),
+            BootloaderLockState = GetBootloaderLockState(props, deviceState, verifiedBootState),
+            DeviceState = deviceState,
+            VerifiedBootState = verifiedBootState,
             MagiskInstalled = ContainsMagiskPackage(packageListOutput)
         };
     }
@@ -95,7 +98,10 @@ public static class OverviewBuilder
         };
     }
 
-    private static string? GetBootloaderLockState(IReadOnlyDictionary<string, string> props)
+    private static string? GetBootloaderLockState(
+        IReadOnlyDictionary<string, string> props,
+        string? deviceState,
+        string? verifiedBootState)
     {
         if (Get(props, PropKeys.BootFlashLocked) is { } flashLocked)
         {
@@ -115,6 +121,16 @@ public static class OverviewBuilder
                 false => "locked",
                 _ => NormalizeState(unlocked)
             };
+        }
+
+        if (deviceState is "locked" or "unlocked")
+        {
+            return deviceState;
+        }
+
+        if (verifiedBootState == "orange")
+        {
+            return "unlocked";
         }
 
         return null;

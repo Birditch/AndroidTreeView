@@ -178,10 +178,25 @@ public sealed class DeviceCardViewModelTests
         });
 
         Assert.Equal("common.yes", card.OemUnlockSupportedText);
-        Assert.Equal("common.no", card.OemUnlockAllowedText);
+        Assert.Equal("state.unlocked", card.OemUnlockAllowedText);
         Assert.Equal("state.locked", card.BootloaderLockText);
         Assert.Equal("state.unlocked", card.DeviceStateText);
         Assert.Equal("state.orange", card.VerifiedBootText);
+    }
+
+    [Fact]
+    public void ApplyOverview_uses_device_state_as_bootloader_unlock_fallback()
+    {
+        var card = CreateCard();
+
+        card.ApplyOverview(new DeviceOverview
+        {
+            OemUnlockAllowed = false,
+            DeviceState = "unlocked"
+        });
+
+        Assert.Equal("state.unlocked", card.OemUnlockAllowedText);
+        Assert.Equal("state.unlocked", card.BootloaderLockText);
     }
 
     [Fact]

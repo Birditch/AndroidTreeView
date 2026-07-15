@@ -233,6 +233,13 @@ public sealed class DevicesViewModelTests
             Assert.Equal(new[] { "A", "A" }, installer.InstalledSerials);
             Assert.Equal(new[] { file1, file2 }, installer.PushedFiles.Select(push => push.Path));
             Assert.All(installer.PushedFiles, push => Assert.Equal("/sdcard/Download/", push.RemoteDirectory));
+            Assert.True(vm.IsTransferProgressVisible);
+            Assert.False(vm.IsTransferInProgress);
+            Assert.Equal(100, vm.TransferProgressValue);
+            Assert.Equal("100%", vm.TransferProgressPercentText);
+            Assert.Equal("batch.progress.bytes", vm.TransferProgressBytesText);
+            Assert.Equal("batch.progress.count", vm.TransferProgressText);
+            Assert.Equal("batch.files.result", vm.TransferProgressDetail);
         }
         finally
         {

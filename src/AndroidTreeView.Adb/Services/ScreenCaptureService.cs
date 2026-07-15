@@ -17,7 +17,7 @@ namespace AndroidTreeView.Adb.Services;
 /// keep retrying without special error handling.
 /// </para>
 /// </summary>
-public sealed class ScreenCaptureService : IScreenCaptureService
+public sealed class ScreenCaptureService : IScreenCaptureService, IProgressiveFileTransferService
 {
     private static readonly TimeSpan CaptureTimeout = TimeSpan.FromSeconds(8);
     private static readonly TimeSpan TapTimeout     = TimeSpan.FromSeconds(8);
@@ -284,6 +284,143 @@ public sealed class ScreenCaptureService : IScreenCaptureService
         }
     }
 
+    async Task<bool> IProgressiveFileTransferService.PushFileAsync(
+        string serial,
+        string filePath,
+        string? remoteDirectory,
+        IProgress<double>? progress,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            return false;
+        }
+
+        var preferredDirectory = NormalizeRemoteDirectory(remoteDirectory);
+        var fileName = Path.GetFileName(filePath);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return false;
+        }
+
+        try
+        {
+            foreach (var directory in CandidateRemoteDirectories(preferredDirectory))
+            {
+                await PrepareFileTransferAsync(serial, directory, ct).ConfigureAwait(false);
+
+                var remotePath = directory + fileName;
+                if (await TryPushFileWithInputProgressAsync(serial, filePath, remotePath, progress, ct)
+                        .ConfigureAwait(false))
+                {
+                    progress?.Report(1);
+                    return true;
+                }
+
+                if (await TryPushFileWithAdbProgressAsync(serial, filePath, remotePath, progress, ct)
+                        .ConfigureAwait(false))
+                {
+                    progress?.Report(1);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch (AdbNotFoundException)
+        {
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Progressive push on {Serial} for '{File}' failed.", serial, filePath);
+            return false;
+        }
+    }
+
+    private async Task<bool> TryPushFileWithInputProgressAsync(
+        string serial,
+        string filePath,
+        string remotePath,
+        IProgress<double>? progress,
+        CancellationToken ct)
+    {
+        var fileSize = new FileInfo(filePath).Length;
+        var byteProgress = fileSize <= 0
+            ? null
+            : new InlineProgress<long>(bytes => progress?.Report(Math.Clamp(bytes / (double)fileSize, 0, 1)));
+        var argv = BuildDeviceArgv(serial, "exec-in", "sh", "-c", "cat > " + QuoteShell(remotePath));
+
+        var result = await ProcessRunner
+            .RunWithInputFileAsync(_environment.ExecutablePath, argv, filePath, PushTimeout, byteProgress, ct)
+            .ConfigureAwait(false);
+
+        if (result.ExitCode == 0 && !result.TimedOut)
+        {
+            return true;
+        }
+
+        _logger.LogDebug(
+            "exec-in push to {RemotePath} on {Serial} exited {Code}. stderr: {Stderr}",
+            remotePath, serial, result.ExitCode, result.StandardError);
+
+        return false;
+    }
+
+    private async Task<bool> TryPushFileWithAdbProgressAsync(
+        string serial,
+        string filePath,
+        string remotePath,
+        IProgress<double>? progress,
+        CancellationToken ct)
+    {
+        var recentOutput = string.Empty;
+        var lastPercent = -1;
+
+        void OnChunk(string chunk)
+        {
+            if (progress is null || string.IsNullOrEmpty(chunk))
+            {
+                return;
+            }
+
+            recentOutput += chunk;
+            if (recentOutput.Length > 1024)
+            {
+                recentOutput = recentOutput[^1024..];
+            }
+
+            var percent = LastPercent(recentOutput);
+            if (percent is null || percent == lastPercent)
+            {
+                return;
+            }
+
+            lastPercent = percent.Value;
+            progress.Report(Math.Clamp(percent.Value / 100d, 0, 1));
+        }
+
+        var argv = BuildDeviceArgv(serial, AdbArgs.Push(filePath, remotePath));
+        var result = await ProcessRunner
+            .RunTextStreamingAsync(_environment.ExecutablePath, argv, PushTimeout, OnChunk, ct)
+            .ConfigureAwait(false);
+
+        if (result.ExitCode == 0 && !result.TimedOut)
+        {
+            return true;
+        }
+
+        _logger.LogDebug(
+            "push to {RemotePath} on {Serial} exited {Code}. stderr: {Stderr}",
+            remotePath, serial, result.ExitCode, result.StandardError);
+
+        return false;
+    }
+
     /// <inheritdoc/>
     public async Task<bool> PrepareFileTransferAsync(
         string serial,
@@ -314,9 +451,48 @@ public sealed class ScreenCaptureService : IScreenCaptureService
 
     private static IReadOnlyList<string> BuildScreencapArgv(string serial)
     {
-        var argv = new List<string>(2 + AdbArgs.ExecOutScreencap.Length) { "-s", serial };
-        argv.AddRange(AdbArgs.ExecOutScreencap);
+        return BuildDeviceArgv(serial, AdbArgs.ExecOutScreencap);
+    }
+
+    private static IReadOnlyList<string> BuildDeviceArgv(string serial, params string[] arguments)
+    {
+        var argv = new List<string>(2 + arguments.Length) { "-s", serial };
+        argv.AddRange(arguments);
         return argv;
+    }
+
+    private static string QuoteShell(string value) =>
+        "'" + value.Replace("'", "'\\''", StringComparison.Ordinal) + "'";
+
+    private static int? LastPercent(string text)
+    {
+        int? last = null;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] != '%')
+            {
+                continue;
+            }
+
+            var start = i - 1;
+            while (start >= 0 && char.IsDigit(text[start]))
+            {
+                start--;
+            }
+
+            var token = text[(start + 1)..i];
+            if (int.TryParse(token, out var percent) && percent is >= 0 and <= 100)
+            {
+                last = percent;
+            }
+        }
+
+        return last;
+    }
+
+    private sealed class InlineProgress<T>(Action<T> handler) : IProgress<T>
+    {
+        public void Report(T value) => handler(value);
     }
 
     private async Task<bool> EnsureRemoteDirectoryAsync(string serial, string directory, CancellationToken ct)

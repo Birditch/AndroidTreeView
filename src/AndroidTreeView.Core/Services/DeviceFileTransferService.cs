@@ -19,6 +19,7 @@ public sealed class DeviceFileTransferService
         IReadOnlyList<string> serials,
         IReadOnlyList<string> paths,
         string remoteDirectory = DefaultRemoteDirectory,
+        IProgress<DeviceFileTransferProgress>? progress = null,
         CancellationToken ct = default)
     {
         var targets = serials
@@ -28,14 +29,98 @@ public sealed class DeviceFileTransferService
         var existing = ExistingFilePaths(paths);
         var apks = existing.Where(IsApk).ToArray();
         var files = existing.Where(path => !IsApk(path)).ToArray();
+        var fileSizes = existing.ToDictionary(
+            path => path,
+            path => new FileInfo(path).Length,
+            StringComparer.OrdinalIgnoreCase);
+        var totalBytes = fileSizes.Values.Sum() * targets.Length;
 
         if (targets.Length == 0 || existing.Length == 0)
         {
-            return new DeviceFileTransferResult(0, 0, 0, 0, existing.Length, targets.Length);
+            return new DeviceFileTransferResult(0, 0, 0, 0, existing.Length, targets.Length, totalBytes);
+        }
+
+        var completed = 0;
+        var completedBytes = 0L;
+        var total = targets.Length * existing.Length;
+        var progressGate = new object();
+        var activeBytes = new Dictionary<string, long>(StringComparer.Ordinal);
+        progress?.Report(DeviceFileTransferProgress.Start(total, totalBytes));
+
+        void ReportActive(string serial, string path, DeviceFileTransferOperation operation, long bytes)
+        {
+            if (progress is null)
+            {
+                return;
+            }
+
+            var key = ProgressKey(serial, path, operation);
+            var size = fileSizes.TryGetValue(path, out var fileSize) ? fileSize : 0;
+            var clamped = Math.Clamp(bytes, 0, size);
+            int done;
+            long doneBytes;
+
+            lock (progressGate)
+            {
+                if (clamped < size &&
+                    activeBytes.TryGetValue(key, out var previous) &&
+                    Math.Abs(clamped - previous) < ActiveProgressStep(size))
+                {
+                    return;
+                }
+
+                activeBytes[key] = clamped;
+                done = completed;
+                doneBytes = completedBytes + activeBytes.Values.Sum();
+            }
+
+            progress.Report(new DeviceFileTransferProgress(
+                done,
+                total,
+                doneBytes,
+                totalBytes,
+                serial,
+                path,
+                operation,
+                null));
+        }
+
+        void ReportComplete(string serial, string path, DeviceFileTransferOperation operation, bool succeeded)
+        {
+            var key = ProgressKey(serial, path, operation);
+            var size = fileSizes.TryGetValue(path, out var fileSize) ? fileSize : 0;
+            int done;
+            long doneBytes;
+
+            lock (progressGate)
+            {
+                activeBytes.Remove(key);
+                completed++;
+                completedBytes += size;
+                done = completed;
+                doneBytes = completedBytes + activeBytes.Values.Sum();
+            }
+
+            progress?.Report(new DeviceFileTransferProgress(
+                done,
+                total,
+                doneBytes,
+                totalBytes,
+                serial,
+                path,
+                operation,
+                succeeded));
         }
 
         var results = await Task.WhenAll(
-                targets.Select(serial => ProcessOneDeviceAsync(serial, apks, files, remoteDirectory, ct)))
+                targets.Select(serial => ProcessOneDeviceAsync(
+                    serial,
+                    apks,
+                    files,
+                    remoteDirectory,
+                    ReportActive,
+                    ReportComplete,
+                    ct)))
             .ConfigureAwait(false);
 
         return new DeviceFileTransferResult(
@@ -44,7 +129,8 @@ public sealed class DeviceFileTransferService
             results.Sum(result => result.TransferSucceeded),
             results.Sum(result => result.TransferFailed),
             existing.Length,
-            targets.Length);
+            targets.Length,
+            totalBytes);
     }
 
     private async Task<DeviceFileTransferResult> ProcessOneDeviceAsync(
@@ -52,6 +138,8 @@ public sealed class DeviceFileTransferService
         IReadOnlyList<string> apks,
         IReadOnlyList<string> files,
         string remoteDirectory,
+        Action<string, string, DeviceFileTransferOperation, long> reportActive,
+        Action<string, string, DeviceFileTransferOperation, bool> reportComplete,
         CancellationToken ct)
     {
         var installSucceeded = 0;
@@ -62,7 +150,9 @@ public sealed class DeviceFileTransferService
         foreach (var apk in apks)
         {
             ct.ThrowIfCancellationRequested();
-            if (await TryInstallApkAsync(serial, apk, ct).ConfigureAwait(false))
+            reportActive(serial, apk, DeviceFileTransferOperation.InstallApk, 0);
+            var succeeded = await TryInstallApkAsync(serial, apk, ct).ConfigureAwait(false);
+            if (succeeded)
             {
                 installSucceeded++;
             }
@@ -70,12 +160,23 @@ public sealed class DeviceFileTransferService
             {
                 installFailed++;
             }
+
+            reportComplete(serial, apk, DeviceFileTransferOperation.InstallApk, succeeded);
         }
 
         foreach (var file in files)
         {
             ct.ThrowIfCancellationRequested();
-            if (await TryPushFileAsync(serial, file, remoteDirectory, ct).ConfigureAwait(false))
+            var fileSize = new FileInfo(file).Length;
+            reportActive(serial, file, DeviceFileTransferOperation.TransferFile, 0);
+            var fileProgress = new InlineProgress<double>(fraction =>
+                reportActive(
+                    serial,
+                    file,
+                    DeviceFileTransferOperation.TransferFile,
+                    (long)Math.Round(fileSize * Math.Clamp(fraction, 0, 1))));
+            var succeeded = await TryPushFileAsync(serial, file, remoteDirectory, fileProgress, ct).ConfigureAwait(false);
+            if (succeeded)
             {
                 transferSucceeded++;
             }
@@ -83,6 +184,8 @@ public sealed class DeviceFileTransferService
             {
                 transferFailed++;
             }
+
+            reportComplete(serial, file, DeviceFileTransferOperation.TransferFile, succeeded);
         }
 
         return new DeviceFileTransferResult(
@@ -114,10 +217,17 @@ public sealed class DeviceFileTransferService
         string serial,
         string filePath,
         string remoteDirectory,
+        IProgress<double>? progress,
         CancellationToken ct)
     {
         try
         {
+            if (_deviceFiles is IProgressiveFileTransferService progressive)
+            {
+                return await progressive.PushFileAsync(serial, filePath, remoteDirectory, progress, ct)
+                    .ConfigureAwait(false);
+            }
+
             return await _deviceFiles.PushFileAsync(serial, filePath, remoteDirectory, ct)
                 .ConfigureAwait(false);
         }
@@ -139,6 +249,17 @@ public sealed class DeviceFileTransferService
 
     private static bool IsApk(string path) =>
         path.EndsWith(".apk", StringComparison.OrdinalIgnoreCase);
+
+    private static string ProgressKey(string serial, string path, DeviceFileTransferOperation operation) =>
+        string.Concat(serial, '\0', path, '\0', operation.ToString());
+
+    private static long ActiveProgressStep(long fileSize) =>
+        fileSize < 512 * 1024 ? 1 : Math.Max(512 * 1024, fileSize / 1000);
+
+    private sealed class InlineProgress<T>(Action<T> handler) : IProgress<T>
+    {
+        public void Report(T value) => handler(value);
+    }
 }
 
 public sealed record DeviceFileTransferResult(
@@ -147,9 +268,30 @@ public sealed record DeviceFileTransferResult(
     int TransferSucceeded,
     int TransferFailed,
     int ValidFileCount,
-    int TargetCount)
+    int TargetCount,
+    long TotalBytes = 0)
 {
     public int TotalSucceeded => InstallSucceeded + TransferSucceeded;
 
     public int TotalFailed => InstallFailed + TransferFailed;
+}
+
+public enum DeviceFileTransferOperation
+{
+    InstallApk,
+    TransferFile
+}
+
+public sealed record DeviceFileTransferProgress(
+    int CompletedCount,
+    int TotalCount,
+    long CompletedBytes,
+    long TotalBytes,
+    string? Serial,
+    string? Path,
+    DeviceFileTransferOperation? Operation,
+    bool? Succeeded)
+{
+    public static DeviceFileTransferProgress Start(int totalCount, long totalBytes) =>
+        new(0, totalCount, 0, totalBytes, null, null, null, null);
 }

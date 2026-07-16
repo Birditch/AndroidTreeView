@@ -1,0 +1,61 @@
+name: Review and auto-merge
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions: {}
+
+concurrency:
+  group: automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  govern:
+    name: Assign reviewer and enable auto-merge
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Assign Birditch and enable guarded auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${AUTHOR,,}" != "birditch" ]; then
+            gh pr edit "$PR" --repo "$REPO" --add-reviewer Birditch >/dev/null 2>&1 || true
+          else
+            echo "PR 作者是 Birditch，GitHub 不允许请求作者本人审核；保留审核门禁。"
+          fi
+
+          state=UNKNOWN
+          for _ in $(seq 1 10); do
+            state=$(gh pr view "$PR" --repo "$REPO" --json mergeable --jq .mergeable)
+            [ "$state" != UNKNOWN ] && break
+            sleep 6
+          done
+
+          labeled=$(gh pr view "$PR" --repo "$REPO" --json labels \
+            --jq '[.labels[].name] | index("merge-conflict") != null')
+          if [ "$state" = CONFLICTING ]; then
+            gh label create merge-conflict --repo "$REPO" --color E11D21 \
+              --description "PR 与目标分支存在冲突" --force >/dev/null 2>&1 || true
+            gh pr edit "$PR" --repo "$REPO" --add-label merge-conflict >/dev/null 2>&1 || true
+            if [ "$labeled" != true ]; then
+              gh pr comment "$PR" --repo "$REPO" --body \
+                "该 PR 与目标分支存在冲突。解决冲突并推送后，审核和检查通过时会自动进入合并队列。"
+            fi
+            exit 0
+          fi
+
+          gh pr edit "$PR" --repo "$REPO" --remove-label merge-conflict >/dev/null 2>&1 || true
+          gh pr merge "$PR" --repo "$REPO" --auto --squash --delete-branch
